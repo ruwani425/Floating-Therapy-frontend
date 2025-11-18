@@ -10,6 +10,7 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Use the new color classes for NavLink status
   const getNavLinkClass = (
     { isActive, isPending }: { isActive: boolean; isPending: boolean },
     checkPrefix: string = ""
@@ -18,8 +19,9 @@ const NavBar: React.FC = () => {
       checkPrefix &&
       location.pathname.toLowerCase().startsWith(checkPrefix.toLowerCase());
 
-    const activeClassName = "text-white bg-indigo-700";
-    const baseClassName = "text-indigo-200 hover:bg-indigo-600";
+    // Applying palette: Active is Dark Blue (#035C84), Base Text is Light Blue (#E6F3FF), Hover is Medium Blue (#0873A1)
+    const activeClassName = "text-white bg-dark-blue-600";
+    const baseClassName = "text-light-blue-100 hover:bg-dark-blue-700";
     const pendingClassName = "opacity-75";
     const isLinkActive = checkPrefix ? pathPrefixMatch : isActive;
 
@@ -34,7 +36,7 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-indigo-800 p-4 shadow-lg sticky top-0 z-10">
+    <nav className="bg-dark-blue-800 p-4 shadow-lg sticky top-0 z-10 w-full">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <NavLink
           to="/"
@@ -47,8 +49,9 @@ const NavBar: React.FC = () => {
             to="/"
             className={({ isActive, isPending }) => {
               const isExactRoot = location.pathname.toLowerCase() === "/";
-              const activeClassName = "text-white bg-indigo-700";
-              const baseClassName = "text-indigo-200 hover:bg-indigo-600";
+              // Applying palette: Active is Dark Blue (#035C84), Base Text is Light Blue (#E6F3FF), Hover is Medium Blue (#0873A1)
+              const activeClassName = "text-white bg-dark-blue-600";
+              const baseClassName = "text-light-blue-100 hover:bg-dark-blue-700";
               const pendingClassName = "opacity-75";
 
               return `px-3 py-2 rounded-lg font-medium transition duration-150 ${
@@ -68,12 +71,13 @@ const NavBar: React.FC = () => {
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
+              // Logout is a critical action, keeping red but can be themed if desired
               className="px-3 py-2 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition duration-150"
             >
               Logout
             </button>
           ) : (
-            <NavLink to="/login" className={getNavLinkClass}>
+            <NavLink to="/login" className={(state) => getNavLinkClass(state)}>
               Login
             </NavLink>
           )}
@@ -93,9 +97,22 @@ export const Layout: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-inter">
+    <div className="min-h-screen bg-light-blue-50 font-inter w-screen overflow-x-hidden">
+      {/* Inject Custom Style Block here to ensure the classes used in NavBar are defined */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            /* NavBar Custom Palette */
+            .bg-dark-blue-800 { background-color: #003F5C; } 
+            .bg-dark-blue-600 { background-color: #035C84; }
+            .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; } 
+            .text-light-blue-100 { color: #E6F3FF; }
+            .bg-light-blue-50 { background-color: #F0F8FF; }
+          `,
+        }}
+      />
       {!shouldHideNavbar && <NavBar />}{" "}
-      <main className="max-w-7xl mx-auto py-6">
+      <main className="w-full mx-auto">
         <Outlet />
       </main>
     </div>

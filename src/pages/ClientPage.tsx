@@ -83,25 +83,6 @@ const benefitsData = [
   },
 ];
 
-// Mock data for the testimonials section (images not used here, only text)
-const testimonialsData = [
-  {
-    name: "Rebecca Lorenna",
-    quote:
-      "This place is peaceful, clean, and the energy is amazing. I felt relaxed the moment I arrived. Highly recommend to anyone needing real stress relief.",
-  },
-  {
-    name: "Marcus Leroy",
-    quote:
-      "I've been to many massage studios, but this one stands out. You're not just a name on a schedule—you're treated with respect and genuine care.",
-  },
-  {
-    name: "Maya Sanches",
-    quote:
-      "I look forward to my massage every week—it's the only time I truly disconnect and reset. The therapists are intuitive and professional. This place is magic.",
-  },
-];
-
 // Mock data for the blog section
 const blogData = [
   {
@@ -188,14 +169,14 @@ const Header: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
           <button className="flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-light-blue-100 transition duration-150">
-            {/* 💡 Reverted star color to yellow-500 */}
+            {/* 💡 Star color set to yellow-500 */}
             <Star className="w-5 h-5 text-yellow-500" />
           </button>
           <button className="flex items-center px-4 py-2 bg-dark-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-dark-blue-700 transition duration-300">
             <CalendarCheck className="w-5 h-5 mr-2" />
             Appointment
           </button>
-          {/* Changed 'Buy now' button color from indigo-600 */}
+          {/* Changed 'Buy now' button color to dark-blue-600 */}
           <button className="hidden sm:inline px-4 py-2 bg-dark-blue-600 text-white font-semibold rounded-full hover:bg-dark-blue-700 transition duration-300">
             Buy now
           </button>
@@ -217,7 +198,8 @@ const Hero: React.FC = () => {
   return (
     <section
       id="home"
-      className="pt-24 min-h-[80vh] relative overflow-hidden flex justify-center items-center"
+      // Added w-full and overflow-hidden is key for background sections
+      className="pt-24 min-h-[80vh] relative w-full overflow-hidden flex justify-center items-center"
     >
       {/* Background Media Container (full width) */}
       <div className="absolute z-0 w-full h-full inset-0">
@@ -267,7 +249,7 @@ const Hero: React.FC = () => {
           </button>
           <div className="mt-8">
             <p className="text-sm text-gray-200">
-              {/* 💡 Reverted star rating text color to yellow-500 */}
+              {/* 💡 Star rating set to yellow-500 */}
               <span className="text-yellow-500 text-xl">★★★★★</span> TRUSTED BY
               1000+ PATIENTS
             </p>
@@ -276,11 +258,13 @@ const Hero: React.FC = () => {
 
         {/* Footer/Strapline section visible in the screenshot, ensuring alignment */}
         <div className="absolute bottom-0 left-0 right-0 py-4 px-4 sm:px-6 lg:px-8 bg-black bg-opacity-30 text-white backdrop-blur-sm">
-          <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-medium">
-            <p>Reduced Pain</p>
-            <p>Improved Circulation</p>
-            <p>Reduced Stress</p>
-            <p>Enhances Overall Well-being</p>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-medium">
+              <p>Reduced Pain</p>
+              <p>Improved Circulation</p>
+              <p>Reduced Stress</p>
+              <p>Enhances Overall Well-being</p>
+            </div>
           </div>
         </div>
         {/* === END OF REVERTED CONTENT === */}
@@ -303,7 +287,7 @@ const AboutUs: React.FC = () => {
   return (
     <section
       id="about"
-      className="py-20 relative bg-light-blue-50"
+      className="py-20 relative bg-light-blue-50 w-full" // Use lightest background
       style={{
         // Apply background pattern if available
         backgroundImage: hasPattern ? `url(${backgroundPattern})` : "none",
@@ -389,11 +373,11 @@ const AboutUs: React.FC = () => {
           {/* Right Text Column */}
           <div className="lg:col-span-1 space-y-8 py-8">
             <div className="space-y-4">
-              <div className="flex items-center">
-                <Flower className="w-5 h-5 text-dark-blue-600 mr-2" />
+              <div className="flex items-center justify-end">
                 <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
                   A Trusted Local Studio
                 </span>
+                <Flower className="w-5 h-5 text-dark-blue-600 ml-2" />
               </div>
               <div className="border-r-4 border-dark-blue-600 pr-4 text-right">
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">
@@ -435,9 +419,9 @@ const AboutUs: React.FC = () => {
  */
 const Services: React.FC = () => {
   return (
-    <section id="services" className="py-20 bg-light-blue-50">
+    <section id="services" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Changed bg-gray-50 to light-blue-50 */}
+      {/* Added w-full */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
@@ -449,6 +433,7 @@ const Services: React.FC = () => {
               Begin Your Journey to Better Health
             </h2>
           </div>
+          {/* Button uses light-blue-200 for background and dark-blue-800 for text */}
           <button className="px-6 py-2 bg-light-blue-200 text-dark-blue-800 rounded-full hover:bg-light-blue-300 transition duration-150">
             View All
           </button>
@@ -497,7 +482,9 @@ const Services: React.FC = () => {
  */
 const Reviews: React.FC = () => {
   return (
-    <section id="reviews" className="py-20 bg-light-blue-50">
+    <section id="reviews" className="py-20 bg-light-blue-50 w-full">
+      {" "}
+      {/* Use lightest background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
@@ -532,7 +519,7 @@ const Reviews: React.FC = () => {
                 4.9
               </p>
               <div className="text-yellow-500 text-3xl mb-2">
-                {/* 💡 Reverted star rating text color to yellow-500 */}
+                {/* 💡 Star rating set to yellow-500 */}
                 ★★★★★
               </div>
               <p className="text-sm text-gray-600">220+ Reviews on Google</p>
@@ -592,7 +579,9 @@ const BenefitsFAQ: React.FC = () => {
   const hasBackground = benefitBackgroundUrl.includes("YOUR_") === false;
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-white w-full">
+      {" "}
+      {/* Use white background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -698,9 +687,9 @@ const WhyChooseUs: React.FC = () => {
   ];
 
   return (
-    <section id="why-choose-us" className="py-20 bg-light-blue-50">
+    <section id="why-choose-us" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Changed bg-gray-50 to light-blue-50 */}
+      {/* Use lightest background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-4">
@@ -792,7 +781,9 @@ const MeetOurTherapist: React.FC = () => {
   ];
 
   return (
-    <section id="therapist" className="py-20 bg-light-blue-50">
+    <section id="therapist" className="py-20 bg-light-blue-50 w-full">
+      {" "}
+      {/* Use lightest background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
@@ -852,7 +843,9 @@ const MeetOurTherapist: React.FC = () => {
  */
 const Blog: React.FC = () => {
   return (
-    <section id="blog" className="py-20 bg-white">
+    <section id="blog" className="py-20 bg-white w-full">
+      {" "}
+      {/* Use white background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
@@ -903,32 +896,17 @@ const Blog: React.FC = () => {
     <section
       id="cta-wait"
       // Use 'relative' for the content to be positioned relative to this section
-      className="py-20 relative overflow-hidden flex justify-center items-center"
+      className="py-20 relative overflow-hidden flex justify-center items-center w-full" // Added w-full
       style={{ minHeight: "400px" }}
     >
       {/* Background Media Container (full width) - z-0 */}
       <div className="absolute z-0 w-full h-full inset-0">
-        {/* 💡 Background Video Element */}
-        {/* 'fixed' positioning is applied via 'backgroundAttachment: "fixed"' style on the video's wrapper or by making the video fixed. 
-            For a full-width background video in a container, a combination of 'absolute' on the video wrapper
-            and 'background-attachment: fixed' on a *covering* element is often used, but here, 
-            simply keeping the video within the absolute container and using object-cover is cleaner.
-            We ensure the video itself acts as the background. 
-        */}
-
         <video
           autoPlay
           loop
           muted
           playsInline // Important for mobile devices
           className="w-full h-full object-cover"
-          style={
-            {
-              // REMOVED: background-color and background-image from here.
-              // They were obscuring the video. The gradient is moved to a separate overlay <div>.
-              // backgroundAttachment: "fixed", // Not necessary here, the video is within the section.
-            }
-          }
         >
           <source src={ctaVideoUrl} type="video/mp4" />
           Your browser does not support the video tag.
@@ -978,9 +956,9 @@ const Blog: React.FC = () => {
 const AppointmentFooter: React.FC = () => {
   return (
     <footer
-      className="relative py-20 bg-cover bg-center text-white"
-      // 💡 Ensure background stretches full width
-      style={{ backgroundColor: "#035C84" }}
+      className="relative py-20 bg-cover bg-center text-white w-full" // Added w-full
+      // 💡 Ensure background stretches full width, using the darkest blue for the footer
+      style={{ backgroundColor: "#035C84" }} // Keeping the primary dark blue from the palette
     >
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1072,7 +1050,9 @@ const AppointmentFooter: React.FC = () => {
                 </li>
                 <li className="flex items-start">
                   <Clock className="w-4 h-4 mr-3 mt-1 text-dark-blue-600 flex-shrink-0" />
-                  <span>Mon–Thu 7:30 AM–7:30 PM / Fri–Day 8:00 AM–4:30 PM</span>
+                  <span>
+                    Mon–Thu 7:30 AM–7:30 PM / Fri–Day 8:00 AM–4:30 PM
+                  </span>
                 </li>
                 <li className="flex items-start">
                   <Mail className="w-4 h-4 mr-3 mt-1 text-dark-blue-600 flex-shrink-0" />
@@ -1120,36 +1100,44 @@ const AppointmentFooter: React.FC = () => {
  * Uses a palette of soft blues to match the calming, professional theme.
  */
 const HomePage: React.FC = () => {
-  // Define custom colors based on the screenshot aesthetic (soft neutrals/earth tones)
+  // Define custom colors based on the requested palette
   const CustomStyle = `
-    /* Custom Blue Color Palette (Based on IMG-20251116-WA0010.jpg) */
-    .text-dark-blue-600 { color: #035C84; }
-    .bg-dark-blue-600 { background-color: #035C84; }
-    .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; } /* Medium Blue */
-    .text-dark-blue-800 { color: #003F5C; } /* Darker shade for text contrast */
-    .bg-dark-blue-800 { background-color: #003F5C; } /* Darkest background */
-    .border-dark-blue-700 { border-color: #003F5C; } /* Border color matching dark background */
+    /* ** CRITICAL FIX: RESET BODY/HTML MARGINS ** */
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        overflow-x: hidden; 
+    }
 
-    .text-light-blue-400 { color: #94CCE7; } /* Light accent color for links/titles in dark sections */
+    /* CUSTOM COLOR PALETTE MAPPING */
+    /* Based on #035C84 (Darkest Blue) and #94CCE7 (Lightest Blue) */
+    .text-dark-blue-600 { color: #035C84; } /* Primary/Main Dark Blue */
+    .bg-dark-blue-600 { background-color: #035C84; }
+    .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; } /* Medium Blue (Hover/Accent) */
+    .text-dark-blue-800 { color: #003F5C; } /* Used for highest contrast text, based on #035C84 shade */
+    .border-dark-blue-600 { border-color: #035C84; } /* Added for border-l-4 in AboutUs */
+    .border-dark-blue-700 { border-color: #0873A1; } /* Border color matching medium blue */
+    
+    .text-light-blue-400 { color: #2DA0CC; } /* Lighter Blue (Link/Icon color) */
     .hover\\:text-dark-blue-600:hover { color: #035C84; } /* Primary blue for hover */
 
     /* Light Blue Backgrounds */
-    .bg-light-blue-50 { background-color: #F0F8FF; } /* Very light blue/off-white */
-    .bg-light-blue-100 { background-color: #E6F3FF; } /* Pale blue */
-    .bg-light-blue-200 { background-color: #94CCE7; } /* Light blue for button background */
+    .bg-light-blue-50 { background-color: #F0F8FF; } /* Very light/Off-white background - based on #94CCE7 light tint */
+    .bg-light-blue-100 { background-color: #E6F3FF; } /* Pale blue (used for hover on light items) */
+    .bg-light-blue-200 { background-color: #94CCE7; } /* Pale Blue (Button Background/Border) */
     .hover\\:bg-light-blue-300:hover { background-color: #79BDE1; } /* Slightly darker light blue for hover */
     .border-light-blue-200 { border-color: #94CCE7; } /* Border for review cards */
     
-    /* Reintroducing standard yellow for star ratings */
+    /* Star Ratings */
     .text-yellow-500 { color: #F59E0B; } 
-
-
+    
     .font-serif { font-family: 'Georgia', serif; }
   `;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Inject custom styles for the color theme */}
+    <div className="min-h-screen bg-white w-full">
+      {/* Inject custom styles for the color theme and the crucial width reset */}
       <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
       <Header />
       <main>
