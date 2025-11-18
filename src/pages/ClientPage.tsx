@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+// 🎯 ADDED LINK FOR ROUTING
+import { Link } from "react-router-dom";
 import {
   Flower,
   Star,
@@ -18,7 +20,7 @@ import {
   Quote, // New icon for Testimonials
 } from "lucide-react";
 
-// --- Data Structures ---
+// --- Data Structures (Same as before) ---
 
 // Mock data for the services section
 const servicesData = [
@@ -134,57 +136,7 @@ const BenefitAccordion: React.FC<{
   </div>
 );
 
-/**
- * Header and Navigation Component
- */
-const Header: React.FC = () => {
-  return (
-    <header className="fixed top-0 left-0 w-full bg-white bg-opacity-95 shadow-lg z-50 backdrop-blur-sm">
-      {/* Container is now max-w-7xl mx-auto to match the intended content width */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        {/* Logo Section */}
-        <div className="flex items-center space-x-2 text-xl font-serif text-gray-800">
-          <Flower className="w-6 h-6 text-dark-blue-600" />
-          <span className="font-bold tracking-wider">Flexora</span>
-          <span className="text-sm text-gray-500 ml-4 hidden sm:inline">
-            Physical Therapy
-          </span>
-        </div>
-
-        {/* Navigation Links */}
-        <nav className="hidden lg:flex space-x-8 text-gray-600 font-medium">
-          {["Home", "About", "Services", "Reviews", "Blog", "Contact us"].map(
-            (item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
-                className="hover:text-dark-blue-600 transition duration-150"
-              >
-                {item}
-              </a>
-            )
-          )}
-        </nav>
-
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-4">
-          <button className="flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-light-blue-100 transition duration-150">
-            {/* 💡 Star color set to yellow-500 */}
-            <Star className="w-5 h-5 text-yellow-500" />
-          </button>
-          <button className="flex items-center px-4 py-2 bg-dark-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-dark-blue-700 transition duration-300">
-            <CalendarCheck className="w-5 h-5 mr-2" />
-            Appointment
-          </button>
-          {/* Changed 'Buy now' button color to dark-blue-600 */}
-          <button className="hidden sm:inline px-4 py-2 bg-dark-blue-600 text-white font-semibold rounded-full hover:bg-dark-blue-700 transition duration-300">
-            Buy now
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-};
+// ❌ REMOVED: The custom Header component is removed.
 
 /**
  * Hero Section
@@ -198,8 +150,8 @@ const Hero: React.FC = () => {
   return (
     <section
       id="home"
-      // Added w-full and overflow-hidden is key for background sections
-      className="pt-24 min-h-[80vh] relative w-full overflow-hidden flex justify-center items-center"
+      // ✅ MODIFIED: Removed pt-24 since global NavBar/Layout handles spacing
+      className="min-h-screen relative w-full overflow-hidden flex justify-center items-center" 
     >
       {/* Background Media Container (full width) */}
       <div className="absolute z-0 w-full h-full inset-0">
@@ -286,7 +238,6 @@ const AboutUs: React.FC = () => {
 
   return (
     <section
-      id="about"
       className="py-20 relative bg-light-blue-50 w-full" // Use lightest background
       style={{
         // Apply background pattern if available
@@ -994,9 +945,10 @@ const AppointmentFooter: React.FC = () => {
                 </h4>
                 <ul className="space-y-2 text-gray-300 text-sm">
                   <li>
-                    <a href="#about" className="hover:text-light-blue-400">
+                    {/* Changed to Link for routing */}
+                    <Link to="/about" className="hover:text-light-blue-400">
                       About
-                    </a>
+                    </Link>
                   </li>
                   <li>
                     <a href="#reviews" className="hover:text-light-blue-400">
@@ -1009,7 +961,7 @@ const AppointmentFooter: React.FC = () => {
                     </a>
                   </li>
                   <li>
-                    <a href="#contact" className="hover:text-light-blue-400">
+                    <a href="#contact-us" className="hover:text-light-blue-400">
                       Contact
                     </a>
                   </li>
@@ -1139,7 +1091,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-white w-full">
       {/* Inject custom styles for the color theme and the crucial width reset */}
       <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
-      <Header />
+      {/* ❌ Header component removed */}
       <main>
         {/* --- SECTION ORDER UPDATED AS PER YOUR REQUEST --- */}
         <Hero /> {/* 1. Massage for Your Body & Mind */}
