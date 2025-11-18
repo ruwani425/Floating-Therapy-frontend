@@ -29,6 +29,7 @@ import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import SignupPage from "./pages/SignUpPage";
 import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
 
 export default function App() {
   return (
@@ -42,7 +43,7 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="About" element={<AboutPage />} />
-
+            <Route path="contact-us" element={<ContactPage />}/>
             {/* PROTECTED ADMIN ROUTES: Protected by the <ProtectedRoute /> element */}
             <Route path="admin" element={<ProtectedRoute />}>
               {/* These routes are only accessible if ProtectedRoute allows rendering the Outlet */}

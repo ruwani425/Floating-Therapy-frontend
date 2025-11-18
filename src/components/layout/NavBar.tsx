@@ -9,8 +9,9 @@ import {
     CalendarCheck,
     Phone,
 } from "lucide-react";
-import type { AdminCardProps } from "../../types";
+import type { AdminCardProps } from "../../types"; // Assuming this type is available
 
+// --- Client Navigation Component ---
 
 // This utility component contains the client-facing navigation logic
 const ClientNavigation: React.FC<{ location: ReturnType<typeof useLocation> }> = ({ location }) => {
@@ -49,17 +50,22 @@ const ClientNavigation: React.FC<{ location: ReturnType<typeof useLocation> }> =
             >
                 Blog
             </a>
-            <a
-                href={isHomePage ? "#contact-us" : "/#contact-us"}
-                className="hover:text-dark-blue-600 transition duration-150"
+            {/* The 'Contact us' link is now a NavLink to the specific page route */}
+            <NavLink
+                to="/contact-us" 
+                className={({ isActive }) => 
+                    `hover:text-dark-blue-600 transition duration-150 ${isActive ? 'text-dark-blue-600 font-semibold' : ''}`
+                }
             >
                 Contact us
-            </a>
+            </NavLink>
             {/* Keeping Admin access hidden or under a different condition for a pure client nav */}
         </nav>
     );
 }
 
+
+// --- Main NavBar Component ---
 
 const NavBar: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -126,6 +132,8 @@ const NavBar: React.FC = () => {
   );
 };
 
+// --- Layout Component (where styles are injected) ---
+
 export const Layout: React.FC = () => {
   const location = useLocation();
 
@@ -152,16 +160,15 @@ export const Layout: React.FC = () => {
             .bg-light-blue-50 { background-color: #F0F8FF; }
             .bg-light-blue-100 { background-color: #E6F3FF; } 
             .bg-light-blue-200 { background-color: #94CCE7; } 
-             .bg-light-blue-400 { background-color: #2DA0CC; } 
+             .bg-light-blue-400 { background-color: #2DA0CC; } 
             .hover\\:bg-light-blue-300:hover { background-color: #79BDE1; } 
-             .hover\\:bg-light-blue-400:hover { background-color: #2DA0CC; } 
+             .hover\\:bg-light-blue-400:hover { background-color: #2DA0CC; } 
           `,
         }}
       />
       
       {!shouldHideNavbar && <NavBar />}{" "}
       
-      {/* FIX APPLIED HERE: The bottom padding (pb-6) is removed to allow the footer to sit flush. */}
       <main className="w-full mx-auto pb-0"> 
         <Outlet />
       </main>
