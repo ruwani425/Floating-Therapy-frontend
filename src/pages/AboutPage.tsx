@@ -1,9 +1,9 @@
 import React from "react";
 // ADDED MapPin to imports
 import { Award, Clock, DollarSign, Flower, HeartHandshake, Quote, MapPin } from "lucide-react";
+import Footer from "../components/layout/Footer";
 
-// --- Data Structures (Reused/Adapted) ---
-
+// --- Data Structures (Remains the same) ---
 const coreBenefits = [
   {
     title: "Flat Fee",
@@ -39,10 +39,12 @@ const coreBenefits = [
 
 /**
  * Section 1: Hero/Banner
+ * FIX: Increased padding to pt-40 to ensure content clears the fixed NavBar, 
+ * based on the latest screenshot showing overlap.
  */
 const AboutHero: React.FC = () => {
   return (
-    <section className="pt-32 pb-20 bg-white w-full text-center">
+    <section className="pt-40 pb-20 bg-white w-full text-center">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-6xl font-serif font-bold text-gray-900 mb-4">
           About
@@ -56,13 +58,14 @@ const AboutHero: React.FC = () => {
 };
 
 /**
- * Section 2 & 3: Our Story, Experience, and Philosophy
+ * Section 2 & 3: Our Story, Experience, and Philosophy (Remains the same)
  */
 const StoryAndPhilosophy: React.FC = () => {
   const storyImageUrl = "/GettyImages-2222455931-683x1024.jpg";
   const trainingImageUrl = "/GettyImages-489204244-801x1024.jpg";
 
   return (
+    // Applied bg-light-blue-50
     <section className="py-20 bg-light-blue-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start mb-20">
@@ -124,6 +127,7 @@ const StoryAndPhilosophy: React.FC = () => {
                 "Doctor of Chiropractic (D.C.) by the Council on Chiropractic Education (CCE)",
               ].map((item, index) => (
                 <li key={index} className="flex items-start">
+                  {/* Applied text-dark-blue-600 */}
                   <Flower className="w-5 h-5 text-dark-blue-600 mr-3 mt-1 flex-shrink-0" />
                   <span>{item}</span>
                 </li>
@@ -138,6 +142,7 @@ const StoryAndPhilosophy: React.FC = () => {
                 style={{ backgroundImage: `url(${trainingImageUrl})` }}
               ></div>
               <div className="absolute bottom-4 left-4 p-2 bg-white rounded-lg shadow-md">
+                {/* Applied text-dark-blue-600 */}
                 <p className="text-sm font-semibold text-dark-blue-600">
                   Dr. Kevin Morra
                 </p>
@@ -170,6 +175,7 @@ const BenefitBlock: React.FC<{ benefit: typeof coreBenefits[number]; alignment: 
   const isLeft = alignment === 'left';
   return (
     <div className={`flex flex-col p-4 w-full max-w-[220px] ${isLeft ? 'items-end text-right ml-auto mr-0' : 'items-start text-left mr-0 ml-auto'}`}>
+      {/* Applied text-dark-blue-600 */}
       <div className="flex items-center mb-2 text-dark-blue-600">
         {isLeft && <h3 className="text-xl font-semibold text-gray-900 mr-2">{benefit.title}</h3>}
         <Flower className="w-5 h-5" />
@@ -186,7 +192,7 @@ const BenefitBlock: React.FC<{ benefit: typeof coreBenefits[number]; alignment: 
  * Section 4: What Clients Can Expect? (Image and Text - UPDATED)
  */
 const ClientExpectation: React.FC = () => {
-  const expectImageUrl = "/GettyImages-489204244-801x1024.jpg"; 
+  const expectImageUrl = "/GettyImages-489204244-801x1024.jpg";
   const benefitImageUrl = "/GettyImages-489204244-801x1024.jpg";
 
   const getBenefit = (position: string) => coreBenefits.find(b => b.position === position);
@@ -194,25 +200,31 @@ const ClientExpectation: React.FC = () => {
   return (
     <section className="py-20 bg-white w-full text-center">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <div className="mb-12 flex justify-center">
           <img
-            src={expectImageUrl} 
+            src={expectImageUrl}
             alt="Expertise.com Badge"
             className="h-24 w-auto"
             style={{
               clipPath: "polygon(10% 0, 90% 0, 100% 100%, 0% 100%)",
             }}
+            onError={(e) => {
+               (e.target as HTMLImageElement).onerror = null;
+               (e.target as HTMLImageElement).src =
+                 "https://placehold.co/400x450/94CCE7/000?text=Expertise+Badge"; // Using Lightest Blue for placeholder BG
+            }}
           />
         </div>
 
+        {/* Applied text-dark-blue-600 */}
         <p className="text-xs tracking-widest uppercase text-dark-blue-600 font-semibold mb-2">
           YOUR EXPERIENCE
         </p>
         <h2 className="text-5xl font-serif font-bold text-gray-900 mb-8">
           What Clients Can Expect?
         </h2>
-        
+
         <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
           From your first visit, we focus on making you feel welcome and at ease. Every session begins with a
           short consultation to understand your needs and ends with practical guidance for lasting results.
@@ -220,16 +232,17 @@ const ClientExpectation: React.FC = () => {
         </p>
 
         <div className="relative flex justify-center mx-auto max-w-5xl px-4 md:px-0">
-          
+
           <img
             src={benefitImageUrl}
             alt="Central physical therapy image"
             className="w-full max-w-md h-[450px] object-cover rounded-xl shadow-2xl z-10"
-            style={{ borderRadius: '20px' }} 
+            style={{ borderRadius: '20px' }}
             onError={(e) => {
               (e.target as HTMLImageElement).onerror = null;
+              // Using Lightest Blue for placeholder BG
               (e.target as HTMLImageElement).src =
-                "https://placehold.co/400x450/E6F3FF/000?text=Therapy+Image";
+                "https://placehold.co/400x450/94CCE7/000?text=Therapy+Image";
             }}
           />
 
@@ -238,14 +251,15 @@ const ClientExpectation: React.FC = () => {
               <BenefitBlock benefit={getBenefit("left-top")!} alignment={'left'} />
               <BenefitBlock benefit={getBenefit("left-bottom")!} alignment={'left'} />
             </div>
-            
+
             <div className="flex flex-col justify-between h-full">
               <BenefitBlock benefit={getBenefit("right-top")!} alignment={'right'} />
               <BenefitBlock benefit={getBenefit("right-bottom")!} alignment={'right'} />
             </div>
           </div>
-          
+
         </div>
+
       </div>
     </section>
   );
@@ -256,9 +270,10 @@ const ClientExpectation: React.FC = () => {
  * Section 6: The Space - Calming Retreat
  */
 const TheSpace: React.FC = () => {
-  const image1 = "/GettyImages-200112735-001-801x1024.jpg"; 
-  const image2 = "/GettyImages-2222455863.webp"; 
-  const image3 = "/pexels-arina-krasnikova-6663372.webp"; 
+// ... (TheSpace content remains the same)
+  const image1 = "/GettyImages-200112735-001-801x1024.jpg";
+  const image2 = "/GettyImages-2222455863.webp";
+  const image3 = "/pexels-arina-krasnikova-6663372.webp";
 
   const ClipStyle = {
     clipPath: "polygon(0 10%, 100% 0, 100% 100%, 0% 90%)",
@@ -272,6 +287,7 @@ const TheSpace: React.FC = () => {
         </p>
         <h2 className="text-5xl font-serif font-bold text-gray-900 mb-12">
           A Calming Retreat Designed for Your Comfort
+
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -284,12 +300,13 @@ const TheSpace: React.FC = () => {
             <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${image2})` }}></div>
           </div>
 
+          {/* Applied bg-light-blue-50, text-dark-blue-600 */}
           <div className="relative h-[450px] bg-light-blue-50 rounded-xl shadow-xl overflow-hidden flex flex-col justify-between">
             <div className="h-1/2 w-full bg-cover bg-center" style={{ backgroundImage: `url(${image3})`, ...ClipStyle }}></div>
             <div className="flex-1 flex flex-col justify-center items-center p-6 text-gray-800">
-              
-              <MapPin className="w-8 h-8 text-dark-blue-600 mb-4" /> 
-              
+
+              <MapPin className="w-8 h-8 text-dark-blue-600 mb-4" />
+
               <div className="text-center">
                 <span className="text-lg font-semibold font-serif">San Francisco</span>
                 <p className="text-sm text-gray-600 mt-2">
@@ -308,6 +325,7 @@ const TheSpace: React.FC = () => {
  * Section 7: Reviews/Testimonials (Adapted from HomePage)
  */
 const Reviews: React.FC = () => {
+// ... (Reviews content remains the same)
   const testimonials = [
     {
       quote: "After a sports injury, I was worried I'd never regain full mobility. The chiropractic care I received here not only helped me recover faster, but also strengthened areas I hadn't even realized were weak.",
@@ -326,12 +344,13 @@ const Reviews: React.FC = () => {
     },
     {
       quote: "I look forward to my massage every week—it’s the only time I truly disconnect and reset. The therapists are intuitive and professional. This place is magic.",
-      author: "MARCUS LEROY", 
+      author: "MARCUS LEROY",
       position: "bottom-right"
     },
   ];
 
   return (
+    // Applied bg-light-blue-50
     <section id="reviews" className="py-20 bg-light-blue-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
@@ -348,6 +367,7 @@ const Reviews: React.FC = () => {
 
           <div className="lg:col-span-1 flex flex-col items-center justify-between space-y-8">
             <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200 w-full text-center">
+              {/* Applied text-dark-blue-600 */}
               <p className="text-6xl font-bold font-serif text-dark-blue-600 mb-2">
                 4.9
               </p>
@@ -357,6 +377,7 @@ const Reviews: React.FC = () => {
               <p className="text-sm text-gray-600">
                 220+ Reviews on Google
               </p>
+              {/* Applied bg-light-blue-200, text-dark-blue-800, hover:bg-light-blue-300 */}
               <button className="mt-4 px-4 py-2 bg-light-blue-200 text-dark-blue-800 rounded-full text-sm hover:bg-light-blue-300 transition duration-150">
                 Read All Reviews
               </button>
@@ -376,6 +397,7 @@ const Reviews: React.FC = () => {
           <ReviewCard data={testimonials[2]} />
           <ReviewCard data={testimonials[3]} />
         </div>
+
       </div>
     </section>
   );
@@ -385,115 +407,20 @@ const Reviews: React.FC = () => {
  * Review Card Helper Component
  */
 const ReviewCard: React.FC<{ data: { quote: string, author: string, position: string } }> = ({ data }) => (
+// ... (ReviewCard content remains the same)
+  // Applied border border-light-blue-200
   <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200">
+    {/* Applied text-dark-blue-600 */}
     <Quote className="w-8 h-8 text-dark-blue-600 mb-4 transform -scale-x-100" />
     <p className="text-lg text-gray-700 leading-relaxed mb-6">
       {data.quote}
     </p>
+    {/* Applied text-dark-blue-800 */}
     <p className="font-semibold text-dark-blue-800 uppercase text-sm tracking-wider">
       {data.author}
     </p>
   </div>
 );
-/**
- * Section 8: Appointment Booking and Footer Section (Adapted for About Page Style)
- * MODIFIED: Changed hardcoded style to use the Tailwind utility class bg-dark-blue-600.
- */
-const AboutFooter: React.FC = () => {
-  
-  return (
-    <footer
-      className="relative pt-20 pb-0 bg-cover bg-center text-white w-full bg-dark-blue-600"
-    >
-      {/* Curved top shape (Simplified using a border) */}
-      <div className="absolute top-0 left-0 right-0 h-10 bg-white" style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)", transform: "translateY(-40px)" }}></div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Top Section: Address, Hours, Logo, CTA */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center text-sm font-semibold mb-10 text-gray-300 space-x-12">
-            <div>
-              <p className="uppercase tracking-widest mb-2">ADDRESS</p>
-              <p>200 Sutter St Suite 602 San</p>
-              <p>Francisco, CA 94108</p>
-            </div>
-            <div>
-              <p className="uppercase tracking-widest mb-2">OFFICE HOURS</p>
-              <p>Mon–Thu: 7:30 AM–7:30 PM</p>
-              <p>Friday: 8:00 AM–4:30 PM</p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center space-x-2 text-3xl font-serif font-bold text-white mb-8">
-            <Flower className="w-8 h-8 text-white" />
-            <span className="tracking-wider">Flexora</span>
-            </div>
-
-          <div className="flex flex-wrap justify-center items-center space-x-6">
-            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300">
-              (422) 820 820
-            </button>
-            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300">
-              <Flower className="w-5 h-5 mr-2" />
-              Book Appointment
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom Section: Footer Links */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-600 pt-10 text-sm">
-          {/* ABOUT */}
-          <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">ABOUT</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Who we are</li>
-              <li>Reviews</li>
-              <li>Blog</li>
-              <li>Contact us</li>
-            </ul>
-          </div>
-          {/* SERVICES */}
-          <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">SERVICES</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Chiropractic Care</li>
-              <li>Medical Massage</li>
-              <li>Chronic Pain</li>
-              <li>Posture Correction</li>
-              <li>Sport Injuries</li>
-            </ul>
-          </div>
-          {/* CONDITIONS */}
-          <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">CONDITIONS</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Back pain</li>
-              <li>Neck pain</li>
-              <li>Headaches/migraines</li>
-              <li>Sciatica</li>
-              <li>Shoulder Pain</li>
-            </ul>
-          </div>
-          {/* PATIENTS */}
-          <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">PATIENTS</h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Patient Paperwork</li>
-              <li>Book an appointment</li>
-              <li>FAQ</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center text-xs text-gray-400 py-2">
-        &copy; {new Date().getFullYear()} Flexora. All rights reserved.
-      </div>
-    </footer>
-  );
-};
-
 
 // --- Main About Page Component (Wrapper) ---
 
@@ -504,24 +431,44 @@ const AboutFooter: React.FC = () => {
  */
 const AboutPage: React.FC = () => {
 
+  // Define custom styles *locally* for immediate use in this file,
+  // matching the palette provided by the user image.
   const CustomStyle = `
+    /* Palette from Image: #94CCE7, #2DA0CC, #0873A1, #035C84 */
+    
+    /* Darkest Blue: #035C84 (Was 600) */
     .text-dark-blue-600 { color: #035C84; }
     .bg-dark-blue-600 { background-color: #035C84; }
-    .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; }
-    .text-dark-blue-800 { color: #003F5C; }
     .border-dark-blue-600 { border-color: #035C84; }
-    .text-light-blue-400 { color: #2DA0CC; }
-    .bg-light-blue-50 { background-color: #F0F8FF; }
-    .bg-light-blue-100 { background-color: #E6F3FF; }
+    
+    /* Medium Dark Blue: #0873A1 (Was 700/800) - Used for strong hover/secondary text */
+    .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; }
+    .text-dark-blue-800 { color: #0873A1; } 
+    
+    /* Medium Light Blue: #2DA0CC (Was 400) */
+    .text-light-blue-400 { color: #2DA0CC; } 
+    
+    /* Lightest Blue: #94CCE7 (Was 200) - Used for light background/borders/buttons */
     .bg-light-blue-200 { background-color: #94CCE7; }
-    .hover\\:bg-light-blue-300:hover { background-color: #79BDE1; }
     .border-light-blue-200 { border-color: #94CCE7; }
+    
+    /* Slight variation for button hover/BG: Use the Medium Light Blue */
+    .hover\\:bg-light-blue-300:hover { background-color: #2DA0CC; } 
+    
+    /* Very Light Background: #F0F8FF (Lightest Blue from original design for a near-white background) */
+    .bg-light-blue-50 { background-color: #F0F8FF; } 
+    .bg-light-blue-100 { background-color: #E6F3FF; } /* Kept as a near white alternative */
+    
+    /* Accent Color (Yellow for Stars) */
     .text-yellow-500 { color: #F59E0B; }
+    
+    /* Font */
     .font-serif { font-family: 'Georgia', serif; }
   `;
 
   return (
     <div className="min-h-screen bg-white w-full">
+      {/* Inject custom styles for local rendering if not global */}
       <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
       <main>
         <AboutHero />
@@ -529,8 +476,8 @@ const AboutPage: React.FC = () => {
         <ClientExpectation />
         <TheSpace />
         <Reviews />
+        <Footer />
       </main>
-      <AboutFooter />
     </div>
   );
 };

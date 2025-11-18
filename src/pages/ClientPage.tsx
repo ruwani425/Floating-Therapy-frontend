@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-// 🎯 ADDED LINK FOR ROUTING
 import { Link } from "react-router-dom";
 import {
   Flower,
@@ -19,6 +18,7 @@ import {
   Twitter,
   Quote, // New icon for Testimonials
 } from "lucide-react";
+import Footer from "../components/layout/Footer";
 
 // --- Data Structures (Same as before) ---
 
@@ -28,7 +28,6 @@ const servicesData = [
     title: "Swedish Massage",
     description:
       "Gentle, full-body massage that relaxes muscles and reduces stress.",
-    // 💡 Image URL is pulled from the servicesData mock array
     image: "/GettyImages-2222455931-683x1024.jpg",
   },
   {
@@ -136,13 +135,11 @@ const BenefitAccordion: React.FC<{
   </div>
 );
 
-// ❌ REMOVED: The custom Header component is removed.
 
 /**
  * Hero Section
  */
 const Hero: React.FC = () => {
-  // 💡 Using a representative path relative to the public root folder
   const heroVideoUrl =
     "/pexels.com_video_woman-doing-a-back-massage-6628400.webm";
   const isPlaceholder = heroVideoUrl.includes("YOUR_");
@@ -150,12 +147,10 @@ const Hero: React.FC = () => {
   return (
     <section
       id="home"
-      // ✅ MODIFIED: Removed pt-24 since global NavBar/Layout handles spacing
       className="min-h-screen relative w-full overflow-hidden flex justify-center items-center" 
     >
       {/* Background Media Container (full width) */}
       <div className="absolute z-0 w-full h-full inset-0">
-        {/* 💡 Background Video Element */}
         {!isPlaceholder && (
           <video
             autoPlay
@@ -174,7 +169,6 @@ const Hero: React.FC = () => {
             isPlaceholder ? "bg-cover bg-center" : ""
           }`}
           style={{
-            // 💡 If no actual video URL is provided, replace this static image URL
             backgroundImage: isPlaceholder
               ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('YOUR_HERO_STATIC_IMAGE_URL')`
               : "none",
@@ -201,7 +195,6 @@ const Hero: React.FC = () => {
           </button>
           <div className="mt-8">
             <p className="text-sm text-gray-200">
-              {/* 💡 Star rating set to yellow-500 */}
               <span className="text-yellow-500 text-xl">★★★★★</span> TRUSTED BY
               1000+ PATIENTS
             </p>
@@ -229,10 +222,8 @@ const Hero: React.FC = () => {
  * About Us Section with Image and Text Split
  */
 const AboutUs: React.FC = () => {
-  // 💡 Your custom image URL for the central subject image
   const centerImageUrl = "/GettyImages-1322320699-1.jpg";
 
-  // 💡 Your custom URL for the subtle background pattern
   const backgroundPattern = "/pattern_bg.jpg";
   const hasPattern = backgroundPattern.includes("YOUR_") === false;
 
@@ -295,7 +286,6 @@ const AboutUs: React.FC = () => {
                 className="absolute inset-0 z-0 rounded-t-[50%] rounded-b-xl transform -translate-y-4 shadow-2xl overflow-hidden"
                 style={{ backgroundColor: "#E6F3FF" /* Light blue fallback */ }}
               >
-                {/* 💡 CENTRAL IMAGE APPLIED HERE AS BACKGROUND */}
                 <div
                   className="w-full h-full bg-cover bg-center"
                   style={{ backgroundImage: `url(${centerImageUrl})` }}
@@ -400,7 +390,6 @@ const Services: React.FC = () => {
               {/* Image with rounded bottom corners to match screenshot aesthetic */}
               <div
                 className="relative h-64 bg-cover bg-center rounded-t-xl"
-                // 💡 Image URL is pulled from the servicesData mock array
                 style={{ backgroundImage: `url(${service.image})` }}
                 onError={(e) => {
                   (e.target as HTMLImageElement).onerror = null;
@@ -470,7 +459,6 @@ const Reviews: React.FC = () => {
                 4.9
               </p>
               <div className="text-yellow-500 text-3xl mb-2">
-                {/* 💡 Star rating set to yellow-500 */}
                 ★★★★★
               </div>
               <p className="text-sm text-gray-600">220+ Reviews on Google</p>
@@ -522,10 +510,8 @@ const BenefitsFAQ: React.FC = () => {
     setOpenBenefitId(openBenefitId === id ? 0 : id);
   };
 
-  // 💡 Your custom image URL for the main subject image
   const benefitImageUrl = "/GettyImages-1208634923.jpg";
 
-  // 💡 NEW MARKER: URL for the background pattern/texture *behind* the main image
   const benefitBackgroundUrl = "/pattern_bg.jpg";
   const hasBackground = benefitBackgroundUrl.includes("YOUR_") === false;
 
@@ -553,7 +539,6 @@ const BenefitsFAQ: React.FC = () => {
 
             <div className="relative p-6">
               <img
-                // 💡 Image source here
                 src={benefitImageUrl}
                 alt="Therapy benefits visualization"
                 className="w-full h-auto object-cover rounded-xl shadow-2xl"
@@ -602,7 +587,6 @@ const BenefitsFAQ: React.FC = () => {
  * Why Choose Us Section
  */
 const WhyChooseUs: React.FC = () => {
-  // 💡 MARKER: REPLACE THIS URL with your central 'Why Choose Us' image
   const centerImageUrl = "/pexels-arina-krasnikova-6663372-1.jpg";
 
   // Data for the 4 core benefits
@@ -640,7 +624,6 @@ const WhyChooseUs: React.FC = () => {
   return (
     <section id="why-choose-us" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Use lightest background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-4">
@@ -657,7 +640,6 @@ const WhyChooseUs: React.FC = () => {
 
           {/* Central Image with rounded clip-path */}
           <img
-            // 💡 Image source here
             src={centerImageUrl}
             alt="Central massage image"
             className="w-96 h-[500px] object-cover rounded-full shadow-2xl z-10"
@@ -720,13 +702,11 @@ const MeetOurTherapist: React.FC = () => {
     {
       name: "Hana Gregson",
       title: "FOUNDER / MASSAGE THERAPIST",
-      // 💡 REPLACE THIS URL with Hana's image
       image: "/GettyImages-1324943018-2-1024x600.jpg",
     },
     {
       name: "Lisa Simonelli",
       title: "MASSAGE THERAPIST",
-      // 💡 REPLACE THIS URL with Lisa's image
       image: "/GettyImages-sb10064081j-002-1024x600.jpg",
     },
   ];
@@ -734,7 +714,6 @@ const MeetOurTherapist: React.FC = () => {
   return (
     <section id="therapist" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Use lightest background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
@@ -796,7 +775,6 @@ const Blog: React.FC = () => {
   return (
     <section id="blog" className="py-20 bg-white w-full">
       {" "}
-      {/* Use white background */}
       {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
@@ -808,13 +786,11 @@ const Blog: React.FC = () => {
           </button>
         </div>
 
-        {/* Blog Post Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {blogData.map((post, index) => (
             <div key={index} className="space-y-4">
               <div
                 className="h-64 bg-cover bg-center rounded-xl shadow-lg"
-                // 💡 Image source here
                 style={{ backgroundImage: `url(${post.image})` }}
                 onError={(e) => {
                   (e.target as HTMLImageElement).onerror = null;
@@ -839,24 +815,21 @@ const Blog: React.FC = () => {
 /**
  * Call to Action Section (Why Wait to Feel Better?)
  */ const CtaWhyWait: React.FC = () => {
-  // 💡 URL for the background video (relative path from public folder)
   const ctaVideoUrl =
     "/pexels.com_video_woman-doing-a-back-massage-6628400.webm";
 
   return (
     <section
       id="cta-wait"
-      // Use 'relative' for the content to be positioned relative to this section
       className="py-20 relative overflow-hidden flex justify-center items-center w-full" // Added w-full
       style={{ minHeight: "400px" }}
     >
-      {/* Background Media Container (full width) - z-0 */}
       <div className="absolute z-0 w-full h-full inset-0">
         <video
           autoPlay
           loop
           muted
-          playsInline // Important for mobile devices
+          playsInline 
           className="w-full h-full object-cover"
         >
           <source src={ctaVideoUrl} type="video/mp4" />
@@ -864,12 +837,9 @@ const Blog: React.FC = () => {
         </video>
       </div>
 
-      {/* 💡 NEW: Dedicated Overlay Div (z-10) */}
       <div
         className="absolute z-10 w-full h-full inset-0"
         style={{
-          // This applies a fixed, dark, semi-transparent overlay *over* the video (z-0)
-          // but *under* the main content (z-20)
           backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark overlay
         }}
       ></div>
@@ -901,158 +871,11 @@ const Blog: React.FC = () => {
     </section>
   );
 };
-/**
- * Appointment Booking and Footer Section
- */
-const AppointmentFooter: React.FC = () => {
-  return (
-    <footer
-      className="relative py-20 bg-cover bg-center text-white w-full" // Added w-full
-      // 💡 Ensure background stretches full width, using the darkest blue for the footer
-      style={{ backgroundColor: "#035C84" }} // Keeping the primary dark blue from the palette
-    >
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left Column: Stay Connected & Footer Menu */}
-          <div className="space-y-10">
-            {/* Stay Connected (Newsletter) */}
-            <div className="space-y-4">
-              <h3 className="text-3xl font-serif font-bold text-white">
-                Stay Connected
-              </h3>
-              <p className="text-gray-300">
-                Never miss our special massage offers and the latest wellness
-                news!
-              </p>
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="px-4 py-3 w-full sm:w-2/3 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-light-blue-200"
-                />
-                <button className="px-6 py-3 bg-light-blue-200 text-dark-blue-800 font-semibold rounded-full hover:bg-light-blue-300 transition duration-300 w-full sm:w-1/3">
-                  Send
-                </button>
-              </div>
-            </div>
-
-            {/* Menu & Services Links */}
-            <div className="grid grid-cols-2 gap-8 pt-8">
-              <div>
-                <h4 className="text-xl font-semibold mb-4 text-light-blue-400">
-                  Menu
-                </h4>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  <li>
-                    {/* Changed to Link for routing */}
-                    <Link to="/about" className="hover:text-light-blue-400">
-                      About
-                    </Link>
-                  </li>
-                  <li>
-                    <a href="#reviews" className="hover:text-light-blue-400">
-                      Reviews
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#blog" className="hover:text-light-blue-400">
-                      Blog
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#contact-us" className="hover:text-light-blue-400">
-                      Contact
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-xl font-semibold mb-4 text-light-blue-400">
-                  Services
-                </h4>
-                <ul className="space-y-2 text-gray-300 text-sm">
-                  {servicesData.map((service, index) => (
-                    <li key={index}>
-                      <a
-                        href={`#service-${index}`}
-                        className="hover:text-light-blue-400"
-                      >
-                        {service.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Appointment Booking Card */}
-          <div className="flex justify-end lg:justify-start">
-            <div className="bg-white p-8 rounded-2xl shadow-2xl text-gray-800 max-w-sm w-full">
-              <h3 className="text-2xl font-serif font-bold mb-6">
-                Book an Appointment
-              </h3>
-
-              {/* Contact Details */}
-              <ul className="space-y-4 text-sm">
-                <li className="flex items-start">
-                  <MapPin className="w-4 h-4 mr-3 mt-1 text-dark-blue-600 flex-shrink-0" />
-                  <span>200 Sutter St Suite 602 San Francisco</span>
-                </li>
-                <li className="flex items-start">
-                  <Clock className="w-4 h-4 mr-3 mt-1 text-dark-blue-600 flex-shrink-0" />
-                  <span>
-                    Mon–Thu 7:30 AM–7:30 PM / Fri–Day 8:00 AM–4:30 PM
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <Mail className="w-4 h-4 mr-3 mt-1 text-dark-blue-600 flex-shrink-0" />
-                  <span>contact@flexora.com</span>
-                </li>
-              </ul>
-
-              <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-200">
-                <button className="flex items-center px-4 py-2 bg-light-blue-200 text-dark-blue-800 rounded-full hover:bg-light-blue-300 transition duration-300">
-                  <CalendarCheck className="w-4 h-4 mr-2" />
-                  Book Now
-                </button>
-                <div className="text-lg font-semibold text-dark-blue-800">
-                  (422) 820 820
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Footer Strip */}
-      <div className="relative border-t border-dark-blue-700 mt-12 pt-6 text-center text-sm text-gray-300">
-        {/* 💡 Container is max-w-7xl mx-auto to contain the content width */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <p>&copy; {new Date().getFullYear()} Flexora. All rights reserved.</p>
-          <div className="flex space-x-6">
-            <a href="#" className="hover:text-light-blue-400">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-light-blue-400">
-              Privacy Policy
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
-
-// --- Main App Component (Wrapper) ---
 
 /**
  * Main wrapper for the Flexora homepage.
- * Uses a palette of soft blues to match the calming, professional theme.
  */
 const HomePage: React.FC = () => {
-  // Define custom colors based on the requested palette
   const CustomStyle = `
     /* ** CRITICAL FIX: RESET BODY/HTML MARGINS ** */
     html, body {
@@ -1089,22 +912,19 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white w-full">
-      {/* Inject custom styles for the color theme and the crucial width reset */}
       <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
-      {/* ❌ Header component removed */}
       <main>
-        {/* --- SECTION ORDER UPDATED AS PER YOUR REQUEST --- */}
-        <Hero /> {/* 1. Massage for Your Body & Mind */}
-        <AboutUs /> {/* 2. Professional Care, Inspired by Nature */}
-        <Services /> {/* 3. Begin Your Journey to Better Health */}
-        <WhyChooseUs /> {/* 4. Care That Goes Beyond the Massage */}
-        <BenefitsFAQ /> {/* 5. How Massage Therapy Transforms Your Body */}
-        <MeetOurTherapist /> {/* 6. Meet Our Therapist */}
-        <CtaWhyWait /> {/* 7. Why Wait to Feel Better? */}
-        <Reviews /> {/* 8. What Our Clients Say About Us */}
-        <Blog /> {/* 9. Therapist Tips & Wellness Wisdom */}
+        <Hero /> 
+        <AboutUs /> 
+        <Services />
+        <WhyChooseUs /> 
+        <BenefitsFAQ />
+        <MeetOurTherapist /> 
+        <CtaWhyWait />
+        <Reviews />
+        <Blog />
+        <Footer />
       </main>
-      <AppointmentFooter /> {/* 10. Stay Connected... */}
     </div>
   );
 };
