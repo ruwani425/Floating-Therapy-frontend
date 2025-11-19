@@ -1,24 +1,11 @@
-import React, {
-  useState,
-  createContext,
-  useContext,
-  useEffect,
-  type ReactNode,
-  type FormEvent,
-} from "react";
+
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
-  Outlet,
-} from "react-router-dom"; // REMOVED TO PREVENT CONFLICT WITH MOCK IMPLEMENTATIONS
-import type {
-  AdminCardProps,
-  AuthContextType,
-  AuthProviderProps,
-} from "./types";
-import { getCookie, removeCookie, setCookie } from "./utils/cookieUtils";
+} from "react-router-dom";
+
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import NavBar, { Layout } from "./components/layout/NavBar";
 import ClientPage from "./pages/ClientPage";
@@ -30,6 +17,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import SignupPage from "./pages/SignUpPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import BlogPage from "./pages/BlogPage";
 
 export default function App() {
   return (
@@ -43,7 +31,8 @@ export default function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
             <Route path="About" element={<AboutPage />} />
-            <Route path="contact-us" element={<ContactPage />}/>
+            <Route path="contact-us" element={<ContactPage />} />
+            <Route path="blog" element={<BlogPage />} />
             {/* PROTECTED ADMIN ROUTES: Protected by the <ProtectedRoute /> element */}
             <Route path="admin" element={<ProtectedRoute />}>
               {/* These routes are only accessible if ProtectedRoute allows rendering the Outlet */}

@@ -78,7 +78,7 @@ const StoryAndPhilosophy: React.FC = () => {
             </h2>
             <p className="text-lg text-gray-600 space-y-4">
               <p>
-                At Flexora, we believe true health begins with proper alignment. Our mission is simple:
+                At Theta Lounge, we believe true health begins with proper alignment. Our mission is simple:
                 to help people move freely, feel stronger, and live without unnecessary pain.
               </p>
               <p>
@@ -425,7 +425,7 @@ const ReviewCard: React.FC<{ data: { quote: string, author: string, position: st
 // --- Main About Page Component (Wrapper) ---
 
 /**
- * Main wrapper for the Flexora About page.
+ * Main wrapper for the Theta Lounge About page.
  * NOTE: Assumes the necessary color classes (.dark-blue-600, .light-blue-50, etc.)
  * are defined globally or in the Layout component.
  */

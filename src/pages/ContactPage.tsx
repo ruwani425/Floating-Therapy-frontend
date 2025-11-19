@@ -157,7 +157,7 @@ const ContactCardsSection: React.FC = () => {
                     <ContactCard
                         icon={Mail}
                         title="Email"
-                        details="info@flexoraj.com"
+                        details="info@thetalounge.com"
                         buttonText="Write us"
                     />
                 </div>

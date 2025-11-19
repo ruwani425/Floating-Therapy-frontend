@@ -873,7 +873,7 @@ const Blog: React.FC = () => {
 };
 
 /**
- * Main wrapper for the Flexora homepage.
+ * Main wrapper for the Theta Lounge homepage.
  */
 const HomePage: React.FC = () => {
   const CustomStyle = `

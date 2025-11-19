@@ -1,17 +1,15 @@
+// src/components/layout/Footer.tsx
+
 import React from "react";
 import { Flower, CalendarCheck, Star } from "lucide-react";
 
-/**
- * Reusable Footer Component
- * Designed to be imported and used across multiple pages.
- * NOTE: Assumes Tailwind color classes are defined in the main component or globally.
- */
+
 const Footer: React.FC = () => {
   return (
     <footer
       className="relative pt-20 pb-0 bg-cover bg-center text-white w-full bg-dark-blue-600"
     >
-      {/* Curved top shape (matches the screenshot design) */}
+      {/* Curved top shape */}
       <div
         className="absolute top-0 left-0 right-0 h-10 bg-white"
         style={{
@@ -38,7 +36,7 @@ const Footer: React.FC = () => {
 
           <div className="flex items-center justify-center space-x-2 text-3xl font-serif font-bold text-white mb-8">
             <Flower className="w-8 h-8 text-white" />
-            <span className="tracking-wider">Flexora</span>
+            <span className="tracking-wider">Theta Lounge</span>
           </div>
 
           <div className="flex flex-wrap justify-center items-center space-x-6">
