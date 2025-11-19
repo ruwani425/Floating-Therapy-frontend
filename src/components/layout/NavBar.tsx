@@ -2,14 +2,12 @@
 
 import React from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Outlet, NavLink, useNavigate, useLocation, Link } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import {
     Flower,
-    Star,
     CalendarCheck,
     Phone,
 } from "lucide-react";
-import type { AdminCardProps } from "../../types"; // Assuming this type is available
 
 // --- Client Navigation Component ---
 
@@ -39,12 +37,12 @@ const ClientNavigation: React.FC<{ location: ReturnType<typeof useLocation> }> =
             >
                 About
             </Link>
-            <a
-                href={isHomePage ? "#services" : "/#services"}
-                className="hover:text-dark-blue-600 transition duration-150"
+            <Link
+                to="/service" 
+                className={getLinkClassName('/service')} // Changed from NavLink to Link
             >
                 Services
-            </a>
+            </Link>
             <a
                 href={isHomePage ? "#reviews" : "/#reviews"}
                 className="hover:text-dark-blue-600 transition duration-150"

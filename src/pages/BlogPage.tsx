@@ -18,15 +18,15 @@ interface BlogPost {
 }
 
 const initialBlogPosts: BlogPost[] = [
-  { id: 1, category: "PHYSICAL THERAPY", title: "Neck & Back Pain from Remote Work", imageUrl: "path/to/image1.jpg" },
-  { id: 2, category: "PHYSICAL THERAPY", title: "How Physical Therapy Can Transform Your Life", imageUrl: "path/to/image2.jpg" },
-  { id: 3, category: "PHYSICAL THERAPY", title: "Effective Arm Exercises to Tone and Strengthen Your Upper Body", imageUrl: "path/to/image3.jpg" },
-  { id: 4, category: "CARE", title: "A Muscle Imbalance Could Put You at Risk of Injury", imageUrl: "path/to/image4.jpg" },
-  { id: 5, category: "PREGNANCY", title: "Is Chiropractic Care Safe During Pregnancy", imageUrl: "path/to/image5.jpg" },
-  { id: 6, category: "MIGRAINES", title: "Chiropractors May Relieve Migraines", imageUrl: "path/to/image6.jpg" },
-  { id: 7, category: "PHYSICAL THERAPY", title: "How Physical Therapy Speeds Up Injury Recovery", imageUrl: "path/to/image7.jpg" },
-  { id: 8, category: "PHYSICAL THERAPY", title: "Chiropractic Care vs. Pain Medication: What's the Difference?", imageUrl: "path/to/image8.jpg" },
-  { id: 9, category: "SPORTS & PERFORMANCE", title: "Why Athletes Rely on Chiropractic Care for Performance and Recovery", imageUrl: "path/to/image9.jpg" },
+  { id: 1, category: "PHYSICAL THERAPY", title: "Neck & Back Pain from Remote Work", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 2, category: "PHYSICAL THERAPY", title: "How Physical Therapy Can Transform Your Life", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 3, category: "PHYSICAL THERAPY", title: "Effective Arm Exercises to Tone and Strengthen Your Upper Body", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 4, category: "CARE", title: "A Muscle Imbalance Could Put You at Risk of Injury", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 5, category: "PREGNANCY", title: "Is Chiropractic Care Safe During Pregnancy", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 6, category: "MIGRAINES", title: "Chiropractors May Relieve Migraines", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 7, category: "PHYSICAL THERAPY", title: "How Physical Therapy Speeds Up Injury Recovery", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 8, category: "PHYSICAL THERAPY", title: "Chiropractic Care vs. Pain Medication: What's the Difference?", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
+  { id: 9, category: "SPORTS & PERFORMANCE", title: "Why Athletes Rely on Chiropractic Care for Performance and Recovery", imageUrl: "/pexels-arina-krasnikova-6663372.webp" },
 ];
 
 const BlogPostCard: React.FC<{ post: BlogPost }> = ({ post }) => (

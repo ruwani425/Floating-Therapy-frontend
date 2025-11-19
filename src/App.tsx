@@ -18,6 +18,7 @@ import SignupPage from "./pages/SignUpPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import BlogPage from "./pages/BlogPage";
+import ServicesPage from "./pages/ServicesPage";
 
 export default function App() {
   return (
@@ -33,6 +34,8 @@ export default function App() {
             <Route path="About" element={<AboutPage />} />
             <Route path="contact-us" element={<ContactPage />} />
             <Route path="blog" element={<BlogPage />} />
+                          <Route path = "service" element = {<ServicesPage />}/>
+
             {/* PROTECTED ADMIN ROUTES: Protected by the <ProtectedRoute /> element */}
             <Route path="admin" element={<ProtectedRoute />}>
               {/* These routes are only accessible if ProtectedRoute allows rendering the Outlet */}

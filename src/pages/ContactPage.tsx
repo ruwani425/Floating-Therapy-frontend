@@ -53,9 +53,8 @@ const ContactHeader: React.FC = () => {
 // --- Section 2: Contact Form ---
 
 const ContactForm: React.FC = () => {
-    // This URL should be replaced with an actual image of the therapy room
     const treatmentRoomUrl =
-        "/creative-thinking-w800.png"; // Placeholder path
+        "/pexels-arina-krasnikova-6663372-1.jpg"; // Placeholder path
 
     return (
         <section className="py-20 bg-white w-full">
