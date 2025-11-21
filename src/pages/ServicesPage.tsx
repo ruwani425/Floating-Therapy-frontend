@@ -59,7 +59,7 @@ const servicesData: ServiceSectionData[] = [
         title: "Posture Correction",
         description: "Relieves strain, improves alignment, supports balance.",
         image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        isHighlighted: true, // Example of the highlighted card in screenshots
+        isHighlighted: true,
       },
     ],
   },
@@ -126,7 +126,7 @@ const servicesData: ServiceSectionData[] = [
         title: "Sports Injury Rehab",
         description: "Recover stronger with targeted, holistic rehab for athletes.",
         image: "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-        isHighlighted: true, 
+        isHighlighted: true,
       },
     ],
   },
@@ -139,52 +139,51 @@ const ServiceCard: React.FC<{ item: ServiceItem }> = ({ item }) => {
       className={`
         group relative flex flex-col rounded-2xl overflow-hidden 
         bg-white shadow-sm transition-all duration-300 hover:shadow-xl
+        /* Mobile: Allow card to fill width but not get too huge on tablets */
+        w-full max-w-md mx-auto sm:max-w-none
         ${item.isHighlighted ? `ring-4 ring-[${COLORS.lightestBlue}]` : ""}
       `}
     >
       {/* Image Section */}
-      <div className="relative h-64 overflow-hidden">
+      {/* Responsive height: shorter on mobile (h-56), taller on desktop (h-64) */}
+      <div className="relative h-56 sm:h-64 overflow-hidden">
         <img
           src={item.image}
           alt={item.title}
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        {/* Overlay Gradient (Optional) */}
+        {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300" />
       </div>
 
-      {/* Card Content with "Curved Cutout" Effect */}
-      <div className="relative px-6 pb-8 pt-10 text-center flex-grow flex flex-col items-center">
+      {/* Card Content */}
+      <div className="relative px-5 pb-8 pt-10 text-center flex-grow flex flex-col items-center">
         
-        {/* The Floating Icon - Positioned to overlap image and text */}
+        {/* The Floating Icon */}
         <div 
-          className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white p-2 rounded-full"
+          className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white p-2 rounded-full z-10"
           style={{
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)", // Subtle shadow
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
           }}
         >
-           {/* This creates the "cutout" look by matching bg color */}
            <div className="bg-white rounded-full p-3"> 
              <Flower 
-                size={24} 
-                color={COLORS.darkBlue} 
-                className="fill-current opacity-80"
+               size={24} 
+               color={COLORS.darkBlue} 
+               className="fill-current opacity-80"
              />
            </div>
-           {/* Decorative SVG curve filler (Optional visual polish to smooth edges) */}
-           <svg className="absolute top-6 -left-4 w-4 h-4 text-white fill-current hidden" viewBox="0 0 10 10">
-             <path d="M10,0 Q0,0 0,10 L10,10 Z" />
-           </svg>
         </div>
 
         <h3 
-          className="text-xl font-serif font-medium mb-3"
+          className="text-xl sm:text-2xl font-serif font-bold mb-3"
           style={{ color: COLORS.darkBlue }}
         >
           {item.title}
         </h3>
         
-        <p className="text-gray-500 text-sm leading-relaxed">
+        <p className="text-gray-600 text-sm sm:text-base font-sans leading-relaxed">
           {item.description}
         </p>
       </div>
@@ -198,66 +197,87 @@ const ServicesPage: React.FC = () => {
     <div className="w-full min-h-screen bg-white flex flex-col">
       
       {/* --- Header Section --- */}
-      <div className="w-full max-w-4xl mx-auto px-4 pt-32 pb-16 text-center">
-        <h1 
-          className="text-5xl md:text-6xl font-serif font-light mb-6"
-          style={{ color: COLORS.darkBlue }}
-        >
-          Services
-        </h1>
-        <p className="text-lg uppercase tracking-widest mb-6 text-gray-400 font-semibold text-xs">
-          Begin Your Journey to Better Health
-        </p>
-        <p className="text-gray-600 leading-relaxed max-w-2xl mx-auto">
-          At Theta Lounge, <strong style={{color: COLORS.darkBlue}}>chiropractic care</strong> is at the center of everything we do. 
-          Our goal is to restore balance, relieve pain, and help your body function at its best. 
-          To support lasting results, we also offer <strong style={{color: COLORS.darkBlue}}>massage therapy</strong> to ease muscle tension 
-          and <strong style={{color: COLORS.darkBlue}}>physical therapy</strong> to rebuild strength and mobility.
-        </p>
+      <div className="relative w-full px-4 sm:px-6 pt-24 pb-10 md:pt-32 md:pb-16 text-center overflow-hidden">
+        {/* Video Background */}
+        <video
+          src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
+          loop
+          preload="none"
+          muted
+          playsInline
+          autoPlay
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        
+        {/* Blue Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-theta-blue/90 via-theta-blue-dark/85 to-theta-blue/90"></div>
+
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <h1 
+            className="text-5xl sm:text-6xl md:text-7xl font-serif font-bold mb-6 md:mb-8 leading-tight text-white"
+          >
+            Services
+          </h1>
+          <p className="text-base sm:text-lg uppercase tracking-widest mb-6 text-blue-100 font-display font-bold text-xs md:text-sm">
+            Begin Your Journey to Better Health
+          </p>
+          <p className="text-base sm:text-lg md:text-xl font-sans text-white leading-relaxed max-w-xl md:max-w-2xl mx-auto">
+            At Theta Lounge, <strong className="font-display">chiropractic care</strong> is at the center of everything we do. 
+            Our goal is to restore balance, relieve pain, and help your body function at its best. 
+            To support lasting results, we also offer <strong className="font-display">massage therapy</strong> to ease muscle tension 
+            and <strong className="font-display">physical therapy</strong> to rebuild strength and mobility.
+          </p>
+        </div>
       </div>
 
       {/* --- Service Categories Loop --- */}
       {servicesData.map((section, index) => (
         <section 
           key={section.id} 
-          className={`w-full py-20 ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}
+          // Alternating background with responsive padding
+          className={`w-full py-12 md:py-20 ${index % 2 !== 0 ? 'bg-gray-50' : 'bg-white'}`}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             {/* Section Header */}
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               {section.subTitle && (
                 <p 
-                   className="uppercase tracking-widest text-xs font-bold mb-3"
-                   style={{ color: COLORS.lightBlue }} // Using the accent color
+                   className="uppercase tracking-widest text-xs font-display font-bold mb-2 md:mb-3"
+                   style={{ color: COLORS.lightBlue }}
                 >
                   {section.subTitle}
                 </p>
               )}
               <h2 
-                className="text-4xl font-serif mb-6"
+                className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold mb-4 md:mb-6 leading-tight"
                 style={{ color: COLORS.darkBlue }}
               >
                 {section.categoryTitle}
               </h2>
-              <p className="text-gray-500 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl font-sans text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
                 {section.description}
               </p>
             </div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Grid Breakpoints:
+                - Default (Mobile): 1 column
+                - sm (640px): 2 columns
+                - lg (1024px): 4 columns
+                gap-6 on mobile, gap-8 on desktop
+             */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
               {section.services.map((item) => (
                 <ServiceCard key={item.id} item={item} />
               ))}
             </div>
-
           </div>
         </section>
       ))}
 
       {/* Spacer for Footer connection */}
-      <div className="h-20 bg-white"></div>
+      <div className="h-12 md:h-20 bg-white"></div>
     </div>
   );
 };

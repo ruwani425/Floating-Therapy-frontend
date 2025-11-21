@@ -105,9 +105,9 @@ const SignupPage: React.FC = () => {
   );
 
   const passwordInputClass =
-    "w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500";
+    "w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-sans transition-all duration-300";
   const regularInputClass =
-    "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500";
+    "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-sans transition-all duration-300";
 
   return (
     <div className="flex items-center justify-center p-8 bg-gray-50 min-h-screen">
@@ -119,16 +119,16 @@ const SignupPage: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="text-3xl font-bold text-indigo-800 mb-2 text-center">
+        <h2 className="text-4xl font-serif font-bold text-indigo-800 mb-3 text-center leading-tight">
           Create Your Account
         </h2>
-        <h3 className="text-center text-gray-600 mb-6">
+        <h3 className="text-center font-display font-medium text-gray-600 mb-8 text-lg">
           Join the Theta Lounge community with your details
         </h3>
 
         {/* Error message display */}
         {error && (
-          <div className="mb-4 p-3 text-sm font-medium text-red-700 bg-red-100 border border-red-400 rounded-lg text-center">
+          <div className="mb-4 p-3 text-sm font-display font-semibold text-red-700 bg-red-100 border border-red-400 rounded-xl text-center">
             {error}
           </div>
         )}
@@ -138,7 +138,7 @@ const SignupPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Username Field (Col 1) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Username
               </label>
               <FieldWithIcon Icon={User}>
@@ -154,7 +154,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 NIC / Passport ID
               </label>
               <FieldWithIcon Icon={CreditCard}>
@@ -170,7 +170,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Email Address
               </label>
               <FieldWithIcon Icon={Mail}>
@@ -186,7 +186,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Date of Birth
               </label>
               <FieldWithIcon Icon={Calendar}>
@@ -201,14 +201,14 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Gender
               </label>
               <FieldWithIcon Icon={Users}>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none font-sans transition-all duration-300"
                   required
                 >
                   <option value="" disabled>
@@ -222,7 +222,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Contact Number
               </label>
               <FieldWithIcon Icon={Phone}>
@@ -238,7 +238,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Address
               </label>
               <div className="relative">
@@ -250,14 +250,14 @@ const SignupPage: React.FC = () => {
                   onChange={(e) => setAddress(e.target.value)}
                   rows={3}
                   placeholder="Enter your full mailing address"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none font-sans transition-all duration-300"
                   required
                 ></textarea>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <FieldWithIcon Icon={Lock} isPassword={true}>
@@ -273,7 +273,7 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-display font-semibold text-gray-700 mb-2">
                 Confirm Password
               </label>
               <FieldWithIcon Icon={Lock} isPassword={true}>
@@ -291,18 +291,18 @@ const SignupPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 transform hover:scale-[1.01] mt-6 sm:col-span-2"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-display font-bold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 mt-6 sm:col-span-2"
           >
             Sign Up
           </button>
         </form>
 
         <div className="mt-6 pt-4 border-t border-gray-200 space-y-3 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm font-sans text-gray-600">
             Already have an account?{" "}
             <NavLink
               to="/login"
-              className="font-semibold text-indigo-600 hover:text-indigo-500 transition duration-150"
+              className="font-display font-bold text-indigo-600 hover:text-indigo-500 transition duration-150"
             >
               Log In
             </NavLink>
@@ -310,7 +310,7 @@ const SignupPage: React.FC = () => {
 
           <NavLink
             to="/"
-            className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-indigo-600 transition duration-150"
+            className="inline-flex items-center text-sm font-display font-semibold text-gray-500 hover:text-indigo-600 transition duration-150"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to home

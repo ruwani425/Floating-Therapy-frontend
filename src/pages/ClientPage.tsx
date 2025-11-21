@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import {
   Flower,
-  Star,
   CalendarCheck,
   ChevronDown,
   ChevronUp,
@@ -10,15 +8,9 @@ import {
   DollarSign,
   Clock,
   HeartHandshake,
-  Mail,
-  Phone,
-  MapPin,
-  Facebook,
-  Instagram,
-  Twitter,
+
   Quote, // New icon for Testimonials
 } from "lucide-react";
-import Footer from "../components/layout/Footer";
 
 // --- Data Structures (Same as before) ---
 
@@ -923,7 +915,6 @@ const HomePage: React.FC = () => {
         <CtaWhyWait />
         <Reviews />
         <Blog />
-        <Footer />
       </main>
     </div>
   );

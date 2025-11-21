@@ -21,29 +21,29 @@ const Footer: React.FC = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Section: Address, Hours, Logo, CTA */}
         <div className="text-center mb-16">
-          <div className="flex justify-center text-sm font-semibold mb-10 text-gray-300 space-x-12">
+          <div className="flex justify-center text-sm font-display font-semibold mb-10 text-gray-300 space-x-12">
             <div>
-              <p className="uppercase tracking-widest mb-2">ADDRESS</p>
-              <p>200 Sutter St Suite 602 San</p>
-              <p>Francisco, CA 94108</p>
+              <p className="uppercase tracking-widest mb-3 font-bold">ADDRESS</p>
+              <p className="font-sans">200 Sutter St Suite 602 San</p>
+              <p className="font-sans">Francisco, CA 94108</p>
             </div>
             <div>
-              <p className="uppercase tracking-widest mb-2">OFFICE HOURS</p>
-              <p>Mon–Thu: 7:30 AM–7:30 PM</p>
-              <p>Friday: 8:00 AM–4:30 PM</p>
+              <p className="uppercase tracking-widest mb-3 font-bold">OFFICE HOURS</p>
+              <p className="font-sans">Mon–Thu: 7:30 AM–7:30 PM</p>
+              <p className="font-sans">Friday: 8:00 AM–4:30 PM</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-center space-x-2 text-3xl font-serif font-bold text-white mb-8">
-            <Flower className="w-8 h-8 text-white" />
-            <span className="tracking-wider">Theta Lounge</span>
+          <div className="flex items-center justify-center space-x-3 text-4xl font-serif font-bold text-white mb-8">
+            <Flower className="w-10 h-10 text-white" />
+            <span className="tracking-wide">Theta Lounge</span>
           </div>
 
-          <div className="flex flex-wrap justify-center items-center space-x-6">
-            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300">
+          <div className="flex flex-wrap justify-center items-center gap-4">
+            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-display font-bold rounded-full shadow-xl hover:shadow-2xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-300">
               (422) 820 820
             </button>
-            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300">
+            <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-display font-bold rounded-full shadow-xl hover:shadow-2xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-300">
               <CalendarCheck className="w-5 h-5 mr-2" />
               Book Appointment
             </button>
@@ -54,73 +54,73 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-600 pt-10 text-sm">
           {/* ABOUT */}
           <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">
+            <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               ABOUT
             </h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Who we are</li>
-              <li>Reviews</li>
-              <li>Blog</li>
-              <li>Contact us</li>
+            <ul className="space-y-2 text-gray-300 font-sans">
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Who we are</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Reviews</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Blog</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Contact us</li>
             </ul>
           </div>
           {/* SERVICES */}
           <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">
+            <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               SERVICES
             </h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Chiropractic Care</li>
-              <li>Medical Massage</li>
-              <li>Chronic Pain</li>
-              <li>Posture Correction</li>
-              <li>Sport Injuries</li>
+            <ul className="space-y-2 text-gray-300 font-sans">
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Chiropractic Care</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Medical Massage</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Chronic Pain</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Posture Correction</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Sport Injuries</li>
             </ul>
           </div>
           {/* CONDITIONS */}
           <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">
+            <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               CONDITIONS
             </h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Back pain</li>
-              <li>Neck pain</li>
-              <li>Headaches/migraines</li>
-              <li>Sciatica</li>
-              <li>Shoulder Pain</li>
+            <ul className="space-y-2 text-gray-300 font-sans">
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Back pain</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Neck pain</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Headaches/migraines</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Sciatica</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Shoulder Pain</li>
             </ul>
           </div>
           {/* PATIENTS */}
           <div className="space-y-4">
-            <h4 className="font-semibold mb-2 text-light-blue-200 uppercase">
+            <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               PATIENTS
             </h4>
-            <ul className="space-y-2 text-gray-300">
-              <li>Patient Paperwork</li>
-              <li>Book an appointment</li>
-              <li>FAQ</li>
+            <ul className="space-y-2 text-gray-300 font-sans">
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Patient Paperwork</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">Book an appointment</li>
+              <li className="hover:text-white cursor-pointer transition-colors duration-300">FAQ</li>
             </ul>
           </div>
         </div>
       </div>
 
       {/* Copyright Strip */}
-      <div className="mt-8 border-t border-gray-600 pt-4 pb-4 text-center text-xs text-gray-400">
+      <div className="mt-8 border-t border-gray-600 pt-4 pb-4 text-center text-xs text-gray-400 font-sans">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <span>
             © {new Date().getFullYear()} VamTam. All rights reserved.
           </span>
-          <div className="flex space-x-3">
-            <span className="hover:text-white cursor-pointer">
+          <div className="flex space-x-4 items-center">
+            <span className="hover:text-white cursor-pointer transition-colors duration-300 font-display">
               Terms of Service
             </span>
-            <span className="hover:text-white cursor-pointer">
+            <span className="hover:text-white cursor-pointer transition-colors duration-300 font-display">
               Privacy Policy
             </span>
             {/* Social Icons Placeholder */}
-            <Star className="w-4 h-4" />
-            <Star className="w-4 h-4" />
-            <Star className="w-4 h-4" />
+            <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />
+            <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />
+            <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />
           </div>
         </div>
       </div>

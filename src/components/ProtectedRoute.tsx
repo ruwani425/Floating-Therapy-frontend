@@ -1,6 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import type { ReactNode } from "react";
 
 /**
  * The ProtectedRoute component acts as the authorization guard for child routes.

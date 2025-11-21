@@ -28,9 +28,16 @@ export default {
         // Optionally, define a clear white for card backgrounds
         'white': '#FFFFFF',
       },
-      // You can also customize fonts here if needed
+      // Custom font families for a beautiful therapy center website
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+        // Primary font for body text - clean and readable
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        
+        // Elegant serif font for headings and titles
+        serif: ['Playfair Display', 'Georgia', 'serif'],
+        
+        // Modern sans-serif for UI elements and buttons
+        display: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },

@@ -1,72 +1,71 @@
 // src/components/layout/NavBar.tsx
 
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
-import {
-    Flower,
-    CalendarCheck,
-    Phone,
-} from "lucide-react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Flower, CalendarCheck, Phone, Menu, X } from "lucide-react";
 
 // --- Client Navigation Component ---
 
 // This utility component contains the client-facing navigation logic
-const ClientNavigation: React.FC<{ location: ReturnType<typeof useLocation> }> = ({ location }) => {
-    // Determine if we are on the Home Page to use anchor links correctly
-    const isHomePage = location.pathname === '/';
+const ClientNavigation: React.FC<{
+  location: ReturnType<typeof useLocation>;
+}> = ({ location }) => {
+  // Determine if we are on the Home Page to use anchor links correctly
+  const isHomePage = location.pathname === "/";
 
-    // Helper function to apply active styling to regular Link tags based on current location
-    const getLinkClassName = (path: string) => {
-        const isActive = location.pathname === path;
-        // NOTE: We are manually applying the active style since Link doesn't have the isActive prop
-        return `hover:text-dark-blue-600 transition duration-150 ${isActive ? 'text-dark-blue-600 font-semibold' : ''}`;
-    };
+  // Helper function to apply active styling to regular Link tags based on current location
+  const getLinkClassName = (path: string) => {
+    const isActive = location.pathname === path;
+    // NOTE: We are manually applying the active style since Link doesn't have the isActive prop
+    return `hover:text-theta-blue transition duration-150 ${
+      isActive ? "text-theta-blue font-semibold" : ""
+    }`;
+  };
 
-    return (
-        <nav className="hidden lg:flex space-x-8 text-gray-600 font-medium items-center">
-            <Link
-                to="/"
-                className={getLinkClassName('/')} // Using Link for Home and applying active style manually
-            >
-                Home
-            </Link>
-            <Link
-                to="/about"
-                className={getLinkClassName('/about')} // Changed from NavLink to Link
-            >
-                About
-            </Link>
-            <Link
-                to="/service" 
-                className={getLinkClassName('/service')} // Changed from NavLink to Link
-            >
-                Services
-            </Link>
-            <a
-                href={isHomePage ? "#reviews" : "/#reviews"}
-                className="hover:text-dark-blue-600 transition duration-150"
-            >
-                Reviews
-            </a>
-            
-            <Link
-                to="/blog" 
-                className={getLinkClassName('/blog')} // Changed from NavLink to Link
-            >
-                Blog
-            </Link>
-            <Link
-                to="/contact-us" 
-                className={getLinkClassName('/contact-us')} // Changed from NavLink to Link
-            >
-                Contact us
-            </Link>
-            {/* Keeping Admin access hidden or under a different condition for a pure client nav */}
-        </nav>
-    );
-}
+  return (
+    <nav className="hidden lg:flex space-x-8 text-gray-600 font-display font-medium items-center">
+      <Link
+        to="/"
+        className={getLinkClassName("/")} // Using Link for Home and applying active style manually
+      >
+        Home
+      </Link>
+      <Link
+        to="/about"
+        className={getLinkClassName("/about")} // Changed from NavLink to Link
+      >
+        About
+      </Link>
+      <Link
+        to="/service"
+        className={getLinkClassName("/service")} // Changed from NavLink to Link
+      >
+        Services
+      </Link>
+      <a
+        href={isHomePage ? "#reviews" : "/#reviews"}
+        className="hover:text-theta-blue transition duration-150"
+      >
+        Reviews
+      </a>
 
+      <Link
+        to="/blog"
+        className={getLinkClassName("/blog")} // Changed from NavLink to Link
+      >
+        Blog
+      </Link>
+      <Link
+        to="/contact-us"
+        className={getLinkClassName("/contact-us")} // Changed from NavLink to Link
+      >
+        Contact us
+      </Link>
+      {/* Keeping Admin access hidden or under a different condition for a pure client nav */}
+    </nav>
+  );
+};
 
 // --- Main NavBar Component ---
 
@@ -74,109 +73,205 @@ const NavBar: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Unified Navbar for the client site, replacing the old SecureApp bar.
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    setIsMobileMenuOpen(false);
   };
-  
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   // NOTE: This NavBar now uses the styling and structure of the client-side Header
   // and is fixed/sticky for continuous display, just like the original Header.
   return (
     <header className="fixed top-0 left-0 w-full bg-white bg-opacity-95 shadow-lg z-50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            
-            {/* Logo Section */}
-            <div className="flex items-center space-x-2 text-xl font-serif text-gray-800">
-                <Flower className="w-6 h-6 text-dark-blue-600" />
-                <Link to="/" className="font-bold tracking-wider"> 
-                    Theta Lounge
-                </Link>
-                <span className="text-sm text-gray-500 ml-4 hidden sm:inline">
-                    Physical Therapy
-                </span>
-            </div>
-
-            {/* Main Navigation Links */}
-            <ClientNavigation location={location} />
-
-            {/* Action Buttons & Utility (Phone, Appointment, Auth) */}
-            <div className="flex items-center space-x-4">
-                
-                {/* Phone Number (Optional addition based on a common client need) */}
-                <span className="hidden md:inline text-gray-600 flex items-center text-sm font-medium">
-                    <Phone className="w-4 h-4 mr-1 text-dark-blue-600" /> (422) 820 820
-                </span>
-
-                {/* Appointment Button */}
-                <button className="flex items-center px-4 py-2 bg-dark-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-dark-blue-700 transition duration-300">
-                    <CalendarCheck className="w-5 h-5 mr-2" />
-                    Appointment
-                </button>
-                
-                {/* Auth/Utility Button (Buy Now or Admin Login Placeholder) */}
-                {isAuthenticated ? (
-                    <button
-                        onClick={handleLogout}
-                        className="hidden sm:inline px-4 py-2 bg-red-500 text-white font-semibold rounded-full hover:bg-red-600 transition duration-300"
-                    >
-                        Logout
-                    </button>
-                ) : (
-                    <Link to="/login" className="hidden sm:inline px-4 py-2 bg-light-blue-200 text-dark-blue-600 font-semibold rounded-full hover:bg-light-blue-400 hover:text-white transition duration-300">
-                        Log In
-                    </Link>
-                )}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        {/* Logo Section */}
+        <div className="flex items-center space-x-3 text-gray-800">
+          <Flower className="w-7 h-7 text-theta-blue" />
+          <div className="flex flex-col">
+            <Link to="/" className="font-serif text-2xl font-bold tracking-tight hover:text-theta-blue transition-colors duration-300">
+              Theta Lounge
+            </Link>
+            <span className="text-xs font-display text-gray-500 tracking-wider hidden sm:block">
+              Physical Therapy
+            </span>
+          </div>
         </div>
+
+        {/* Main Navigation Links - Desktop Only */}
+        <ClientNavigation location={location} />
+
+        {/* Action Buttons & Utility - Desktop Only */}
+        <div className="hidden lg:flex items-center space-x-4">
+          {/* Phone Number */}
+          <span className="hidden xl:inline-flex text-gray-600 items-center text-sm font-display font-medium">
+            <Phone className="w-4 h-4 mr-1 text-theta-blue" /> (422) 820 820
+          </span>
+
+          {/* Appointment Button */}
+          <button className="flex items-center px-5 py-2.5 bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white font-display font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <CalendarCheck className="w-5 h-5 mr-2" />
+            Appointment
+          </button>
+
+          {/* Auth Button */}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-display font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="px-5 py-2.5 bg-theta-blue-light text-theta-blue font-display font-semibold rounded-full hover:bg-gradient-to-r hover:from-theta-blue hover:to-theta-blue-dark hover:text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              Log In
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={toggleMobileMenu}
+          className="lg:hidden p-2 text-gray-600 hover:text-theta-blue focus:outline-none"
+          aria-label="Toggle mobile menu"
+        >
+          {isMobileMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      <div
+        className={`lg:hidden fixed top-[72px] left-0 right-0 bg-white shadow-lg transition-all duration-300 ease-in-out overflow-hidden ${
+          isMobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <nav className="px-4 py-6 space-y-4">
+          {/* Mobile Navigation Links */}
+          <Link
+            to="/"
+            onClick={closeMobileMenu}
+            className={`block py-3 px-4 rounded-xl font-display font-medium transition-all duration-300 ${
+              location.pathname === "/"
+                ? "bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white shadow-lg"
+                : "text-gray-700 hover:bg-blue-50 hover:text-theta-blue"
+            }`}
+          >
+            Home
+          </Link>
+          <Link
+            to="/about"
+            onClick={closeMobileMenu}
+            className={`block py-3 px-4 rounded-xl font-display font-medium transition-all duration-300 ${
+              location.pathname === "/about"
+                ? "bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white shadow-lg"
+                : "text-gray-700 hover:bg-blue-50 hover:text-theta-blue"
+            }`}
+          >
+            About
+          </Link>
+          <Link
+            to="/service"
+            onClick={closeMobileMenu}
+            className={`block py-3 px-4 rounded-xl font-display font-medium transition-all duration-300 ${
+              location.pathname === "/service"
+                ? "bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white shadow-lg"
+                : "text-gray-700 hover:bg-blue-50 hover:text-theta-blue"
+            }`}
+          >
+            Services
+          </Link>
+          <a
+            href={location.pathname === "/" ? "#reviews" : "/#reviews"}
+            onClick={closeMobileMenu}
+            className="block py-3 px-4 rounded-xl font-display font-medium text-gray-700 hover:bg-blue-50 hover:text-theta-blue transition-all duration-300"
+          >
+            Reviews
+          </a>
+          <Link
+            to="/blog"
+            onClick={closeMobileMenu}
+            className={`block py-3 px-4 rounded-xl font-display font-medium transition-all duration-300 ${
+              location.pathname === "/blog"
+                ? "bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white shadow-lg"
+                : "text-gray-700 hover:bg-blue-50 hover:text-theta-blue"
+            }`}
+          >
+            Blog
+          </Link>
+          <Link
+            to="/contact-us"
+            onClick={closeMobileMenu}
+            className={`block py-3 px-4 rounded-xl font-display font-medium transition-all duration-300 ${
+              location.pathname === "/contact-us"
+                ? "bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white shadow-lg"
+                : "text-gray-700 hover:bg-blue-50 hover:text-theta-blue"
+            }`}
+          >
+            Contact us
+          </Link>
+
+           {/* Mobile Phone Number */}
+          <div className="pt-4 border-t border-gray-200">
+            <a
+              href="tel:4228208200"
+              className="flex items-center py-3 px-4 text-gray-600 hover:text-theta-blue transition-colors duration-300 rounded-lg hover:bg-blue-50"
+            >
+              <Phone className="w-5 h-5 mr-3 text-theta-blue" />
+              <div>
+                <p className="text-xs font-display text-gray-500">Call Us</p>
+                <p className="font-display font-semibold">(422) 820 820</p>
+              </div>
+            </a>
+          </div>
+
+          {/* Mobile Action Buttons */}
+          <div className="space-y-3 pt-2">
+            <button className="w-full flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white font-display font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+              <CalendarCheck className="w-5 h-5 mr-2" />
+              Book Appointment
+            </button>
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-display font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={closeMobileMenu}
+                className="block text-center w-full px-4 py-3.5 bg-theta-blue-light text-theta-blue font-display font-semibold rounded-full hover:bg-gradient-to-r hover:from-theta-blue hover:to-theta-blue-dark hover:text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                Log In
+              </Link>
+            )}
+          </div>
+        </nav>
+      </div>
     </header>
   );
 };
 
 // --- Layout Component (where styles are injected) ---
-
-export const Layout: React.FC = () => {
-  const location = useLocation();
-
-  const noNavbarRoutes = ["/login", "/signup"];
-
-  const shouldHideNavbar = noNavbarRoutes.includes(
-    location.pathname.toLowerCase()
-  );
-
-  return (
-    <div className="min-h-screen bg-light-blue-50 font-inter w-screen overflow-x-hidden">
-      {/* Inject Custom Style Block here to define custom colors globally */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            /* CUSTOM COLOR PALETTE MAPPING */
-            .text-dark-blue-600 { color: #035C84; } 
-            .bg-dark-blue-600 { background-color: #035C84; }
-            .hover\\:bg-dark-blue-700:hover { background-color: #0873A1; } 
-            .text-dark-blue-800 { color: #003F5C; } 
-            .border-dark-blue-600 { border-color: #035C84; } 
-            
-            .text-light-blue-200 { color: #94CCE7; } 
-            .bg-light-blue-50 { background-color: #F0F8FF; }
-            .bg-light-blue-100 { background-color: #E6F3FF; } 
-            .bg-light-blue-200 { background-color: #94CCE7; } 
-             .bg-light-blue-400 { background-color: #2DA0CC; } 
-            .hover\\:bg-light-blue-300:hover { background-color: #79BDE1; } 
-             .hover\\:bg-light-blue-400:hover { background-color: #2DA0CC; } 
-          `,
-        }}
-      />
-      
-      {!shouldHideNavbar && <NavBar />}{" "}
-      
-      <main className="w-full mx-auto pb-0"> 
-        <Outlet />
-      </main>
-    </div>
-  );
-};
 
 export default NavBar;

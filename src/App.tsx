@@ -6,8 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import NavBar, { Layout } from "./components/layout/NavBar";
+import { AuthProvider } from "./context/AuthContext";
 import ClientPage from "./pages/ClientPage";
 import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -19,6 +18,7 @@ import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import BlogPage from "./pages/BlogPage";
 import ServicesPage from "./pages/ServicesPage";
+import { Layout } from "./components/layout/Layout";
 
 export default function App() {
   return (
@@ -34,7 +34,7 @@ export default function App() {
             <Route path="About" element={<AboutPage />} />
             <Route path="contact-us" element={<ContactPage />} />
             <Route path="blog" element={<BlogPage />} />
-                          <Route path = "service" element = {<ServicesPage />}/>
+            <Route path = "service" element = {<ServicesPage />}/>
 
             {/* PROTECTED ADMIN ROUTES: Protected by the <ProtectedRoute /> element */}
             <Route path="admin" element={<ProtectedRoute />}>
