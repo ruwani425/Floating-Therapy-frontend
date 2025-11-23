@@ -16,15 +16,15 @@ import ClientAppointmentPage from "./pages/ClientAppointmentPage";
 import { AuthProvider } from "./components/AuthProvider";
 import TankManagementPage from "./pages/admin/TankManagementPage";
 import AddTankPage from "./pages/admin/AddTankPage";
+import ReservationsPage from "./pages/admin/ReservationPage";
+import CalendarManagement from "./pages/admin/CalenderManage";
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* The root path applies the common Layout (NavBar, etc.) */}
           <Route path="/" element={<Layout />}>
-            {/* PUBLIC ROUTES: Accessible to everyone */}
             <Route index element={<ClientPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
@@ -33,7 +33,6 @@ export default function App() {
             <Route path="blog" element={<BlogPage />} />
             <Route path="service" element={<ServicesPage />} />
             <Route path="appointments" element={<ClientAppointmentPage />} />
-            {/* 404 Catch-all: For any unmatched path */}
             <Route
               path="*"
               element={
@@ -44,15 +43,17 @@ export default function App() {
             />
           </Route>
 
-          {/* PROTECTED ADMIN ROUTES: Protected by the <ProtectedRoute /> element */}
           <Route path="admin" element={<ProtectedRoute />}>
-            {/* These routes are only accessible if ProtectedRoute allows rendering the Outlet */}
-            <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsersPage />} />
             <Route path="products" element={<AdminProductsPage />} />
-            <Route path="tank-management" element={<TankManagementPage />} /> 
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="tank-management" element={<TankManagementPage />} />
             <Route path="add-tank" element={<AddTankPage />} />
-            {/* Redirect /admin to /admin/dashboard */}
+            <Route path="reservations" element={<ReservationsPage />} />
+            <Route
+              path="calendar-management"
+              element={<CalendarManagement />}
+            />
             <Route index element={<Navigate to="dashboard" replace />} />
           </Route>
         </Routes>

@@ -5,7 +5,7 @@ import Footer from "./Footer";
 export const Layout: React.FC = () => {
   const location = useLocation();
 
-  const noNavbarRoutes = ["/login", "/signup"];
+  const noNavbarRoutes = ["/login", "/signup" ];
 
   const shouldHideNavbar = noNavbarRoutes.includes(
     location.pathname.toLowerCase()
@@ -13,7 +13,6 @@ export const Layout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-light-blue-50 font-inter w-screen overflow-x-hidden">
-      {/* Inject Custom Style Block here to define custom colors globally */}
       <style
         dangerouslySetInnerHTML={{
           __html: `

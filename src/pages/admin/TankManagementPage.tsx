@@ -1,140 +1,191 @@
-// src/pages/admin/TankManagementPage.tsx
+"use client"
 
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { Bath, PlusCircle, ArrowLeft, Info, Trash2, Edit, Clock, BathIcon } from "lucide-react";
+import type React from "react"
+import { NavLink, useNavigate } from "react-router-dom"
+import { Bath, PlusCircle, ArrowLeft, Info, Trash2, Edit, Clock } from "lucide-react"
 
 // --- MOCK DATA ---
 const MOCK_TANKS = [
-    { id: 1, name: "Neptune Chamber", status: "Ready", capacity: 1, lastCleaned: "2 hours ago", imageUrl: "/Building_Biology_Consultancy_25.webp" },
-    { id: 2, name: "Orion Pod", status: "Occupied", capacity: 1, lastCleaned: "Yesterday", imageUrl: "/Building_Biology_Consultancy_25.webp" },
-    { id: 3, name: "Zen Floater XL", status: "Maintenance", capacity: 2, lastCleaned: "4 days ago", imageUrl: "/Building_Biology_Consultancy_25.webp" },
-    { id: 4, name: "Aqua Retreat", status: "Ready", capacity: 1, lastCleaned: "1 hour ago", imageUrl: "/Building_Biology_Consultancy_25.webp" }, // Added for more variety
-];
-
-// --- CUSTOM TAILWIND STYLES (Theta Lounge Theme) ---
-const CustomStyle = `
-  .text-theta-primary { color: #233547; } 
-  .bg-theta-light { background-color: #92B8D9; } 
-  .text-theta-secondary { color: #475D73; } 
-  .bg-theta-background { background-color: #CEDBE6; } 
-
-  .border-status-ready { border-left: 4px solid #00C49F; } /* Green */
-  .border-status-occupied { border-left: 4px solid #FFBB28; } /* Yellow */
-  .border-status-maintenance { border-left: 4px solid #FF8042; } /* Orange */
-
-  /* Image Placeholder Styles - if you don't have actual images */
-  .tank-image-placeholder {
-    background: linear-gradient(135deg, #92B8D9, #CEDBE6); /* bg-theta-light to bg-theta-background gradient */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #233547; /* text-theta-primary */
-    font-weight: bold;
-    font-size: 0.8rem;
-    text-align: center;
-    border-radius: 0.5rem; /* Rounded corners for the image container */
-  }
-`;
+  {
+    id: 1,
+    name: "Neptune Chamber",
+    status: "Ready",
+    capacity: 1,
+    lastCleaned: "2 hours ago",
+    imageUrl: "/float-tank-water.jpg",
+  },
+  {
+    id: 2,
+    name: "Orion Pod",
+    status: "Occupied",
+    capacity: 1,
+    lastCleaned: "Yesterday",
+    imageUrl: "/float-tank-water.jpg",
+  },
+  {
+    id: 3,
+    name: "Zen Floater XL",
+    status: "Maintenance",
+    capacity: 2,
+    lastCleaned: "4 days ago",
+    imageUrl: "/float-tank-water.jpg",
+  },
+  {
+    id: 4,
+    name: "Aqua Retreat",
+    status: "Ready",
+    capacity: 1,
+    lastCleaned: "1 hour ago",
+    imageUrl: "/float-tank-water.jpg",
+  },
+]
 
 const TankManagementPage: React.FC = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate()
 
-    return (
-        <div className="min-h-screen bg-theta-background p-0">
-            <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
-            
-            <div className="relative w-full max-w-full mx-auto p-10 md:p-12 bg-white rounded-2xl shadow-3xl">
-                
-                {/* Header and Back Link */}
-                <NavLink
-                    to="/admin/dashboard"
-                    className="inline-flex items-center text-theta-primary hover:text-theta-secondary transition-colors mb-6"
-                >
-                    <ArrowLeft className="w-5 h-5 mr-2" />
-                    <span className="font-semibold">Back to Dashboard</span>
-                </NavLink>
+  return (
+    <div
+      className="min-h-screen p-6 md:p-8 lg:p-10"
+      style={{
+        background: "linear-gradient(135deg, #6BA3C5 0%, #475D73 50%, #0F3A52 100%)",
+      }}
+    >
+      <div className="w-full max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-8 md:p-10">
+        <NavLink
+          to="/admin/dashboard"
+          className="inline-flex items-center mb-8 text-base font-semibold transition-colors hover:opacity-80"
+          style={{ color: "#233547" }}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Dashboard
+        </NavLink>
 
-                <header className="mb-10 border-b border-gray-200 pb-4">
-                    <h1 className="flex items-center text-4xl font-extrabold text-theta-primary">
-                        <Bath className="w-8 h-8 mr-3" />
-                        Tank Management Hub
-                    </h1>
-                    <p className="text-lg text-theta-secondary mt-1">
-                        View current tank status and manage configurations.
-                    </p>
-                </header>
+        <header className="mb-10 pb-6 border-b-2" style={{ borderColor: "#92B8D9" }}>
+          <div className="flex items-center gap-3 mb-2">
+            <Bath className="w-8 h-8" style={{ color: "#0F3A52" }} />
+            <h1 className="text-4xl font-bold" style={{ color: "#233547" }}>
+              Tank Management Hub
+            </h1>
+          </div>
+          <p className="text-lg" style={{ color: "#5A7A95" }}>
+            View current tank status and manage configurations.
+          </p>
+        </header>
 
-                <section>
-                    <h2 className="text-2xl font-bold text-theta-primary mb-6">Tank Inventory</h2>
-                    
-                    {/* Tank Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        
-                        {/* 1. ADD NEW TANK BOX (Navigation) */}
-                        <div 
-                            onClick={() => navigate('/admin/add-tank')} // 💡 Navigation link
-                            className="p-6 bg-theta-background border-2 border-dashed border-theta-secondary/50 rounded-xl 
-                                       shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer 
-                                       flex flex-col items-center justify-center text-center h-full min-h-[250px] hover:bg-theta-background/80"
-                        >
-                            <PlusCircle className="w-10 h-10 mb-3" style={{ color: '#475D73' }} />
-                            <h3 className="text-xl font-bold text-theta-primary">Add New Tank</h3>
-                            <p className="text-sm text-theta-secondary">Configure a new floating pod</p>
-                        </div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-8" style={{ color: "#0F3A52" }}>
+            Tank Inventory
+          </h2>
 
-                        {/* 2. Existing Tank Boxes (Mapped) */}
-                        {MOCK_TANKS.map((tank) => (
-                            <div 
-                                key={tank.id} 
-                                className={`p-4 bg-white rounded-xl shadow-md transition-shadow duration-300 hover:shadow-lg 
-                                            ${'border-status-' + tank.status.toLowerCase()} flex flex-col`}
-                            >
-                                {/* 💡 Tank Image Section */}
-                                <div className="relative w-full h-32 bg-gray-200 rounded-lg mb-4 overflow-hidden flex-shrink-0">
-                                    {/* Replace with your actual image path */}
-                                    <img 
-                                        src={tank.imageUrl || "https://via.placeholder.com/200x128?text=Float+Tank"} 
-                                        alt={`${tank.name} Float Tank`} 
-                                        className="w-full h-full object-cover" 
-                                    />
-                                    {/* Optional: Status Overlay on Image */}
-                                    <span 
-                                        className={`absolute bottom-2 left-2 px-3 py-1 text-xs font-bold text-white rounded-full
-                                                    ${tank.status === 'Ready' ? 'bg-[#00C49F]' : tank.status === 'Occupied' ? 'bg-[#FFBB28]' : 'bg-[#FF8042]'}`}
-                                    >
-                                        {tank.status}
-                                    </span>
-                                </div>
-
-
-                                <div className="flex-grow"> {/* Allows details to push actions to bottom */}
-                                    <h3 className="text-xl font-bold text-theta-primary mb-1">{tank.name}</h3>
-                                    <p className="text-sm font-semibold mt-1 mb-3" style={{ color: tank.status === 'Ready' ? '#00C49F' : tank.status === 'Occupied' ? '#FFBB28' : '#FF8042' }}>
-                                        {tank.status === 'Ready' ? 'Available for booking' : tank.status === 'Occupied' ? 'Currently in use' : 'Under maintenance'}
-                                    </p>
-                                    <div className="text-sm text-gray-600 space-y-1 border-t pt-3">
-                                        <p><Info className="w-4 h-4 inline mr-2 align-middle" /> Capacity: {tank.capacity} person</p>
-                                        <p><Clock className="w-4 h-4 inline mr-2 align-middle" /> Last Cleaned: {tank.lastCleaned}</p>
-                                    </div>
-                                </div>
-                                
-                                {/* Action Buttons */}
-                                <div className="mt-4 flex justify-end space-x-2 border-t pt-3 flex-shrink-0">
-                                    <button title="Edit Tank" className="p-2 rounded-full text-theta-secondary hover:bg-gray-100 hover:text-theta-primary transition-colors">
-                                        <Edit className="w-5 h-5" />
-                                    </button>
-                                    <button title="Delete Tank" className="p-2 rounded-full text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+          {/* Tank Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div
+              onClick={() => navigate("/admin/add-tank")}
+              className="p-8 rounded-xl shadow-md transition-all duration-300 cursor-pointer flex flex-col items-center justify-center text-center h-full min-h-[280px] border-2 border-dashed hover:shadow-lg hover:scale-105"
+              style={{
+                backgroundColor: "#E8F0F5",
+                borderColor: "#5A7A95",
+              }}
+            >
+              <div className="mb-4 p-3 rounded-full" style={{ backgroundColor: "#92B8D9" }}>
+                <PlusCircle className="w-8 h-8" style={{ color: "#0F3A52" }} />
+              </div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: "#0F3A52" }}>
+                Add New Tank
+              </h3>
+              <p style={{ color: "#5A7A95" }}>Configure a new floating pod</p>
             </div>
-        </div>
-    );
-};
 
-export default TankManagementPage;
+            {MOCK_TANKS.map((tank) => {
+            const statusColors: { [key: string]: { bg: string; text: string; border: string } } = {
+                Ready: { bg: "#E3F2FD", text: "#92B8D9", border: "#92B8D9" },
+                Occupied: { bg: "#EEF4F9", text: "#5A7A95", border: "#5A7A95" },
+                Maintenance: { bg: "#F5EBE6", text: "#C4956D", border: "#C4956D" },
+            }
+
+
+              const colors = statusColors[tank.status] || statusColors.Ready
+
+              return (
+                <div
+                  key={tank.id}
+                  className="rounded-xl shadow-md transition-all duration-300 overflow-hidden hover:shadow-lg hover:scale-105 flex flex-col bg-white"
+                  style={{
+                    borderLeft: `4px solid ${colors.border}`,
+                  }}
+                >
+                  {/* Tank Image */}
+                  <div className="relative w-full h-32 overflow-hidden">
+                    <img
+                      src={tank.imageUrl || "/placeholder.svg"}
+                      alt={tank.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <span
+                      className="absolute bottom-2 left-2 px-3 py-1 text-xs font-bold text-white rounded-full"
+                      style={{ backgroundColor: colors.text }}
+                    >
+                      {tank.status}
+                    </span>
+                  </div>
+
+                  {/* Tank Details */}
+                  <div className="flex-grow p-4">
+                    <h3 className="text-lg font-bold mb-2" style={{ color: "#0F3A52" }}>
+                      {tank.name}
+                    </h3>
+                    <p className="text-sm font-semibold mb-3" style={{ color: colors.text }}>
+                      {tank.status === "Ready"
+                        ? "Available for booking"
+                        : tank.status === "Occupied"
+                          ? "Currently in use"
+                          : "Under maintenance"}
+                    </p>
+                    <div className="text-sm space-y-1 border-t pt-3" style={{ borderColor: "#E0E0E0", color: "#666" }}>
+                      <p className="flex items-center">
+                        <Info className="w-4 h-4 mr-2" style={{ color: "#5A7A95" }} />
+                        Capacity: {tank.capacity} person
+                      </p>
+                      <p className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2" style={{ color: "#5A7A95" }} />
+                        Last Cleaned: {tank.lastCleaned}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="p-4 border-t flex justify-end gap-2" style={{ borderColor: "#E0E0E0" }}>
+                    <button
+                      title="Edit Tank"
+                      className="p-2 rounded-full transition-all duration-200 hover:bg-opacity-100"
+                      style={{
+                        color: "#5A7A95",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#E8F0F5")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      title="Delete Tank"
+                      className="p-2 rounded-full transition-all duration-200"
+                      style={{
+                        color: "#FF8042",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#FFE8E0")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default TankManagementPage

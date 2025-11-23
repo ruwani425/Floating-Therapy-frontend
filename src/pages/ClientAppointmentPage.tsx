@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 // Removed react-calendar imports
-import { CalendarCheck, Clock, User, Mail, MessageSquare, AlertTriangle, Send, Info, Tally1, Zap, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Shield ,CalendarCheck, Clock, User, Mail, MessageSquare, AlertTriangle, Send, Info, Tally1, Zap, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 // --- 1. TypeScript Interfaces & Data ---
 
@@ -138,23 +139,18 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
         const isClosedForDay = MOCK_OPERATIONAL_HOURS[dayOfWeek] === 'CLOSED';
 
         if (isSelected) {
-            // Accent Blue circle for selected date
             return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`;
         } else if (isTodayMarker) {
-            // Darker Blue circle for the current day
             return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`;
         } else if (isFull || isClosedForDay) {
-            // 🔴 RED CIRCLE for fully booked days OR days that are closed
             return `${baseClasses} bg-red-500 text-white shadow-md`;
         } else {
-            // Default (available or empty slot)
             return `${baseClasses} text-gray-700 hover:bg-gray-100`;
         }
     };
     
     return (
         <div className="w-full">
-            {/* Header: Navigation and Month/Year */}
             <div className="flex items-center justify-between px-2 pb-6 text-[var(--dark-blue-800)]">
                 <button type="button" onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100 transition">
                     <ChevronLeft className="w-7 h-7 text-gray-700" />
@@ -167,20 +163,17 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
                 </button>
             </div>
 
-            {/* Weekday Labels */}
             <div className="grid grid-cols-7 text-center text-gray-500 font-semibold mb-2">
                 {WEEKDAYS.map(day => (
                     <div key={day} className="h-8 flex items-center justify-center text-sm">{day}</div>
                 ))}
             </div>
 
-            {/* Days Grid */}
             <div className="grid grid-cols-7">
                 {calendarDays.map((date, index) => {
                     const isCurrentMonth = date.getMonth() === currentDate.getMonth();
                     const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0));
                     
-                    // A date is clickable if it is in the current month AND not in the past.
                     const isClickable = isCurrentMonth && !isPastDate;
 
                     return (
@@ -189,7 +182,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
                                 type="button"
                                 className={getTileClass(date)}
                                 onClick={() => isClickable && onDateChange(date)}
-                                disabled={!isClickable} // Disable only for dates outside the current scope (past/other month)
+                                disabled={!isClickable}
                             >
                                 {date.getDate()}
                             </button>
@@ -201,10 +194,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
     );
 };
 
-// --- 3. Right Sidebar/Events List Component (Kept) ---
-
 const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate }) => {
-    // If no date is selected, use a mock date (Nov 27th is selected in the screenshot)
     const mockDefaultDate = new Date(2025, 10, 27); 
     const displayDate = selectedDate || mockDefaultDate; 
     
@@ -214,18 +204,15 @@ const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate })
     const dateNum = displayDate.getDate().toString().padStart(2, '0');
     const month = displayDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    // Determine Operational Hours
-    const dayOfWeek = displayDate.getDay(); // 0 (Sun) to 6 (Sat)
+    
+    const dayOfWeek = displayDate.getDay();
     const operationalHours = MOCK_OPERATIONAL_HOURS[dayOfWeek] || '09:00 - 17:00'; 
 
-    // Determine if the date is closed/full
     const isClosedOrFull = dateStatus === 'full' || operationalHours === 'CLOSED';
     
-    // Determine Date Box Color
     const dateBoxColor = isClosedOrFull ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
 
-    // Generate Session Status Data using dynamic hours
-    const sessions = MOCK_SESSIONS(operationalHours, dateStatus || 'unavailable'); // Pass status for dynamic values
+    const sessions = MOCK_SESSIONS(operationalHours, dateStatus || 'unavailable');
 
     const getStatusColor = (status: 'available' | 'open' | 'info' | 'full') => {
         switch (status) {
@@ -243,32 +230,27 @@ const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate })
     return (
         <div className="w-full max-w-sm ml-auto space-y-4 pt-1">
             <div className="flex justify-between items-start">
-                {/* Date Box (Dynamic Color) */}
                 <div 
                     className="w-20 h-20 flex flex-col items-center justify-center text-white font-bold rounded-lg shadow-xl"
-                    style={{ backgroundColor: dateBoxColor }} // Use dynamic color
+                    style={{ backgroundColor: dateBoxColor }}
                 >
                     <span className="text-3xl">{dateNum}</span>
                     <span className="text-sm">{month}</span>
                 </div>
                 
-                {/* View All link */}
                 <div className="flex items-center pt-1 text-sm">
                     <span className="text-gray-500 mr-1">View:</span>
                     <a href="#" className="font-semibold text-gray-700 hover:text-[var(--accent-color)] transition">All</a>
                 </div>
             </div>
 
-            {/* Session Status List */}
             <div className="space-y-4 pt-4">
                 <p className="text-sm font-bold text-[var(--dark-blue-800)] uppercase">Session Summary</p>
                 <div className="border-t border-gray-200 pt-3 space-y-3">
                     {sessions.map((session, index) => (
                         <div key={index} className="flex justify-between items-center">
-                            {/* Label */}
                             <p className="text-sm text-gray-600 font-medium">{session.label}</p>
                             
-                            {/* Value (styled by status) */}
                             {session.label === 'Open and Close Time' ? (
                                 <p className={`text-base font-semibold ${getStatusColor(session.status as any)}`}>
                                     {session.value}
@@ -287,17 +269,13 @@ const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate })
 };
 
 
-// --- 4. Main Component (Consolidated View - UPDATED VALIDATION) ---
-
 const ConsolidatedBookingForm: React.FC = () => {
     // --- State Initialization (Preserved) ---
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2025, 10, 1)); 
     const [selectedDate, setSelectedDate] = useState<Date | null>(new Date(2025, 10, 27)); 
-    // 🆕 State variables
     const [contactNumber, setContactNumber] = useState('');
     const [email, setEmail] = useState('');
     const [specialNote, setSpecialNote] = useState(''); 
-    // ------------------------------------
     const [selectedTime, setSelectedTime] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -334,8 +312,6 @@ const ConsolidatedBookingForm: React.FC = () => {
             isValidForBooking = false;
         }
 
-        // 🎯 VALIDATION FIX: Check for required fields (selectedTime, isValidForBooking, email, contactNumber). 
-        // specialNote is NOT included here as it is optional.
         if (!selectedTime || !isValidForBooking || !email || !contactNumber) {
             if (!message) { 
                  setMessage('Please select an available date, time, and provide your email and contact number.');
@@ -347,7 +323,6 @@ const ConsolidatedBookingForm: React.FC = () => {
         setMessage('Processing your appointment...');
         setSuccessMessage(null);
 
-        // --- Simulated API Call ---
         await new Promise(resolve => setTimeout(resolve, 2000)); 
         
         setIsSubmitting(false);
@@ -359,7 +334,6 @@ const ConsolidatedBookingForm: React.FC = () => {
     };
 
 
-    // --- Utilities (Preserved) ---
     const filteredSlots = useMemo(() => {
         if (!selectedDate) return []; 
 
@@ -376,7 +350,6 @@ const ConsolidatedBookingForm: React.FC = () => {
 
     const inputClass = "input-style";
     
-    // --- Custom Calendar Styles using CSS Variables (Kept) ---
     const CustomStyles = `
         :root {
             --theta-blue: ${THEME_COLORS['--theta-blue']};
@@ -398,14 +371,11 @@ const ConsolidatedBookingForm: React.FC = () => {
     `;
 
     return (
-        // Outer container: Full width, using the light blue background
         <div className="bg-[var(--light-blue-50)] min-h-screen pt-0"> 
             <style dangerouslySetInnerHTML={{ __html: CustomStyles }} />
             
-            {/* Inner Container: Full width white box */}
             <div className="w-full bg-white shadow-2xl rounded-xl py-8 lg:py-12 border border-gray-100 relative overflow-hidden mt-[72px]">
                 
-                {/* --- Success Message Overlay --- */}
                 {successMessage && (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-10 bg-white/95 backdrop-blur-sm rounded-xl">
                         <CalendarCheck className="w-16 h-16 text-[var(--theta-blue)] mb-4 animate-bounce" />
@@ -422,10 +392,8 @@ const ConsolidatedBookingForm: React.FC = () => {
                     </div>
                 )}
 
-                {/* --- Content Wrapper --- */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
-                    {/* Header: Meetings, Events, Petitions (From Screenshot) */}
                     <div className="absolute top-0 right-0 p-4 space-x-4 text-sm font-semibold text-gray-600">
                         <span className="hover:text-[var(--accent-color)] transition cursor-pointer">Meetings</span>
                         <span className="hover:text-[var(--accent-color)] transition cursor-pointer">Events</span>
@@ -436,10 +404,8 @@ const ConsolidatedBookingForm: React.FC = () => {
                         Make an Appointment
                     </h1>
 
-                    {/* 🗓️ --- CALENDAR & SIDEBAR LAYOUT --- 🗓️ */}
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-10 mb-12 border border-gray-100 rounded-lg shadow-md p-6">
                         
-                        {/* Custom Calendar Component (Spans 3/4) */}
                         <div className="lg:col-span-3 p-4 border-r border-gray-200">
                             <CustomCalendar
                                 currentDate={currentMonth}
@@ -449,24 +415,19 @@ const ConsolidatedBookingForm: React.FC = () => {
                             />
                         </div>
 
-                        {/* Event Sidebar Component (Spans 1/4) */}
                         <div className="lg:col-span-1 pt-6 lg:pt-0">
                             <EventSidebar selectedDate={selectedDate} />
                         </div>
                     </div>
-                    {/* --------------------------------------------------- */}
 
 
-                    {/* --- Main Form Grid Layout (Below Calendar) --- */}
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12 pt-8 border-t border-gray-100">
                         
-                        {/* === LEFT COLUMN: Time Slots === */}
                         <div className="space-y-8">
                             <label className="block text-xl font-semibold text-gray-700 mb-4">
                                 Select Available Time
                             </label>
 
-                            {/* Timezone Alert */}
                             <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 flex items-center rounded-r-lg shadow-sm">
                                 <AlertTriangle className="w-5 h-5 mr-3" />
                                 <span className="text-sm font-medium">
@@ -494,12 +455,10 @@ const ConsolidatedBookingForm: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center font-medium">
-                                    {/* Message is more accurate if selectedDate is available */}
                                     {selectedDate ? (MOCK_OPERATIONAL_HOURS[selectedDate.getDay()] === 'CLOSED' ? "We are closed on this date." : "No available slots on the selected date.") : "Please select a date."}
                                 </div>
                             )}
 
-                             {/* Status Message */}
                             {message && (
                                 <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-medium shadow-sm">
                                     {message}
@@ -507,10 +466,8 @@ const ConsolidatedBookingForm: React.FC = () => {
                             )}
                         </div>
 
-                        {/* === RIGHT COLUMN: Input Fields and Submit (UPDATED FIELDS) === */}
                         <div className="space-y-6">
                             
-                            {/* Email Input (KEPT) */}
                             <div>
                                 <label htmlFor="email" className="block text-lg font-semibold text-gray-700 mb-2">
                                     Email Address
@@ -531,7 +488,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                                 </div>
                             </div>
                             
-                            {/* Contact Number Input (REQUIRED) */}
                             <div>
                                 <label htmlFor="contact" className="block text-lg font-semibold text-gray-700 mb-2">
                                     Contact Number
@@ -541,7 +497,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                                     <User className="w-5 h-5 ml-3 text-gray-400" />
                                     <input
                                         id="contact"
-                                        type="tel" // Use type tel for phone numbers
+                                        type="tel"
                                         value={contactNumber}
                                         onChange={(e) => setContactNumber(e.target.value)}
                                         required
@@ -601,73 +557,103 @@ const ConsolidatedBookingForm: React.FC = () => {
     );
 };
 
-// --- Session Details Component (Kept) ---
 const SessionDetails: React.FC = () => (
     <div className="pt-10 mt-12 border-t border-[var(--light-blue-200)] lg:col-span-2">
-        <h2 className="text-3xl font-serif font-bold text-[var(--dark-blue-800)] mb-8 flex items-center">
-            <CheckCircle className="w-7 h-7 mr-3 text-[var(--theta-green)]" />
-            Our Commitment: Capacity, Time & Safety
-        </h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-4 pb-8">
-            
-            {/* === LEFT COLUMN: Text and Key Rules === */}
-            <div className="space-y-6">
-                
-                <p className="text-gray-700 text-lg">
-                    We prioritize quality, focus, and impeccable hygiene to ensure a truly restorative experience. Our facility operates with strict, predictable scheduling to guarantee your session space is perfectly clean and ready.
-                </p>
+      <h2 className="text-3xl font-serif font-bold text-[var(--dark-blue-800)] mb-2 flex items-center">
+        <CheckCircle className="w-7 h-7 mr-3 text-[var(--theta-green)]" />
+        Our Commitment: Capacity, Time & Safety
+      </h2>
+      <p className="text-gray-600 mb-10 text-base">
+        We prioritize quality, focus, and impeccable hygiene to ensure a truly restorative experience
+      </p>
 
-                {/* Key Rules List */}
-                <div className="pt-2 space-y-4">
-                    
-                    {/* RULE 1: CAPACITY */}
-                    <div className="flex items-start space-x-3 p-4 bg-[var(--light-blue-50)] rounded-xl shadow-md border border-[var(--light-blue-200)]">
-                        <Tally1 className="w-6 h-6 flex-shrink-0 mt-1 text-[var(--theta-blue)]" />
-                        <div>
-                            <p className="font-bold text-[var(--theta-blue)]">Limited Daily Capacity (20 Sessions)</p>
-                            <p className="text-sm">We use 2 specialized machines offering a maximum of 20 personalized sessions per day. This ensures a low-traffic and serene atmosphere.</p>
-                        </div>
-                    </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-6 pb-8">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="relative h-48 bg-gradient-to-br from-[var(--light-blue-50)] to-[var(--light-blue-200)] flex items-center justify-center overflow-hidden">
+            <img
+              src="/person-enjoying-relaxing-one-hour-floating-therapy.jpg"
+              alt="Limited capacity floating therapy facility"
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-                    {/* RULE 2: DURATION */}
-                    <div className="flex items-start space-x-3 p-4 bg-[var(--light-blue-50)] rounded-xl shadow-md border border-[var(--light-blue-200)]">
-                        <Zap className="w-6 h-6 flex-shrink-0 mt-1 text-[var(--theta-blue)]" />
-                        <div>
-                            <p className="font-bold text-[var(--theta-blue)]">Dedicated 1-Hour Session</p>
-                            <p className="text-sm">Each confirmed appointment guarantees you a full 60 minutes of uninterrupted therapy time in your pod.</p>
-                        </div>
-                    </div>
-                    
-                    {/* RULE 3: CLEANING */}
-                    <div className="flex items-start space-x-3 p-4 bg-red-50 rounded-xl shadow-md border border-red-200">
-                        <Clock className="w-6 h-6 flex-shrink-0 mt-1 text-[var(--theta-red)]" />
-                        <div>
-                            <p className="font-bold text-[var(--theta-red)]">Mandatory 30-Minute Sanitization</p>
-                            <p className="text-sm">A 30-minute cleaning break is strictly scheduled after every session (1 hour + 30 min turnaround) to meet the highest safety stanksdards.</p>
-                        </div>
-                    </div>
-                </div>
+          <div className="p-6 space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-[var(--light-blue-50)] rounded-lg">
+                <Users className="w-6 h-6 text-[var(--theta-blue)]" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--theta-blue)]">Limited Daily Capacity</h3>
             </div>
-
-            {/* === RIGHT COLUMN: Image Collage (Magazine Style) === */}
-            <div className="relative w-full h-[500px] overflow-hidden rounded-xl shadow-2xl">
-                 {/* Placeholder Image Content */}
-                <div className="absolute inset-0 grid grid-rows-2 grid-cols-2 gap-2">
-                    <div className="row-span-2 col-span-1 bg-cover bg-center rounded-lg bg-gray-300 flex items-center justify-center">
-                        <span className="text-sm text-gray-600">Therapy Image Placeholder (Large)</span>
-                    </div>
-                    <div className="row-span-1 col-span-1 bg-cover bg-center rounded-lg bg-gray-400 flex items-center justify-center">
-                        <span className="text-xs text-gray-700">Machine Setup Placeholder</span>
-                    </div>
-                    <div className="row-span-1 col-span-1 bg-cover bg-center rounded-lg bg-gray-500 flex items-center justify-center">
-                        <span className="text-xs text-gray-800">Cleaning Focus Placeholder</span>
-                    </div>
-                </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              We use only 2 specialized machines with a maximum of 20 personalized sessions per day. This ensures a
+              low-traffic, serene atmosphere where you can truly relax.
+            </p>
+            <div className="pt-2 border-t border-gray-200">
+              <p className="text-xs font-semibold text-[var(--theta-blue)] uppercase">Max 20 Sessions Daily</p>
             </div>
-
+          </div>
         </div>
-    </div>
-);
 
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="relative h-48 bg-gradient-to-br from-[var(--light-blue-50)] to-[var(--light-blue-200)] flex items-center justify-center overflow-hidden">
+            <img
+              src="/person-enjoying-relaxing-one-hour-floating-therapy.jpg"
+              alt="Dedicated one hour therapy session"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-[var(--light-blue-50)] rounded-lg">
+                <Clock className="w-6 h-6 text-[var(--theta-blue)]" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--theta-blue)]">Full 1-Hour Sessions</h3>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Each confirmed appointment guarantees you a full 60 minutes of uninterrupted therapy time in your
+              dedicated pod. No rushing, no distractions.
+            </p>
+            <div className="pt-2 border-t border-gray-200">
+              <p className="text-xs font-semibold text-[var(--theta-blue)] uppercase">60 Minutes Guaranteed</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-red-200 hover:shadow-xl transition-shadow duration-300">
+          <div className="relative h-48 bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center overflow-hidden">
+            <img
+              src="/person-enjoying-relaxing-one-hour-floating-therapy.jpg"
+              alt="Mandatory sanitization and cleaning process"
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-red-100 rounded-lg">
+                <Shield className="w-6 h-6 text-[var(--theta-red)]" />
+              </div>
+              <h3 className="text-xl font-bold text-[var(--theta-red)]">Strict Sanitization</h3>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              A mandatory 30-minute deep cleaning break is strictly scheduled after every session to meet the highest
+              hygiene and safety standards.
+            </p>
+            <div className="pt-2 border-t border-red-200">
+              <p className="text-xs font-semibold text-[var(--theta-red)] uppercase">30 Min Between Sessions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-12 p-6 bg-gradient-to-r from-[var(--light-blue-50)] to-white rounded-xl border-l-4 border-[var(--theta-blue)]">
+        <p className="text-gray-700 text-center font-medium">
+          <span className="text-[var(--theta-blue)] font-bold">Your wellness matters.</span> Every detail in our
+          facility is designed with your safety, comfort, and rejuvenation in mind.
+        </p>
+      </div>
+    </div>
+  )
 
 export default ConsolidatedBookingForm;
