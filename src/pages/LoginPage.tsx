@@ -17,6 +17,30 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [focusedField, setFocusedField] = useState<string | null>(null)
 
+  type UserRole = "admin" | "client"
+
+  interface TestUser {
+    email: string
+    password: string
+    role: UserRole
+  }
+
+
+    // TEMPORARY USERS ARRAY (Frontend Only)
+  const testUsers:TestUser[]= [
+    {
+      email: "admin@theta.com",
+      password: "password123",
+      role: "admin",
+    },
+    {
+      email: "client@theta.com",
+      password: "userpass",
+      role: "client",
+    },
+  ];
+
+
   // Declare handleGoogleSignIn and handleSubmit functions
   const handleGoogleSignIn = async () => {
     try {
@@ -27,17 +51,43 @@ const LoginPage: React.FC = () => {
     }
   }
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    try {
-      await signInWithEmailAndPassword(auth, email, password)
-      const role = email.includes("admin") ? "admin" : "client"
-      login(role)
-      navigate("/admin/dashboard")
-    } catch (error) {
-      setError("Invalid email or password")
+    const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // 1. Find user in test array
+    const foundUser = testUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (!foundUser) {
+      setError("Invalid email or password");
+      return;
     }
-  }
+
+    // 2. Login using your AuthProvider
+    login(foundUser.role);
+
+    // 3. Redirect based on role
+    if (foundUser.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/")
+    }
+  };
+
+
+  // const handleSubmit = async (e: FormEvent) => {
+  //   e.preventDefault()
+  //   try {
+  //     await signInWithEmailAndPassword(auth, email, password)
+  //     const role = email.includes("admin") ? "admin" : "client"
+  //     login(role)
+  //     navigate("/admin/dashboard")
+  //   } catch (error) {
+  //     setError("Invalid email or password")
+  //   }
+  // }
 
   return (
     // FIX: Added 'w-screen' and 'overflow-x-hidden' to ensure the container 

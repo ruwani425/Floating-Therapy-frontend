@@ -154,7 +154,7 @@ export default function ReservationsPage() {
 
             {/* Calendar Toggle Button */}
             <button
-              onClick={() => navigate("/calendar-management")}
+              onClick={() => navigate("/admin/calendar-management")}
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground hover:bg-opacity-90 transition-all"
             >
               <Calendar className="h-5 w-5" />

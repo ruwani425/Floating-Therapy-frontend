@@ -131,7 +131,7 @@ const dashboardOptions = [
   },
   {
     title: "Global Settings",
-    path: "/admin/settings",
+    path: "/admin/system-settings",
     description: "Configure application settings.",
     icon: Settings,
     iconColor: "#233547", // Changed from #B8D4E8 to #233547 (dark blue)

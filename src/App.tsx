@@ -18,6 +18,7 @@ import TankManagementPage from "./pages/admin/TankManagementPage";
 import AddTankPage from "./pages/admin/AddTankPage";
 import ReservationsPage from "./pages/admin/ReservationPage";
 import CalendarManagement from "./pages/admin/CalenderManage";
+import SystemSettings from "./pages/admin/SystemSettingPage";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="tank-management" element={<TankManagementPage />} />
             <Route path="add-tank" element={<AddTankPage />} />
             <Route path="reservations" element={<ReservationsPage />} />
+            <Route path="system-settings" element={<SystemSettings/>}/>
             <Route
               path="calendar-management"
               element={<CalendarManagement />}
