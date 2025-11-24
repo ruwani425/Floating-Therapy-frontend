@@ -4,13 +4,50 @@ import type React from "react"
 import { useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock, Droplet } from "lucide-react"
-import { useAuth } from "../components/AuthProvider"
+import axios from "axios"
 import { signInWithGoogle } from "../firebase/firebase-config"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "../firebase/firebase-config"
+
+
+// Mock Firebase UserCredential type and function
+type UserCredential = {
+  user: {
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+    uid: string;
+  };
+};
+
+const mockSignInWithGoogle = async (): Promise<UserCredential> => {
+    console.log("MOCK: Attempting Google Sign-In...");
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+    return {
+        user: {
+            displayName: "Mocked User",
+            email: "mock.google.user@example.com",
+            photoURL: "https://placehold.co/50x50/4285F4/ffffff?text=G",
+            uid: "mock-firebase-uid-12345",
+        }
+    };
+};
+
+// Mock useAuth Hook
+const useAuth = () => {
+    // These values are mocked since AuthProvider is unresolved.
+    const isAuthenticated = true;
+    const userRole = "client";
+    const login = (role: string) => {
+        console.log(`MOCK: User logged in with role: ${role}`);
+        // In a real scenario, this would handle token/role storage.
+    };
+    return { isAuthenticated, userRole, login };
+};
+
+// Backend API Configuration
+const GOOGLE_API_URL = "http://localhost:5000/api/auth/google-auth"; 
 
 const LoginPage: React.FC = () => {
-  const { isAuthenticated, userRole, login } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
@@ -26,7 +63,7 @@ const LoginPage: React.FC = () => {
   }
 
 
-    // TEMPORARY USERS ARRAY (Frontend Only)
+  // TEMPORARY USERS ARRAY (Frontend Only) - Only for the handleSubmit function
   const testUsers:TestUser[]= [
     {
       email: "admin@theta.com",
@@ -40,18 +77,69 @@ const LoginPage: React.FC = () => {
     },
   ];
 
+const handleGoogleSignIn = async () => {
+  setError(null);
+  try {
+    // 1. Real Firebase Google Sign-In
+    const firebaseUser = await signInWithGoogle();
 
-  // Declare handleGoogleSignIn and handleSubmit functions
-  const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle()
-      navigate("/")
-    } catch (error) {
-      setError("Failed to sign in with Google")
+    if (!firebaseUser.email || !firebaseUser.uid) {
+      throw new Error("Google sign-in did not return required user data.");
     }
-  }
 
-    const handleSubmit = async (e: FormEvent) => {
+    // 2. Send secure user data to backend
+    const googleUserData = {
+      name: firebaseUser.displayName,
+      email: firebaseUser.email,
+      profileImage: firebaseUser.photoURL,
+      uid: firebaseUser.uid,
+    };
+
+    console.log("Sending real Firebase user to backend:", googleUserData);
+
+    const backendResponse = await axios.post(GOOGLE_API_URL, googleUserData);
+
+    // 3. Backend response
+    const { token, user: backendUser } = backendResponse.data;
+
+    console.log("Token from backend:", token);
+
+    // 4. Determine role (TEMP)
+    const role: UserRole = backendUser?.email?.includes("admin")
+      ? "admin"
+      : "client";
+
+    // 5. Update auth state
+    login(role);
+
+    // 6. Redirect
+    if (role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/");
+    }
+  } catch (error) {
+    console.error("Google Auth Integration Error:", error);
+
+    let errorMsg;
+
+    if (axios.isAxiosError(error)) {
+      errorMsg = `Backend Error: ${
+        error.response?.data?.message || "Server issue"
+      }`;
+    } else if (error instanceof Error) {
+      errorMsg = `Client Error: ${error.message}`;
+    } else {
+      errorMsg = "Unknown error occurred.";
+    }
+
+    setError(errorMsg);
+  }
+};
+
+
+  // Standard Email/Password Submission (Still using temporary array logic)
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -77,21 +165,7 @@ const LoginPage: React.FC = () => {
   };
 
 
-  // const handleSubmit = async (e: FormEvent) => {
-  //   e.preventDefault()
-  //   try {
-  //     await signInWithEmailAndPassword(auth, email, password)
-  //     const role = email.includes("admin") ? "admin" : "client"
-  //     login(role)
-  //     navigate("/admin/dashboard")
-  //   } catch (error) {
-  //     setError("Invalid email or password")
-  //   }
-  // }
-
   return (
-    // FIX: Added 'w-screen' and 'overflow-x-hidden' to ensure the container 
-    // takes up exactly 100% of the screen width and prevents horizontal scrolling.
     <div className="min-h-screen w-screen overflow-x-hidden flex flex-col lg:flex-row bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Left Side - Login UI with improved UX */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16">
@@ -119,7 +193,7 @@ const LoginPage: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-md p-6 border border-blue-100 hover:shadow-lg transition-shadow duration-300">
             <button
               className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-50 to-slate-50 hover:from-blue-100 hover:to-slate-100 text-slate-900 font-medium rounded-2xl px-6 py-3.5 border border-blue-200 transition-all duration-300"
-              onClick={handleGoogleSignIn}
+              onClick={handleGoogleSignIn} // Calls the updated function
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -149,55 +223,57 @@ const LoginPage: React.FC = () => {
               <div className="flex-1 h-px bg-slate-200" />
             </div>
 
-            {/* Email Field - Enhanced with focus states */}
-            <div className="space-y-2 mb-4">
-              <label className="text-sm font-medium text-slate-700">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onFocus={() => setFocusedField("email")}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="you@example.com"
-                  className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
-                    focusedField === "email"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 bg-white hover:border-blue-300"
-                  }`}
-                />
+            <form onSubmit={handleSubmit}>
+              {/* Email Field - Enhanced with focus states */}
+              <div className="space-y-2 mb-4">
+                <label className="text-sm font-medium text-slate-700">Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="you@example.com"
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
+                      focusedField === "email"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 bg-white hover:border-blue-300"
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password Field - Enhanced with focus states */}
-            <div className="space-y-2 mb-6">
-              <label className="text-sm font-medium text-slate-700">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setFocusedField("password")}
-                  onBlur={() => setFocusedField(null)}
-                  placeholder="••••••••"
-                  className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
-                    focusedField === "password"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 bg-white hover:border-blue-300"
-                  }`}
-                />
+              {/* Password Field - Enhanced with focus states */}
+              <div className="space-y-2 mb-6">
+                <label className="text-sm font-medium text-slate-700">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedField("password")}
+                    onBlur={() => setFocusedField(null)}
+                    placeholder="••••••••"
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
+                      focusedField === "password"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 bg-white hover:border-blue-300"
+                    }`}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmit}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
-            >
-              Sign In to Theta Lounge
-            </button>
+              {/* Submit Button */}
+              <button
+                type="submit" // Changed from onClick to type="submit" for form
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
+              >
+                Sign In to Theta Lounge
+              </button>
+            </form>
           </div>
 
           {/* Footer Text */}
