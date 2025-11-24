@@ -18,21 +18,6 @@ type UserCredential = {
   };
 };
 
-// const mockSignInWithGoogle = async (): Promise<UserCredential> => {
-//     console.log("MOCK: Attempting Google Sign-In...");
-//     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-//     return {
-//         user: {
-//             displayName: "Mocked User",
-//             email: "mock.google.user@example.com",
-//             photoURL: "https://placehold.co/50x50/4285F4/ffffff?text=G",
-//             uid: "mock-firebase-uid-12345",
-//         }
-//     };
-// };
-
-
-// Backend API Configuration
 const GOOGLE_API_URL = "http://localhost:5000/api/auth/google-auth"; 
 
 const LoginPage: React.FC = () => {
@@ -40,6 +25,8 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     if (isAuthenticated) {
       if (userRole === "admin") navigate("/admin/dashboard");
       else navigate("/");
@@ -56,80 +43,57 @@ const LoginPage: React.FC = () => {
 
   type UserRole = "admin" | "client"
 
-  // interface TestUser {
-  //   email: string
-  //   password: string
-  //   role: UserRole
-  // }
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    try {
+      const firebaseUser = await signInWithGoogle();
 
+      if (!firebaseUser.email || !firebaseUser.uid) {
+        throw new Error("Google sign-in did not return required user data.");
+      }
 
-  // TEMPORARY USERS ARRAY (Frontend Only) - Only for the handleSubmit function
-  // const testUsers:TestUser[]= [
-  //   {
-  //     email: "admin@theta.com",
-  //     password: "password123",
-  //     role: "admin",
-  //   },
-  //   {
-  //     email: "client@theta.com",
-  //     password: "userpass",
-  //     role: "client",
-  //   },
-  // ];
+      const googleUserData = {
+        name: firebaseUser.displayName,
+        email: firebaseUser.email,
+        profileImage: firebaseUser.photoURL,
+        uid: firebaseUser.uid,
+      };
 
-const handleGoogleSignIn = async () => {
-  setError(null);
-  try {
-    const firebaseUser = await signInWithGoogle();
+      console.log("Sending real Firebase user to backend:", googleUserData);
 
-    if (!firebaseUser.email || !firebaseUser.uid) {
-      throw new Error("Google sign-in did not return required user data.");
+      const backendResponse = await axios.post(GOOGLE_API_URL, googleUserData);
+
+      const { token, user: backendUser } = backendResponse.data;
+
+      console.log("Token from backend:", token);
+
+      const role: UserRole = backendUser?.role;
+
+      login(role, token);
+
+      if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Google Auth Integration Error:", error);
+
+      let errorMsg;
+
+      if (axios.isAxiosError(error)) {
+        errorMsg = `Backend Error: ${
+          error.response?.data?.message || "Server issue"
+        }`;
+      } else if (error instanceof Error) {
+        errorMsg = `Client Error: ${error.message}`;
+      } else {
+        errorMsg = "Unknown error occurred.";
+      }
+
+      setError(errorMsg);
     }
-
-    const googleUserData = {
-      name: firebaseUser.displayName,
-      email: firebaseUser.email,
-      profileImage: firebaseUser.photoURL,
-      uid: firebaseUser.uid,
-    };
-
-    console.log("Sending real Firebase user to backend:", googleUserData);
-
-    const backendResponse = await axios.post(GOOGLE_API_URL, googleUserData);
-
-    const { token, user: backendUser } = backendResponse.data;
-
-    console.log("Token from backend:", token);
-
-    const role: UserRole = backendUser?.email?.includes("admin")
-      ? "admin"
-      : "client";
-
-    login(role, token);
-
-    if (role === "admin") {
-      navigate("/admin/dashboard");
-    } else {
-      navigate("/");
-    }
-  } catch (error) {
-    console.error("Google Auth Integration Error:", error);
-
-    let errorMsg;
-
-    if (axios.isAxiosError(error)) {
-      errorMsg = `Backend Error: ${
-        error.response?.data?.message || "Server issue"
-      }`;
-    } else if (error instanceof Error) {
-      errorMsg = `Client Error: ${error.message}`;
-    } else {
-      errorMsg = "Unknown error occurred.";
-    }
-
-    setError(errorMsg);
-  }
-};
+  };
 
 
   const handleSubmit = async (e: FormEvent) => {
