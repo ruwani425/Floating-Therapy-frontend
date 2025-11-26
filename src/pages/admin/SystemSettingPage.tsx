@@ -10,6 +10,8 @@ import {
   Bath,
   Waves,
 } from 'lucide-react';
+import apiRequest from '../../core/axios';
+
 
 const THETA_COLORS = {
   lightestBlue: "#92B8D9",
@@ -48,36 +50,27 @@ interface Settings {
 }
 
 const SystemSettings = () => {
-  const [settings, setSettings] = useState<Settings>({
-    // Tank Pricing
-    float60MinPrice: 6500,
-    float90MinPrice: 9500,
-    packageDealPrice: 25000,
-    addonServicePrice: 2500,
-    
-    // Maintenance Time
-    maintenanceTime: 30,
-    cleaningBuffer: 15,
-    
-    // Session Settings
-    sessionsPerDay: 8,
-    maxConcurrentSessions: 3,
-    
-    // Operating Hours
-    openTime: '09:00',
-    closeTime: '21:00',
-    
-    // Days Open
-    daysOpen: {
-      monday: true,
-      tuesday: true,
-      wednesday: true,
-      thursday: true,
-      friday: true,
-      saturday: true,
-      sunday: false,
-    }
-  });
+const [settings, setSettings] = useState<Settings>({
+  float60MinPrice: 0,
+  float90MinPrice: 0,
+  packageDealPrice: 0,
+  addonServicePrice: 0,
+  maintenanceTime: 0,
+  cleaningBuffer: 0,
+  sessionsPerDay: 0,
+  maxConcurrentSessions: 0,
+  openTime: "",
+  closeTime: "",
+  daysOpen: {
+    monday: false,
+    tuesday: false,
+    wednesday: false,
+    thursday: false,
+    friday: false,
+    saturday: false,
+    sunday: false,
+  },
+});
 
   const [hasChanges, setHasChanges] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -103,15 +96,23 @@ const SystemSettings = () => {
     setSaveSuccess(false);
   };
 
-  const handleSave = () => {
-    // Simulate save operation
-    console.log('Saving settings:', settings);
-    setSaveSuccess(true);
-    setHasChanges(false);
-    
-    setTimeout(() => {
-      setSaveSuccess(false);
-    }, 3000);
+  const handleSave = async () => {
+    try {
+      const response = await apiRequest.post("/system-settings", settings);
+
+      console.log("Backend Response:", response);
+
+      setSaveSuccess(true);
+      setHasChanges(false);
+
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert("Failed to save settings. Please try again.");
+    }
   };
 
   const handleReset = () => {
