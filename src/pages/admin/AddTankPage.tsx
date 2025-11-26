@@ -40,15 +40,10 @@ const AddTankPage: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-
     try {
       console.log("Sending tank data to backend:", formData)
-
-      const response: AxiosResponse<{ message: string; tank?: any }> =
-        await apiRequest.post("/tanks", formData)
-
+      const response: AxiosResponse<{ message: string; tank?: any }> = await apiRequest.post("/tanks", formData)
       console.log("Backend response:", response.data)
-
       alert(`Tank '${formData.name}' added successfully!`)
       navigate("/admin/tank-management")
     } catch (error: any) {
@@ -58,10 +53,7 @@ const AddTankPage: React.FC = () => {
   }
 
   return (
-    <div
-      className="min-h-screen p-6 md:p-8 lg:p-10"
-      style={{ background: "linear-gradient(135deg, #6BA3C5 0%, #475D73 50%, #0F3A52 100%)" }}
-    >
+    <div className="min-h-screen p-6 md:p-8 lg:p-10 bg-gray-100">
       <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 md:p-10">
         <NavLink
           to="/admin/tank-management"
@@ -72,14 +64,12 @@ const AddTankPage: React.FC = () => {
           Back to Tank Inventory
         </NavLink>
 
-        <header className="mb-10 pb-6 border-b-2" style={{ borderColor: "#92B8D9" }}>
+        <header className="mb-10 pb-6 border-b-2" style={{ borderColor: "#ccc" }}>
           <div className="flex items-center gap-3 mb-2">
-            <PlusCircle className="w-8 h-8" style={{ color: "#0F3A52" }} />
-            <h1 className="text-4xl font-bold" style={{ color: "#233547" }}>
-              Add New Floating Tank
-            </h1>
+            <PlusCircle className="w-8 h-8 text-gray-700" />
+            <h1 className="text-4xl font-bold text-gray-800">Add New Floating Tank</h1>
           </div>
-          <p className="text-lg" style={{ color: "#5A7A95" }}>
+          <p className="text-lg text-gray-600">
             Configure the physical and service parameters.
           </p>
         </header>
@@ -87,11 +77,9 @@ const AddTankPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
-              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#92B8D9" }}>
-                <Ruler className="w-5 h-5" style={{ color: "#0F3A52" }} />
-                <h2 className="text-2xl font-bold" style={{ color: "#0F3A52" }}>
-                  Physical Specs & Pricing
-                </h2>
+              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#ccc" }}>
+                <Ruler className="w-5 h-5 text-gray-700" />
+                <h2 className="text-2xl font-bold text-gray-800">Physical Specs & Pricing</h2>
               </div>
 
               <FormField
@@ -148,16 +136,13 @@ const AddTankPage: React.FC = () => {
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#92B8D9" }}>
-                <Info className="w-5 h-5" style={{ color: "#0F3A52" }} />
-                <h2 className="text-2xl font-bold" style={{ color: "#0F3A52" }}>
-                  Therapy & Media
-                </h2>
+              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#ccc" }}>
+                <Info className="w-5 h-5 text-gray-700" />
+                <h2 className="text-2xl font-bold text-gray-800">Therapy & Media</h2>
               </div>
 
-              {/* Benefits Textarea */}
               <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold" style={{ color: "#0F3A52" }}>
+                <label className="flex items-center text-sm font-semibold text-gray-800">
                   <Text className="w-4 h-4 mr-2" />
                   Floating Therapy Benefits
                 </label>
@@ -169,27 +154,17 @@ const AddTankPage: React.FC = () => {
                   onChange={handleChange}
                   placeholder="Describe unique relaxation and health benefits..."
                   className="w-full p-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
-                  style={
-                    {
-                      borderColor: "#E0E0E0",
-                      "--tw-ring-color": "#92B8D9",
-                    } as React.CSSProperties
-                  }
+                  style={{ borderColor: "#ccc", "--tw-ring-color": "#888" } as React.CSSProperties}
                 />
-                <p className="text-xs" style={{ color: "#999" }}>
-                  This text will be used to generate content suggestions for clients.
-                </p>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t" style={{ borderColor: "#E0E0E0" }}>
+          <div className="pt-6 border-t" style={{ borderColor: "#ccc" }}>
             <button
               type="submit"
               className="px-8 py-3 text-white font-bold rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex items-center gap-2"
-              style={{ backgroundColor: "#0F3A52" }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              style={{ backgroundColor: "#333" }}
             >
               <PlusCircle className="w-5 h-5" />
               Add New Floating Tank
@@ -228,8 +203,8 @@ const FormField: React.FC<FormFieldProps> = ({
   step,
 }) => (
   <div className="space-y-2">
-    <label htmlFor={id} className="flex items-center text-sm font-semibold" style={{ color: "#0F3A52" }}>
-      <Icon className="w-4 h-4 mr-2" style={{ color: "#5A7A95" }} />
+    <label htmlFor={id} className="flex items-center text-sm font-semibold text-gray-800">
+      <Icon className="w-4 h-4 mr-2 text-gray-600" />
       {label}
     </label>
     <input
@@ -241,12 +216,7 @@ const FormField: React.FC<FormFieldProps> = ({
       placeholder={placeholder}
       step={step}
       className="w-full p-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
-      style={
-        {
-          borderColor: "#E0E0E0",
-          "--tw-ring-color": "#92B8D9",
-        } as React.CSSProperties
-      }
+      style={{ borderColor: "#ccc", "--tw-ring-color": "#888" } as React.CSSProperties}
     />
   </div>
 )
