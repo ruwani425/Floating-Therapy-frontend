@@ -32,26 +32,20 @@ import {
 } from "recharts"
 import AdminCard from "../../components/admin/AdminCard"
 
-// --- THETA LOUNGE COLOR PALETTE ---
 const THETA_COLORS = {
-  lightestBlue: "#92B8D9",
-  lightBlue: "#92B8D9",
-  mediumBlue: "#475D73",
-  darkBlue: "#233547",
+  darkestBlue: "#0F1F2E",
+  darkBlue: "#1a3a52",
+  mediumBlue: "#3a7ca5",
+  lightBlue: "#6ab4dc",
+  cyan: "#A0E7E5",
+  lightCyan: "#D4F1F9",
   white: "#FFFFFF",
   bgLight: "#F5F8FC",
-  darkGray: "#1a1a1a",
+  bgLighter: "#FAFBFC",
 }
 
-const CHART_COLORS = [
-  "#0FA3B1", // Teal
-  "#1E90FF", // Dodger Blue
-  "#FF6B9D", // Pink
-  "#FFA500", // Orange
-  "#20B2AA", // Light Sea Green
-]
+const CHART_COLORS = ["#06B6D4", "#3B82F6", "#EC4899", "#F59E0B", "#10B981"]
 
-// --- MOCK DATA & COLORS ---
 const PIE_DATA = [
   { name: "60 Min Float", value: 400 },
   { name: "90 Min Float", value: 300 },
@@ -73,10 +67,38 @@ const LINE_DATA = [
 ]
 
 const KPI_DATA = [
-  { title: "Total Revenue", value: "$12,450", change: "+5.1%", trend: "up", icon: Wallet, color: "#233547" },
-  { title: "New Bookings", value: "145", change: "+12%", trend: "up", icon: CalendarCheck, color: "#475D73" },
-  { title: "Tank Availability", value: "82%", change: "-2%", trend: "down", icon: Bath, color: "#92B8D9" },
-  { title: "Avg Session", value: "75 min", change: "+3%", trend: "up", icon: Clock, color: "#B8D4E8" },
+  {
+    title: "Total Revenue",
+    value: "$12,450",
+    change: "+5.1%",
+    trend: "up",
+    icon: Wallet,
+    color: THETA_COLORS.darkestBlue,
+  },
+  {
+    title: "New Bookings",
+    value: "145",
+    change: "+12%",
+    trend: "up",
+    icon: CalendarCheck,
+    color: THETA_COLORS.darkestBlue,
+  },
+  {
+    title: "Tank Availability",
+    value: "82%",
+    change: "-2%",
+    trend: "down",
+    icon: Bath,
+    color: THETA_COLORS.darkestBlue,
+  },
+  {
+    title: "Avg Session",
+    value: "75 min",
+    change: "+3%",
+    trend: "up",
+    icon: Clock,
+    color: THETA_COLORS.darkestBlue,
+  },
 ]
 
 const dashboardOptions = [
@@ -85,65 +107,51 @@ const dashboardOptions = [
     path: "/admin/reservations",
     description: "Manage all appointments and schedules.",
     icon: CalendarCheck,
-    iconColor: "#233547",
   },
   {
     title: "Tank Management",
     path: "/admin/tank-management",
     description: "Monitor floating tank capacity and status.",
     icon: Bath,
-    iconColor: "#233547", // Changed from #475D73 to #233547 (dark blue)
   },
   {
     title: "User Accounts",
     path: "/admin/users",
     description: "Manage all system users and members.",
     icon: User,
-    iconColor: "#233547", // Changed from #92B8D9 to #233547 (dark blue)
   },
   {
     title: "Services & Pricing",
     path: "/admin/pricing",
     description: "Update therapy services and package rates.",
     icon: DollarSign,
-    iconColor: "#233547", // Changed from #B8D4E8 to #233547 (dark blue)
   },
   {
     title: "Reports & Analytics",
     path: "/admin/reports",
     description: "View performance metrics and insights.",
     icon: TrendingUp,
-    iconColor: "#233547",
   },
   {
     title: "Content Management",
     path: "/admin/content",
     description: "Edit website pages and blog posts.",
     icon: BookOpen,
-    iconColor: "#233547", // Changed from #475D73 to #233547 (dark blue)
   },
   {
     title: "Access Control",
     path: "/admin/roles",
     description: "Manage admin permissions and roles.",
     icon: Shield,
-    iconColor: "#233547", // Changed from #92B8D9 to #233547 (dark blue)
   },
   {
     title: "Global Settings",
     path: "/admin/system-settings",
     description: "Configure application settings.",
     icon: Settings,
-    iconColor: "#233547", // Changed from #B8D4E8 to #233547 (dark blue)
   },
 ]
 
-interface PieLabelRenderProps {
-  name?: string
-  percent?: number
-}
-
-// --- STAT CARD COMPONENT ---
 const StatCard: React.FC<(typeof KPI_DATA)[0] & { icon: React.ElementType }> = ({
   title,
   value,
@@ -152,53 +160,43 @@ const StatCard: React.FC<(typeof KPI_DATA)[0] & { icon: React.ElementType }> = (
   icon: Icon,
   color,
 }) => (
-  <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col">
+  <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col">
     <div className="flex items-start justify-between mb-4">
       <div className="flex-1">
-        <p
-          className="text-xs font-display font-bold uppercase tracking-wider mb-2"
-          style={{ color: THETA_COLORS.mediumBlue }}
-        >
+        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: THETA_COLORS.mediumBlue }}>
           {title}
         </p>
-        <h4 className="text-3xl font-serif font-bold mb-3" style={{ color: THETA_COLORS.darkBlue }}>
+        <h4 className="text-3xl font-bold mb-3" style={{ color: THETA_COLORS.darkestBlue }}>
           {value}
         </h4>
         <div
-          className={`flex items-center text-xs font-semibold ${trend === "up" ? "text-green-600" : "text-red-600"}`}
+          className={`flex items-center text-xs font-semibold ${trend === "up" ? "text-emerald-600" : "text-red-600"}`}
         >
           {trend === "up" ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />}
           {change} vs last period
         </div>
       </div>
-      <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
-        <Icon className="w-6 h-6" style={{ color: color }} />
+      <div className="p-4 rounded-xl" style={{ backgroundColor: THETA_COLORS.lightCyan }}>
+        <Icon className="w-6 h-6" style={{ color: THETA_COLORS.darkestBlue }} />
       </div>
     </div>
   </div>
 )
 
-// --- CHART COMPONENTS ---
 const BookingTrendLineChart: React.FC = () => (
-  <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-    <div
-      className="absolute inset-0 opacity-5 pointer-events-none"
-      style={{
-        backgroundImage: `url(/placeholder.svg?height=280&width=560&query=floating therapy meditation water)`,
-        backgroundPosition: "center",
-        backgroundSize: "cover",
-      }}
-    ></div>
+  <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
     <div className="relative z-10">
-      <h3 className="text-xl font-serif font-bold mb-6" style={{ color: THETA_COLORS.darkBlue }}>
+      <h3 className="text-lg font-bold mb-6" style={{ color: THETA_COLORS.darkestBlue }}>
         Weekly Booking Trends
       </h3>
       <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={LINE_DATA}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e8f0f7" />
-          <XAxis dataKey="name" stroke={THETA_COLORS.mediumBlue} />
-          <YAxis stroke={THETA_COLORS.mediumBlue} />
-          <Tooltip />
+        <LineChart data={LINE_DATA} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="name" stroke="#64748b" />
+          <YAxis stroke="#64748b" />
+          <Tooltip
+            contentStyle={{ backgroundColor: THETA_COLORS.white, border: `1px solid ${THETA_COLORS.lightBlue}` }}
+          />
           <Legend />
           <Line
             type="monotone"
@@ -207,7 +205,7 @@ const BookingTrendLineChart: React.FC = () => (
             strokeWidth={3}
             activeDot={{ r: 8 }}
             name="Total Bookings"
-            dot={{ fill: CHART_COLORS[0], r: 4 }}
+            dot={{ fill: CHART_COLORS[0], r: 5 }}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -216,28 +214,20 @@ const BookingTrendLineChart: React.FC = () => (
 )
 
 const TankUtilizationBarChart: React.FC = () => (
-  <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-    <div
-      className="absolute inset-0 opacity-5 pointer-events-none"
-      style={{
-        backgroundImage: `url(/placeholder.svg?height=280&width=560&query=floating tank spa water)`,
-        backgroundPosition: "center",
-        backgroundSize: "cover",
-      }}
-    ></div>
+  <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
     <div className="relative z-10">
-      <h3 className="text-xl font-serif font-bold mb-6" style={{ color: THETA_COLORS.darkBlue }}>
+      <h3 className="text-lg font-bold mb-6" style={{ color: THETA_COLORS.darkestBlue }}>
         Tank Utilization
       </h3>
       <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={BAR_DATA}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e8f0f7" />
-          <XAxis dataKey="name" stroke={THETA_COLORS.mediumBlue} />
-          <YAxis unit="%" domain={[0, 100]} stroke={THETA_COLORS.mediumBlue} />
-          <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+        <BarChart data={BAR_DATA} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="name" stroke="#64748b" />
+          <YAxis unit="%" domain={[0, 100]} stroke="#64748b" />
+          <Tooltip formatter={(value) => [`${value}%`, ""]} contentStyle={{ backgroundColor: THETA_COLORS.white }} />
           <Legend />
           <Bar dataKey="utilization" fill={CHART_COLORS[1]} name="Actual Utilization" radius={[8, 8, 0, 0]} />
-          <Bar dataKey="ideal" fill={CHART_COLORS[3]} name="Ideal Target" radius={[8, 8, 0, 0]} opacity={0.6} />
+          <Bar dataKey="ideal" fill={CHART_COLORS[3]} name="Ideal Target" radius={[8, 8, 0, 0]} opacity={0.5} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -245,17 +235,9 @@ const TankUtilizationBarChart: React.FC = () => (
 )
 
 const RevenuePieChart: React.FC = () => (
-  <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-    <div
-      className="absolute inset-0 opacity-5 pointer-events-none"
-      style={{
-        backgroundImage: `url(/placeholder.svg?height=280&width=280&query=wellness therapy relaxation)`,
-        backgroundPosition: "center",
-        backgroundSize: "cover",
-      }}
-    ></div>
+  <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-all duration-300 relative overflow-hidden">
     <div className="relative z-10">
-      <h3 className="text-xl font-serif font-bold mb-6" style={{ color: THETA_COLORS.darkBlue }}>
+      <h3 className="text-lg font-bold mb-6" style={{ color: THETA_COLORS.darkestBlue }}>
         Revenue Breakdown by Service
       </h3>
       <ResponsiveContainer width="100%" height={280}>
@@ -266,10 +248,10 @@ const RevenuePieChart: React.FC = () => (
             nameKey="name"
             cx="50%"
             cy="50%"
-            outerRadius={90}
+            outerRadius={85}
             labelLine={false}
             label={(props: any) => {
-              if (props.name && props.percent !== undefined) {
+              if (props.percent !== undefined) {
                 return `${(props.percent * 100).toFixed(0)}%`
               }
               return ""
@@ -279,7 +261,7 @@ const RevenuePieChart: React.FC = () => (
               <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => `$${value}`} />
+          <Tooltip formatter={(value) => `$${value}`} contentStyle={{ backgroundColor: THETA_COLORS.white }} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
@@ -287,53 +269,38 @@ const RevenuePieChart: React.FC = () => (
   </div>
 )
 
-// --- MAIN DASHBOARD COMPONENT ---
 const AdminDashboard: React.FC = () => {
   return (
     <div style={{ backgroundColor: THETA_COLORS.bgLight }} className="min-h-screen">
-      <div className="w-full mx-auto p-6 md:p-10 max-w-7xl">
-        <header className="mb-12 relative">
-          <div
-            className="absolute -inset-8 opacity-10 rounded-3xl pointer-events-none"
-            style={{
-              backgroundImage: `url(/placeholder.svg?height=200&width=800&query=floating therapy water meditation relaxation)`,
-              backgroundPosition: "center",
-              backgroundSize: "cover",
-            }}
-          ></div>
-          <div className="relative z-10">
-            <div className="flex items-end gap-4 mb-3">
-              <div className="p-3 rounded-full" style={{ backgroundColor: `${THETA_COLORS.lightBlue}25` }}>
-                <Waves className="w-8 h-8" style={{ color: THETA_COLORS.darkBlue }} />
-              </div>
-              <h1 className="text-5xl font-serif font-bold leading-tight" style={{ color: THETA_COLORS.darkBlue }}>
-                Admin Dashboard
-              </h1>
+      <div className="w-full mx-auto p-6 md:p-8 max-w-7xl">
+        <header className="mb-10">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="p-3 rounded-xl" style={{ backgroundColor: THETA_COLORS.lightCyan }}>
+              <Waves className="w-7 h-7" style={{ color: THETA_COLORS.darkestBlue }} />
             </div>
-            <p
-              className="text-base font-display font-bold uppercase tracking-wider ml-16"
-              style={{ color: THETA_COLORS.lightBlue }}
-            >
-              Manage Your Theta Lounge Operations
-            </p>
+            <h1 className="text-4xl font-bold" style={{ color: THETA_COLORS.darkestBlue }}>
+              Admin Dashboard
+            </h1>
           </div>
+          <p
+            className="text-sm font-semibold uppercase tracking-wider ml-16"
+            style={{ color: THETA_COLORS.mediumBlue }}
+          >
+            Manage Your Theta Lounge Operations
+          </p>
         </header>
 
-        {/* Management Tools Section */}
-        <section className="mb-14">
+        <section className="mb-12">
           <div className="mb-8">
-            <p
-              className="text-xs font-display font-bold uppercase tracking-wider mb-2"
-              style={{ color: THETA_COLORS.lightBlue }}
-            >
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: THETA_COLORS.mediumBlue }}>
               Quick Access
             </p>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold" style={{ color: THETA_COLORS.darkBlue }}>
+            <h2 className="text-3xl font-bold" style={{ color: THETA_COLORS.darkestBlue }}>
               Management Tools
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {dashboardOptions.map((option, index) => (
               <AdminCard
                 key={option.title}
@@ -342,26 +309,21 @@ const AdminDashboard: React.FC = () => {
                 description={option.description}
                 Icon={option.icon}
                 animationDelay={index * 0.05}
-                iconColor={option.iconColor}
               />
             ))}
           </div>
         </section>
 
-        {/* KPI Cards */}
-        <section className="mb-14">
+        <section className="mb-12">
           <div className="mb-8">
-            <p
-              className="text-xs font-display font-bold uppercase tracking-wider mb-2"
-              style={{ color: THETA_COLORS.lightBlue }}
-            >
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: THETA_COLORS.mediumBlue }}>
               Performance Overview
             </p>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold" style={{ color: THETA_COLORS.darkBlue }}>
+            <h2 className="text-3xl font-bold" style={{ color: THETA_COLORS.darkestBlue }}>
               Quick Stats
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {KPI_DATA.map((kpi) => (
               <StatCard
                 key={kpi.title}
@@ -376,16 +338,12 @@ const AdminDashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Charts Grid */}
         <section>
           <div className="mb-8">
-            <p
-              className="text-xs font-display font-bold uppercase tracking-wider mb-2"
-              style={{ color: THETA_COLORS.lightBlue }}
-            >
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: THETA_COLORS.mediumBlue }}>
               Analytics
             </p>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold" style={{ color: THETA_COLORS.darkBlue }}>
+            <h2 className="text-3xl font-bold" style={{ color: THETA_COLORS.darkestBlue }}>
               Performance Insights
             </h2>
           </div>
@@ -393,18 +351,10 @@ const AdminDashboard: React.FC = () => {
             <BookingTrendLineChart />
             <TankUtilizationBarChart />
             <RevenuePieChart />
-            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-              <div
-                className="absolute inset-0 opacity-5 pointer-events-none"
-                style={{
-                  backgroundImage: `url(/placeholder.svg?height=280&width=280&query=floating therapy wellness)`,
-                  backgroundPosition: "center",
-                  backgroundSize: "cover",
-                }}
-              ></div>
+            <div className="p-8 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center items-center text-center hover:shadow-lg transition-all duration-300 relative overflow-hidden">
               <div className="relative z-10">
-                <TrendingUp className="w-12 h-12 mb-4" style={{ color: THETA_COLORS.lightBlue }} />
-                <p className="font-serif font-bold text-lg" style={{ color: THETA_COLORS.darkBlue }}>
+                <TrendingUp className="w-12 h-12 mb-4" style={{ color: THETA_COLORS.darkestBlue }} />
+                <p className="font-bold text-lg" style={{ color: THETA_COLORS.darkestBlue }}>
                   More analytics coming soon
                 </p>
                 <p className="text-sm mt-2" style={{ color: THETA_COLORS.mediumBlue }}>

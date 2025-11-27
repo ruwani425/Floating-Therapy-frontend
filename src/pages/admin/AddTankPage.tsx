@@ -1,8 +1,10 @@
+// Light backgrounds, dark text, dark buttons and form inputs
+
 "use client"
 
 import type React from "react"
 import { useState, type FormEvent, type ChangeEvent } from "react"
-import { NavLink, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { PlusCircle, Hash, Ruler, Clock, Info, Text, ArrowLeft, DollarSign, User } from "lucide-react"
 import apiRequest from "../../core/axios"
 import type { AxiosResponse } from "axios"
@@ -53,33 +55,34 @@ const AddTankPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 md:p-8 lg:p-10 bg-gray-100">
-      <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 md:p-10">
-        <NavLink
-          to="/admin/tank-management"
-          className="inline-flex items-center mb-8 text-base font-semibold transition-colors hover:opacity-80"
-          style={{ color: "#233547" }}
+    <div className="min-h-screen p-6 md:p-8 lg:p-10 bg-gradient-to-br from-[#F0F8FB] via-[#E8F4F9] to-[#F5FAFC]">
+      <div className="w-full max-w-4xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-lg p-8 md:p-10 border border-cyan-100/50 hover:border-cyan-200/70 transition-colors duration-300">
+        <button
+          onClick={() => navigate("/admin/tank-management")}
+          className="inline-flex items-center mb-8 text-base font-semibold transition-all duration-300 hover:text-cyan-600 hover:translate-x-1 text-slate-700"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Tank Inventory
-        </NavLink>
+        </button>
 
-        <header className="mb-10 pb-6 border-b-2" style={{ borderColor: "#ccc" }}>
+        <header className="mb-10 pb-8 border-b-2 border-cyan-200/60">
           <div className="flex items-center gap-3 mb-2">
-            <PlusCircle className="w-8 h-8 text-gray-700" />
-            <h1 className="text-4xl font-bold text-gray-800">Add New Floating Tank</h1>
+            <div className="p-2 rounded-lg bg-cyan-100/40 border border-cyan-300/50">
+              <PlusCircle className="w-8 h-8 text-cyan-700" />
+            </div>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-800 to-blue-900 bg-clip-text text-transparent">
+              Add New Floating Tank
+            </h1>
           </div>
-          <p className="text-lg text-gray-600">
-            Configure the physical and service parameters.
-          </p>
+          <p className="text-lg text-slate-600 ml-11">Configure the physical and service parameters.</p>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 space-y-6">
-              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#ccc" }}>
-                <Ruler className="w-5 h-5 text-gray-700" />
-                <h2 className="text-2xl font-bold text-gray-800">Physical Specs & Pricing</h2>
+              <div className="flex items-center gap-2 border-b-2 border-cyan-200/60 pb-3">
+                <Ruler className="w-5 h-5 text-cyan-700" />
+                <h2 className="text-2xl font-bold text-slate-800">Physical Specs & Pricing</h2>
               </div>
 
               <FormField
@@ -136,14 +139,14 @@ const AddTankPage: React.FC = () => {
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center gap-2 border-b-2 pb-3" style={{ borderColor: "#ccc" }}>
-                <Info className="w-5 h-5 text-gray-700" />
-                <h2 className="text-2xl font-bold text-gray-800">Therapy & Media</h2>
+              <div className="flex items-center gap-2 border-b-2 border-cyan-200/60 pb-3">
+                <Info className="w-5 h-5 text-cyan-700" />
+                <h2 className="text-2xl font-bold text-slate-800">Therapy & Media</h2>
               </div>
 
               <div className="space-y-2">
-                <label className="flex items-center text-sm font-semibold text-gray-800">
-                  <Text className="w-4 h-4 mr-2" />
+                <label className="flex items-center text-sm font-semibold text-slate-800">
+                  <Text className="w-4 h-4 mr-2 text-cyan-700" />
                   Floating Therapy Benefits
                 </label>
                 <textarea
@@ -153,23 +156,22 @@ const AddTankPage: React.FC = () => {
                   value={formData.benefits}
                   onChange={handleChange}
                   placeholder="Describe unique relaxation and health benefits..."
-                  className="w-full p-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
-                  style={{ borderColor: "#ccc", "--tw-ring-color": "#888" } as React.CSSProperties}
+                  className="w-full p-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 bg-blue-50/40 border-cyan-200/60 text-slate-800 placeholder-slate-400 focus:ring-cyan-400/60 focus:border-cyan-400/80 focus:shadow-lg focus:shadow-cyan-200/20"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t" style={{ borderColor: "#ccc" }}>
+          <div className="pt-8 border-t border-cyan-200/40">
             <button
               type="submit"
-              className="px-8 py-3 text-white font-bold rounded-lg shadow-md transition-all duration-300 hover:shadow-lg flex items-center gap-2"
-              style={{ backgroundColor: "#333" }}
+              className="px-8 py-4 text-white font-bold rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-cyan-300/40 flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95"
             >
               <PlusCircle className="w-5 h-5" />
               Add New Floating Tank
             </button>
           </div>
+
         </form>
       </div>
     </div>
@@ -178,7 +180,6 @@ const AddTankPage: React.FC = () => {
 
 export default AddTankPage
 
-// --- Helper Components ---
 interface FormFieldProps {
   id: string
   name: string
@@ -203,8 +204,8 @@ const FormField: React.FC<FormFieldProps> = ({
   step,
 }) => (
   <div className="space-y-2">
-    <label htmlFor={id} className="flex items-center text-sm font-semibold text-gray-800">
-      <Icon className="w-4 h-4 mr-2 text-gray-600" />
+    <label htmlFor={id} className="flex items-center text-sm font-semibold text-slate-800">
+      <Icon className="w-4 h-4 mr-2 text-cyan-700" />
       {label}
     </label>
     <input
@@ -215,8 +216,7 @@ const FormField: React.FC<FormFieldProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       step={step}
-      className="w-full p-3 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2"
-      style={{ borderColor: "#ccc", "--tw-ring-color": "#888" } as React.CSSProperties}
+      className="w-full p-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 bg-blue-50/40 border-cyan-200/60 text-slate-800 placeholder-slate-400 focus:ring-cyan-400/60 focus:border-cyan-400/80 focus:shadow-lg focus:shadow-cyan-200/20"
     />
   </div>
 )
