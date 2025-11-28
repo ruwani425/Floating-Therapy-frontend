@@ -1,64 +1,74 @@
-import React, { useState, useMemo } from 'react';
-// Removed react-calendar imports
-import { Users, Shield ,CalendarCheck, Clock, User, Mail, MessageSquare, AlertTriangle, Send, Info, Tally1, Zap, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { CalendarCheck, Clock, User, Mail, MessageSquare, AlertTriangle, Send, Tally1, Zap, CheckCircle, ChevronLeft, ChevronRight, Users, Shield } from 'lucide-react';
 
+// NOTE: Assuming this path is correct relative to the file's location
+import apiRequest from "../core/axios"; 
 
 // --- 1. TypeScript Interfaces & Data ---
 
-// Mock data: A set of dates that have "booked" or "available" slots
-const MOCK_DATE_STATUS: Record<string, 'booked' | 'available' | 'full'> = {
-    '2025-11-21': 'available', 
-    '2025-11-25': 'available',
-    '2025-11-27': 'available',
-    '2025-11-28': 'full', 
-    '2025-12-01': 'available',
-    '2025-12-05': 'available',
-    '2025-12-06': 'full',
-    // Dates for the screenshot's visual (using Nov 2025 as the current month)
-    '2025-11-09': 'full', 
-    '2025-11-10': 'available', 
-    '2025-11-14': 'available', 
-    '2025-11-30': 'full', 
+const DAY_STATUS = {
+    BOOKABLE: 'Bookable',
+    CLOSED: 'Closed',
+    SOLD_OUT: 'Sold Out',
+} as const;
+type DayStatus = typeof DAY_STATUS[keyof typeof DAY_STATUS];
+
+/** * MATCHES ICalendarDetail from your backend, plus bookedSessions which is calculated/returned.
+ */
+interface CalendarDetailFromBackend {
+    date: string; // YYYY-MM-DD
+    status: DayStatus;
+    openTime?: string; // Optional override time
+    closeTime?: string; // Optional override time
+    sessionsToSell: number; // Total slots available for the day (across all tanks)
+    bookedSessions: number; // Total slots booked (Used for frontend calculation)
+}
+
+/** The overall response structure expected from the backend GET endpoints. */
+interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    message?: string;
+}
+
+/** * MATCHES your SystemSettings interface exactly.
+ */
+interface SystemSettings {
+    defaultFloatPrice: number;
+    cleaningBuffer: number;
+    sessionsPerDay: number;
+    openTime: string; 
+    closeTime: string; 
+}
+
+// Default settings used as a fallback (Ensuring all properties are present)
+const GLOBAL_DEFAULTS: SystemSettings = {
+    defaultFloatPrice: 0,
+    cleaningBuffer: 30, // Example default
+    sessionsPerDay: 8, // Example default
+    openTime: '09:00', 
+    closeTime: '21:00' 
 };
 
-// Mock slots for a specific date 
-const MOCK_SLOTS: string[] = ['09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM'];
+// --- CORE LOGIC CONSTANTS (90-minute cycle) ---
+const SESSION_DURATION_MINUTES = 60;
+const BREAK_DURATION_MINUTES = 30; 
+const TOTAL_CYCLE_MINUTES = SESSION_DURATION_MINUTES + BREAK_DURATION_MINUTES; // 90 minutes
 
-// 🆕 Mock Operational Hours (Day of the week 0=Sunday, 6=Saturday)
-const MOCK_OPERATIONAL_HOURS: Record<number, string> = {
-    0: 'CLOSED', // Sunday
-    1: '09:00 - 17:00', // Monday
-    2: '09:00 - 17:00', // Tuesday
-    3: '09:00 - 17:00', // Wednesday
-    4: '09:00 - 17:00', // Thursday
-    5: '09:00 - 16:00', // Friday (Slightly shorter)
-    6: '10:00 - 14:00', // Saturday (Half Day)
-};
-
-// 🔄 Updated Session Status Data Structure 
-const MOCK_SESSIONS = (hours: string, dateStatus: string) => [
-    { label: 'Available Sessions', value: (dateStatus === 'full' || hours === 'CLOSED' ? '0 slots' : '7 slots'), status: (dateStatus === 'full' || hours === 'CLOSED' ? 'full' : 'available') },
-    { label: 'Closed Status', value: (hours === 'CLOSED' || dateStatus === 'full' ? 'Yes' : 'No'), status: (hours === 'CLOSED' || dateStatus === 'full' ? 'full' : 'open') },
-    { label: 'Open and Close Time', value: hours, status: 'info' },
-    { label: 'Total Session Count', value: '10 sessions', status: 'full' },
-];
-// ---------------------------------------------
-
-// Palette: 94CCE7, 2DA0CC, 0873A1, 035C84
+// --- THEME & UTILITIES ---
 const THEME_COLORS: { [key: string]: string } = {
-    '--theta-blue': '#035C84',       // Dark Blue (Main Action Button/Primary Accent)
-    '--theta-blue-dark': '#0873A1',  // Medium Dark Blue (Hover State/Dark Headings)
-    '--light-blue-50': '#F0F8FF',    // Very Light Blue (Background/Hover States - slightly lighter than 94CCE7)
-    '--light-blue-200': '#94CCE7',   // Light Cyan Blue (Borders/Secondary Light Accent)
-    '--theta-red': '#EF4444',        // Red (Error/Warning - kept) 
-    '--theta-green': '#10B981',      // Green (Success - kept) 
-    '--dark-blue-800': '#003F5C',    // Very Dark Blue (Text/Headings - slightly darker than 035C84 for contrast)
-    '--accent-color': '#2DA0CC',     // Accent Cyan Blue (Selected Date/Time Slot selection)
+    '--theta-blue': '#035C84', 
+    '--theta-blue-dark': '#0873A1',
+    '--light-blue-50': '#F0F8FF',
+    '--light-blue-200': '#94CCE7',
+    '--theta-red': '#EF4444',
+    '--theta-green': '#10B981',
+    '--dark-blue-800': '#003F5C',
+    '--accent-color': '#2DA0CC',
 };
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-// --- Utility Functions (Kept Unchanged) ---
 const getDaysInMonth = (date: Date): Date[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -85,24 +95,98 @@ const getDaysInMonth = (date: Date): Date[] => {
     return days;
 };
 
-const formatDateToKey = (date: Date): string => date.toISOString().split('T')[0];
+/**
+ * FIX: Use local date components for consistent date key generation.
+ */
+const formatDateToKey = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+};
+
 const isSameDay = (date1: Date | null, date2: Date | null): boolean => {
     if (!date1 || !date2) return false;
     return date1.toDateString() === date2.toDateString();
 };
 const isToday = (date: Date): boolean => isSameDay(date, new Date());
 
+/**
+ * Generates available session start times based on the 90-minute cycle.
+ */
+const generateTimeSlots = (openTime: string, closeTime: string): string[] => {
+    const slots: string[] = [];
+    const fixedDate = '2000/01/01';
 
-// --- 2. Custom Calendar Component (Kept) ---
+    try {
+        let current = new Date(`${fixedDate} ${openTime}`);
+        const close = new Date(`${fixedDate} ${closeTime}`);
+
+        const cycleDurationMs = TOTAL_CYCLE_MINUTES * 60 * 1000;
+        const sessionDurationMs = SESSION_DURATION_MINUTES * 60 * 1000;
+
+        while (current.getTime() + sessionDurationMs <= close.getTime()) {
+            const timeString = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            slots.push(timeString);
+            
+            current = new Date(current.getTime() + cycleDurationMs);
+        }
+    } catch (e) {
+        console.error("Time slot generation error:", e);
+    }
+    return slots;
+};
+
+// --- API SERVICE ---
+
+const CALENDAR_API_BASE_URL = "/calendar";
+const SETTINGS_API_BASE_URL = "/system-settings";
+
+const apiService = {
+    getSystemSettings: async (): Promise<SystemSettings> => {
+        try {
+            const response = await apiRequest.get<ApiResponse<SystemSettings>>(SETTINGS_API_BASE_URL); 
+            
+            return { ...GLOBAL_DEFAULTS, ...response.data }; 
+        } catch (error) {
+            console.error("Failed to fetch system settings. Using fallback defaults.", error);
+            return GLOBAL_DEFAULTS;
+        }
+    },
+    
+    getCalendarOverrides: async (formattedStartDate: string, formattedEndDate: string): Promise<CalendarDetailFromBackend[]> => {
+        try {
+            const apiResponse = await apiRequest.get<ApiResponse<CalendarDetailFromBackend[]>>(CALENDAR_API_BASE_URL, {
+                params: { startDate: formattedStartDate, endDate: formattedEndDate }
+            });
+
+            if (apiResponse.success && apiResponse.data) {
+                return apiResponse.data.map(detail => ({
+                    ...detail,
+                    bookedSessions: detail.bookedSessions ?? 0 
+                }));
+            }
+            return [];
+        } catch (error) {
+            console.error("Failed to fetch calendar overrides.", error);
+            return [];
+        }
+    },
+};
+
+
+// --- 2. Custom Calendar Component ---
 
 interface CustomCalendarProps {
     currentDate: Date;
     onDateChange: (date: Date) => void;
     onMonthChange: (date: Date) => void;
     selectedDate: Date | null;
+    dayOverrides: Record<string, CalendarDetailFromBackend>;
 }
 
-const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChange, onMonthChange, selectedDate }) => {
+const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChange, onMonthChange, selectedDate, dayOverrides }) => {
     const calendarDays = useMemo(() => getDaysInMonth(currentDate), [currentDate]);
 
     const handlePrevMonth = () => {
@@ -116,34 +200,32 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
     };
 
     const getTileClass = (date: Date) => {
-        const dateKey = formatDateToKey(date);
-        const status = MOCK_DATE_STATUS[dateKey];
+        const dateKey = formatDateToKey(date); 
+        const override = dayOverrides[dateKey];
         const isCurrentMonth = date.getMonth() === currentDate.getMonth();
 
         let baseClasses = "flex items-center justify-center h-10 w-10 text-center text-sm font-semibold rounded-full transition duration-150 cursor-pointer";
 
-        // Check if the date is in the past
         const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0));
-
-        // Dates outside current month or past dates (non-selectable/non-clickable)
+        
         if (!isCurrentMonth || isPastDate) {
             return `${baseClasses} text-gray-400 cursor-not-allowed`; 
         }
 
         const isSelected = isSameDay(date, selectedDate);
-        const isFull = status === 'full';
         const isTodayMarker = isToday(date);
         
-        // Check for operational hours (Day 0=Sunday, Day 6=Saturday)
-        const dayOfWeek = date.getDay();
-        const isClosedForDay = MOCK_OPERATIONAL_HOURS[dayOfWeek] === 'CLOSED';
+        // Dynamic Status Check (Prioritizes override status)
+        const isClosedOrFull = override?.status === DAY_STATUS.CLOSED || override?.status === DAY_STATUS.SOLD_OUT;
 
         if (isSelected) {
             return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`;
-        } else if (isTodayMarker) {
-            return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`;
-        } else if (isFull || isClosedForDay) {
+        } else if (isClosedOrFull) {
+            // FIX: Check for closed/sold out first, ensuring the red color overrides the "Today" blue color.
             return `${baseClasses} bg-red-500 text-white shadow-md`;
+        } else if (isTodayMarker) {
+            // Only mark today as blue if it is available/bookable.
+            return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`;
         } else {
             return `${baseClasses} text-gray-700 hover:bg-gray-100`;
         }
@@ -194,33 +276,72 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
     );
 };
 
-const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate }) => {
-    const mockDefaultDate = new Date(2025, 10, 27); 
-    const displayDate = selectedDate || mockDefaultDate; 
+
+interface EventSidebarProps {
+    selectedDate: Date | null;
+    dayOverrides: Record<string, CalendarDetailFromBackend>;
+    defaultHours: SystemSettings;
+}
+
+const EventSidebar: React.FC<EventSidebarProps> = ({ selectedDate, dayOverrides, defaultHours }) => {
     
-    const dateKey = formatDateToKey(displayDate);
-    const dateStatus = MOCK_DATE_STATUS[dateKey];
+    const displayDate = selectedDate || new Date(); 
+    const dateKey = formatDateToKey(displayDate); 
+    const override = dayOverrides[dateKey];
+
+    // Determine effective open/close times (Override first, then Default)
+    const effectiveOpenTime = override?.openTime || defaultHours.openTime;
+    const effectiveCloseTime = override?.closeTime || defaultHours.closeTime;
+
+    // Determine current hours and status based on override or default
+    const operationalHours = override?.status !== DAY_STATUS.CLOSED 
+        ? `${effectiveOpenTime} - ${effectiveCloseTime}`
+        : 'CLOSED';
+
+    const sessionsToSell = override?.sessionsToSell || 0;
+    const bookedSessions = override?.bookedSessions || 0;
+    const availableSlots = Math.max(0, sessionsToSell - bookedSessions);
+    
+    // FIX APPLIED HERE: Determine status with correct priority
+    let dateStatus: DayStatus;
+
+    if (override?.status === DAY_STATUS.CLOSED) {
+        // Priority 1: If the database explicitly says CLOSED, honor it.
+        dateStatus = DAY_STATUS.CLOSED;
+    } else if (availableSlots <= 0) {
+        // Priority 2: If capacity is 0 (and it wasn't explicitly Closed), mark SOLD OUT.
+        dateStatus = DAY_STATUS.SOLD_OUT; 
+    } else {
+        // Priority 3: Otherwise, use the explicit status or default to Bookable.
+        dateStatus = override?.status || DAY_STATUS.BOOKABLE;
+    }
+
+
+    // Sidebar Display Properties
+    const isClosedOrFull = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT;
+    const dateBoxColor = isClosedOrFull ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
+    
+    const sessions = [
+        // availableSlots logic remains based on sessionsToSell - bookedSessions
+        { label: 'Available Sessions', value: `${availableSlots} slots`, status: (isClosedOrFull || availableSlots === 0) ? 'full' : 'available' },
+        
+        // This line uses the fixed dateStatus:
+        { label: 'Closed Status', value: dateStatus === DAY_STATUS.CLOSED ? 'Yes' : 'No', status: dateStatus === DAY_STATUS.CLOSED ? 'full' : 'open' },
+        
+        { label: 'Open and Close Time', value: operationalHours, status: 'info' },
+        { label: 'Total Session Count', value: `${sessionsToSell} sessions`, status: 'full' },
+    ];
 
     const dateNum = displayDate.getDate().toString().padStart(2, '0');
     const month = displayDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    
-    const dayOfWeek = displayDate.getDay();
-    const operationalHours = MOCK_OPERATIONAL_HOURS[dayOfWeek] || '09:00 - 17:00'; 
-
-    const isClosedOrFull = dateStatus === 'full' || operationalHours === 'CLOSED';
-    
-    const dateBoxColor = isClosedOrFull ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
-
-    const sessions = MOCK_SESSIONS(operationalHours, dateStatus || 'unavailable');
-
     const getStatusColor = (status: 'available' | 'open' | 'info' | 'full') => {
         switch (status) {
             case 'available':
             case 'open':
                 return 'text-green-600 border-green-300 bg-green-50'; 
             case 'full':
-                return 'text-red-600 border-red-300 bg-red-50';      
+                return 'text-red-600 border-red-300 bg-red-50'; 
             case 'info':
             default:
                 return 'text-gray-700'; 
@@ -239,8 +360,8 @@ const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate })
                 </div>
                 
                 <div className="flex items-center pt-1 text-sm">
-                    <span className="text-gray-500 mr-1">View:</span>
-                    <a href="#" className="font-semibold text-gray-700 hover:text-[var(--accent-color)] transition">All</a>
+                    <span className="text-gray-500 mr-1">Status:</span>
+                    <span className={`font-bold ${isClosedOrFull ? 'text-[var(--theta-red)]' : 'text-[var(--theta-green)]'}`}>{dateStatus.toUpperCase()}</span>
                 </div>
             </div>
 
@@ -270,9 +391,9 @@ const EventSidebar: React.FC<{ selectedDate: Date | null }> = ({ selectedDate })
 
 
 const ConsolidatedBookingForm: React.FC = () => {
-    // --- State Initialization (Preserved) ---
-    const [currentMonth, setCurrentMonth] = useState<Date>(new Date(2025, 10, 1)); 
-    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date(2025, 10, 27)); 
+    // --- State Initialization ---
+    const [currentMonth, setCurrentMonth] = useState<Date>(new Date()); 
+    const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()); 
     const [contactNumber, setContactNumber] = useState('');
     const [email, setEmail] = useState('');
     const [specialNote, setSpecialNote] = useState(''); 
@@ -280,12 +401,55 @@ const ConsolidatedBookingForm: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [dayOverrides, setDayOverrides] = useState<Record<string, CalendarDetailFromBackend>>({});
+    const [defaultHours, setDefaultHours] = useState<SystemSettings>(GLOBAL_DEFAULTS);
+    const [loadingCalendar, setLoadingCalendar] = useState(false);
 
 
-    // --- Handlers (Preserved) ---
+    // --- Dynamic Data Fetching ---
+    const fetchCalendarData = useCallback(async (date: Date) => {
+        setLoadingCalendar(true);
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        const formattedStartDate = formatDateToKey(startOfMonth); 
+        const formattedEndDate = formatDateToKey(endOfMonth);     
+        
+        try {
+            // Fetch System Settings (Defaults) and Calendar Overrides
+            const [settings, overrides] = await Promise.all([
+                apiService.getSystemSettings(),
+                apiService.getCalendarOverrides(formattedStartDate, formattedEndDate)
+            ]);
+
+            setDefaultHours(settings);
+            
+            // Map overrides for quick lookup
+            const overridesMap = overrides.reduce((acc, curr) => {
+                acc[curr.date] = curr;
+                return acc;
+            }, {} as Record<string, CalendarDetailFromBackend>);
+
+            setDayOverrides(overridesMap);
+        } catch (e) {
+            setMessage("Failed to load appointment schedule.");
+            console.error(e);
+        } finally {
+            setLoadingCalendar(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Fetch data whenever the current month changes
+        fetchCalendarData(currentMonth);
+    }, [currentMonth, fetchCalendarData]);
+
+
+    // --- Handlers ---
     const handleDateSelect = (date: Date) => {
         setSelectedDate(date);
         setSelectedTime(''); 
+        setMessage(null);
     };
 
     const handleMonthNavigate = (date: Date) => {
@@ -296,57 +460,77 @@ const ConsolidatedBookingForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        let isValidForBooking = true;
-        
-        if (selectedDate) {
-            const dateKey = formatDateToKey(selectedDate);
-            const status = MOCK_DATE_STATUS[dateKey];
-            const dayOfWeek = selectedDate.getDay();
-            const isClosed = MOCK_OPERATIONAL_HOURS[dayOfWeek] === 'CLOSED';
-            
-            if (status === 'full' || isClosed) {
-                isValidForBooking = false;
-                setMessage('The selected date is unavailable for booking. Please choose another date or time.');
-            }
-        } else {
-            isValidForBooking = false;
+        const dateKey = selectedDate ? formatDateToKey(selectedDate) : null; 
+        const override = dateKey ? dayOverrides[dateKey] : null;
+
+        if (!selectedDate || !selectedTime || !email || !contactNumber) {
+            setMessage('Please select an available date, time, and provide your email and contact number.');
+            return;
         }
 
-        if (!selectedTime || !isValidForBooking || !email || !contactNumber) {
-            if (!message) { 
-                 setMessage('Please select an available date, time, and provide your email and contact number.');
+        const dateStatus: DayStatus = (() => {
+            const sessionsToSell = override?.sessionsToSell || 0;
+            const bookedSessions = override?.bookedSessions || 0;
+            const availableSlots = Math.max(0, sessionsToSell - bookedSessions);
+            
+            if (override?.status === DAY_STATUS.CLOSED) {
+                return DAY_STATUS.CLOSED;
+            } else if (availableSlots <= 0) {
+                return DAY_STATUS.SOLD_OUT;
+            } else {
+                return override?.status || DAY_STATUS.BOOKABLE;
             }
+        })();
+
+        const isClosedOrFull = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT;
+        
+        if (isClosedOrFull) {
+            setMessage('The selected date is unavailable for booking. Please choose another date.');
             return;
+        }
+
+        const availableSlotsForTime = filteredSlots.length > 0;
+        if (!availableSlotsForTime) {
+             setMessage('No available slots on the selected date. Please choose another date.');
+             return;
         }
 
         setIsSubmitting(true);
         setMessage('Processing your appointment...');
         setSuccessMessage(null);
 
+        // --- Mock API call simulation for booking submission ---
+        // In a real implementation, you would make an API call here.
         await new Promise(resolve => setTimeout(resolve, 2000)); 
         
         setIsSubmitting(false);
         setSuccessMessage(`Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. We will contact you at ${contactNumber}.`);
-        setMessage(''); 
+        setMessage(null); 
         
         setSelectedTime('');
         setSelectedDate(null);
     };
 
 
+    // --- Time Slot Calculation Logic (Centralized) ---
     const filteredSlots = useMemo(() => {
-        if (!selectedDate) return []; 
+        if (!selectedDate || loadingCalendar) return []; 
 
-        const dateKey = formatDateToKey(selectedDate);
-        const status = MOCK_DATE_STATUS[dateKey];
-        
-        const dayOfWeek = selectedDate.getDay();
-        const isClosed = MOCK_OPERATIONAL_HOURS[dayOfWeek] === 'CLOSED';
+        const dateKey = formatDateToKey(selectedDate); 
+        const override = dayOverrides[dateKey];
 
-        if (status === 'full' || isClosed) return [];
+        // PRIORITIZE OVERRIDE TIMES, FALLBACK TO DEFAULTS
+        const effectiveOpenTime = override?.openTime || defaultHours.openTime;
+        const effectiveCloseTime = override?.closeTime || defaultHours.closeTime;
+        const status = override?.status || DAY_STATUS.BOOKABLE;
+
+        if (status === DAY_STATUS.CLOSED || status === DAY_STATUS.SOLD_OUT) return [];
         
-        return MOCK_SLOTS;
-    }, [selectedDate]);
+        // Generate time slots based on the dynamic operational hours (90 min cycle)
+        const slots = generateTimeSlots(effectiveOpenTime, effectiveCloseTime);
+        
+        return slots;
+    }, [selectedDate, dayOverrides, defaultHours, loadingCalendar]);
 
     const inputClass = "input-style";
     
@@ -407,16 +591,25 @@ const ConsolidatedBookingForm: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-10 mb-12 border border-gray-100 rounded-lg shadow-md p-6">
                         
                         <div className="lg:col-span-3 p-4 border-r border-gray-200">
-                            <CustomCalendar
-                                currentDate={currentMonth}
-                                onDateChange={handleDateSelect}
-                                onMonthChange={handleMonthNavigate}
-                                selectedDate={selectedDate}
-                            />
+                            {loadingCalendar ? (
+                                <div className="text-center py-20 text-gray-500 font-medium">Loading schedule...</div>
+                            ) : (
+                                <CustomCalendar
+                                    currentDate={currentMonth}
+                                    onDateChange={handleDateSelect}
+                                    onMonthChange={handleMonthNavigate}
+                                    selectedDate={selectedDate}
+                                    dayOverrides={dayOverrides}
+                                />
+                            )}
                         </div>
 
                         <div className="lg:col-span-1 pt-6 lg:pt-0">
-                            <EventSidebar selectedDate={selectedDate} />
+                            <EventSidebar 
+                                selectedDate={selectedDate} 
+                                dayOverrides={dayOverrides} 
+                                defaultHours={defaultHours}
+                            />
                         </div>
                     </div>
 
@@ -455,7 +648,12 @@ const ConsolidatedBookingForm: React.FC = () => {
                                 </div>
                             ) : (
                                 <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center font-medium">
-                                    {selectedDate ? (MOCK_OPERATIONAL_HOURS[selectedDate.getDay()] === 'CLOSED' ? "We are closed on this date." : "No available slots on the selected date.") : "Please select a date."}
+                                    {selectedDate ? (
+                                        // Display status based on the determined dateStatus in the sidebar logic
+                                        (dayOverrides[formatDateToKey(selectedDate)]?.status === DAY_STATUS.CLOSED)
+                                            ? "We are closed on this date." 
+                                            : "No available slots on the selected date (Capacity full or operational hours too short)."
+                                    ) : "Please select a date."}
                                 </div>
                             )}
 
@@ -532,7 +730,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                                 <button
                                     type="submit"
                                     className="w-full px-10 py-3.5 text-lg font-bold rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-xl"
-                                    // Validation now correctly checks selectedTime, email, and contactNumber
                                     disabled={isSubmitting || !selectedTime || !email || !contactNumber}
                                     style={{
                                         backgroundColor: isSubmitting || !selectedTime || !email || !contactNumber ? THEME_COLORS['--light-blue-200'] : THEME_COLORS['--theta-blue'],
@@ -547,7 +744,6 @@ const ConsolidatedBookingForm: React.FC = () => {
 
                     </form>
                     
-                    {/* --- Session Details Section --- */}
                     <SessionDetails />
                     
                 </div> 
@@ -557,6 +753,7 @@ const ConsolidatedBookingForm: React.FC = () => {
     );
 };
 
+// Component below remains the same.
 const SessionDetails: React.FC = () => (
     <div className="pt-10 mt-12 border-t border-[var(--light-blue-200)] lg:col-span-2">
       <h2 className="text-3xl font-serif font-bold text-[var(--dark-blue-800)] mb-2 flex items-center">
@@ -571,7 +768,7 @@ const SessionDetails: React.FC = () => (
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
           <div className="relative h-48 bg-gradient-to-br from-[var(--light-blue-50)] to-[var(--light-blue-200)] flex items-center justify-center overflow-hidden">
             <img
-              src="/person-enjoying-relaxing-one-hour-floating-therapy.jpg"
+              src="/person-enjoying-relaxing-one-hour-floating-therapy.jpg" 
               alt="Limited capacity floating therapy facility"
               className="w-full h-full object-cover"
             />
