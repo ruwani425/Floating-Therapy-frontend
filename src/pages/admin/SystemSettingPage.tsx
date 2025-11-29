@@ -1,10 +1,9 @@
 "use client"
-
-import type React from "react"
-import { useState } from "react"
+import { useState, memo, useCallback } from "react"
 import { Save, RotateCcw, CheckCircle, AlertCircle } from "lucide-react"
 import apiRequest from "../../core/axios"
 
+// --- INTERFACE DEFINITION ---
 interface SystemSettingsProps {
   defaultFloatPrice: number
   cleaningBuffer: number
@@ -13,11 +12,12 @@ interface SystemSettingsProps {
   closeTime: string
 }
 
+// --- THEME COLORS ---
 const THETA_COLORS = {
-  primary: "#5B8DC4", // Light-medium blue
-  primaryDark: "#2C4A6F", // Dark blue
-  primaryLight: "#A8D0E8", // Light blue
-  lightBg: "#F0F6FB", // Very light blue background
+  primary: "#5B8DC4",
+  primaryDark: "#2C4A6F",
+  primaryLight: "#A8D0E8",
+  lightBg: "#F0F6FB",
   white: "#FFFFFF",
   gray100: "#F3F4F6",
   gray200: "#E5E7EB",
@@ -29,6 +29,64 @@ const THETA_COLORS = {
   warning: "#F59E0B",
 }
 
+type SettingField = keyof SystemSettingsProps
+
+interface InputFieldProps {
+  label: string
+  field: SettingField
+  type: "number" | "time" | "text"
+  value: string | number
+  unit?: string
+  description?: string
+  onChange: (field: SettingField, value: number | string) => void
+}
+
+const InputField = memo(({ label, field, type, value, unit, description, onChange }: InputFieldProps) => (
+  <div className="space-y-2">
+    <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
+      {label}
+    </label>
+    <div className="relative">
+      {unit && type === "number" && (
+        <span
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm font-medium z-10"
+          style={{ color: THETA_COLORS.textLight }}
+        >
+          {unit}
+        </span>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(field, type === "number" ? Number(e.target.value) : e.target.value)}
+        className={`w-full py-2.5 border rounded-lg focus:outline-none transition-all duration-200 ${
+          unit && type === "number" ? "pl-14 pr-4" : "px-4"
+        }`}
+        style={{
+          borderColor: THETA_COLORS.gray200,
+          backgroundColor: THETA_COLORS.white,
+          color: THETA_COLORS.text,
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = THETA_COLORS.primary
+          e.currentTarget.style.boxShadow = `0 0 0 3px ${THETA_COLORS.primary}20`
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = THETA_COLORS.gray200
+          e.currentTarget.style.boxShadow = "none"
+        }}
+      />
+    </div>
+    {description && (
+      <p className="text-xs" style={{ color: THETA_COLORS.textLight }}>
+        {description}
+      </p>
+    )}
+  </div>
+))
+
+InputField.displayName = "InputField"
+
 const SystemSettings = () => {
   const [settings, setSettings] = useState<SystemSettingsProps>({
     defaultFloatPrice: 0,
@@ -37,43 +95,37 @@ const SystemSettings = () => {
     openTime: "09:00",
     closeTime: "21:00",
   })
-
   const [hasChanges, setHasChanges] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
-  type SettingField = keyof SystemSettingsProps
-
-  const handleInputChange = (field: SettingField, value: number | string) => {
+  // --- HANDLERS ---
+  const handleInputChange = useCallback((field: SettingField, value: number | string) => {
     setSettings((prev) => ({
       ...prev,
       [field]: value,
     }))
     setHasChanges(true)
     setSaveSuccess(false)
-  }
+  }, [])
+
   const handleSave = async () => {
     try {
-      console.log("Sending to backend:", settings);
-
-      const response = await apiRequest.post<{ message: string }>(
-        "/system-settings",
-        settings
-      );
-
-      console.log("Backend response:", response);
-
-      setSaveSuccess(true);
-      setHasChanges(false);
-
+      setIsSaving(true)
+      console.log("Sending to backend:", settings)
+      await apiRequest.post<{ message: string }>("/system-settings", settings)
+      setSaveSuccess(true)
+      setHasChanges(false)
       setTimeout(() => {
-        setSaveSuccess(false);
-      }, 4000);
-
+        setSaveSuccess(false)
+      }, 4000)
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      console.error("Failed to save settings:", error)
+      alert("Failed to save settings. Check console for details.")
+    } finally {
+      setIsSaving(false)
     }
-  };
-
+  }
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset all settings to default values?")) {
@@ -88,56 +140,6 @@ const SystemSettings = () => {
       setSaveSuccess(false)
     }
   }
-
-  const InputField: React.FC<{
-    label: string
-    field: SettingField
-    type: "number" | "time" | "text"
-    value: string | number
-    unit?: string
-    description?: string
-  }> = ({ label, field, type, value, unit, description }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
-        {label}
-      </label>
-      <div className="relative">
-        {unit && type === "number" && (
-          <span
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm font-medium"
-            style={{ color: THETA_COLORS.textLight }}
-          >
-            {unit}
-          </span>
-        )}
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => handleInputChange(field, type === "number" ? Number(e.target.value) : e.target.value)}
-          className="w-full px-4 py-2.5 border rounded-lg focus:outline-none transition-all duration-200"
-          style={{
-            borderColor: THETA_COLORS.gray200,
-            paddingLeft: unit && type === "number" ? "3.5rem" : undefined,
-            backgroundColor: THETA_COLORS.white,
-            color: THETA_COLORS.text,
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = THETA_COLORS.primary
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${THETA_COLORS.primary}20`
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = THETA_COLORS.gray200
-            e.currentTarget.style.boxShadow = "none"
-          }}
-        />
-      </div>
-      {description && (
-        <p className="text-xs" style={{ color: THETA_COLORS.textLight }}>
-          {description}
-        </p>
-      )}
-    </div>
-  )
 
   return (
     <div style={{ backgroundColor: THETA_COLORS.lightBg }} className="min-h-screen py-8">
@@ -230,6 +232,7 @@ const SystemSettings = () => {
               value={settings.defaultFloatPrice}
               unit="LKR"
               description="Standard base price applied to all tank sessions"
+              onChange={handleInputChange}
             />
           </div>
 
@@ -260,6 +263,7 @@ const SystemSettings = () => {
               type="number"
               value={settings.sessionsPerDay}
               description="Maximum bookings allowed per tank daily"
+              onChange={handleInputChange}
             />
           </div>
 
@@ -291,6 +295,7 @@ const SystemSettings = () => {
                 type="time"
                 value={settings.openTime}
                 description="Start of first available session"
+                onChange={handleInputChange}
               />
               <InputField
                 label="Closing Time"
@@ -298,6 +303,7 @@ const SystemSettings = () => {
                 type="time"
                 value={settings.closeTime}
                 description="End of last scheduled session"
+                onChange={handleInputChange}
               />
               <InputField
                 label="Cleaning Buffer"
@@ -306,6 +312,7 @@ const SystemSettings = () => {
                 value={settings.cleaningBuffer}
                 unit="min"
                 description="Time between sessions for cleaning"
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -315,6 +322,7 @@ const SystemSettings = () => {
         <div className="flex items-center justify-end gap-3">
           <button
             onClick={handleReset}
+            disabled={isSaving}
             className="px-6 py-2.5 font-semibold rounded-lg border-2 transition-all duration-200 hover:bg-opacity-50 flex items-center gap-2"
             style={{
               borderColor: THETA_COLORS.gray300,
@@ -333,15 +341,15 @@ const SystemSettings = () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges || isSaving}
             className="px-8 py-2.5 font-semibold text-white rounded-lg transition-all duration-200 flex items-center gap-2"
             style={{
-              backgroundColor: hasChanges ? THETA_COLORS.primary : THETA_COLORS.gray300,
-              cursor: hasChanges ? "pointer" : "not-allowed",
-              opacity: hasChanges ? 1 : 0.6,
+              backgroundColor: hasChanges && !isSaving ? THETA_COLORS.primary : THETA_COLORS.gray300,
+              cursor: hasChanges && !isSaving ? "pointer" : "not-allowed",
+              opacity: hasChanges && !isSaving ? 1 : 0.6,
             }}
             onMouseEnter={(e) => {
-              if (hasChanges) {
+              if (hasChanges && !isSaving) {
                 e.currentTarget.style.backgroundColor = THETA_COLORS.primaryDark
               }
             }}
@@ -352,7 +360,7 @@ const SystemSettings = () => {
             }}
           >
             <Save className="w-4 h-4" />
-            Save Changes
+            {isSaving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
