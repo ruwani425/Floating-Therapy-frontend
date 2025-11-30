@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, memo } from "react"
 import { useNavigate } from "react-router-dom"
 import { Bath, PlusCircle, ArrowLeft, Trash2, Edit } from "lucide-react" 
 import apiRequest from "../../core/axios" 
+import Swal from 'sweetalert2';
 
 // --- INTERFACE DEFINITION ---
 
@@ -106,11 +107,27 @@ const TankManagementPage: React.FC = () => {
         // Use apiRequest.patch for partial update (status only)
         await apiRequest.patch(`/tanks/${id}`, { status: newStatus }); 
         console.log(`Tank ${id} status updated to ${newStatus}`);
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated!',
+          text: `Tank status changed to ${newStatus}.`,
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2500,
+        });
+
     } catch (error) {
         console.error("Failed to update tank status:", error);
         // Revert UI on failure
         setTanks(originalTanks);
-        alert("Failed to update status. Check console for details.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: 'Failed to update status. Reverting change.',
+          confirmButtonText: 'OK'
+        });
     } finally {
         setUpdating(null);
     }
@@ -119,17 +136,40 @@ const TankManagementPage: React.FC = () => {
 
   // 2. Handle Delete
   const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to permanently delete tank: ${name}? This action cannot be undone.`)) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to permanently delete tank: ${name}. This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      // --- THEME INTEGRATION: Set confirm button color to match the primary cyan theme ---
+      confirmButtonColor: '#0891B2', // Using hex for Tailwind cyan-700
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    
+    if (result.isConfirmed) {
         try {
             // Send DELETE request to the backend
             await apiRequest.delete(`/tanks/${id}`);
 
             // Update UI optimistically by filtering the deleted tank
             setTanks(prev => prev.filter(t => t._id !== id));
-            alert(`Tank ${name} deleted successfully.`);
+            
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted!',
+              text: `Tank ${name} has been deleted.`,
+              timer: 2000,
+              showConfirmButton: false
+            });
         } catch (error) {
             console.error("Failed to delete tank:", error);
-            alert("Failed to delete tank. Ensure the tank is not currently booked.");
+            Swal.fire({
+              icon: 'error',
+              title: 'Deletion Failed',
+              text: "Failed to delete tank. Ensure the tank is not currently booked.",
+              confirmButtonText: 'OK'
+            });
         }
     }
   };
@@ -156,7 +196,13 @@ const TankManagementPage: React.FC = () => {
         setTanks(mappedTanks)
       } catch (error) {
         console.error("Failed to fetch tanks:", error)
-        alert("Failed to fetch tanks. Check console for details.") 
+        // Swal for loading error
+        Swal.fire({
+          icon: 'error',
+          title: 'Load Error',
+          text: 'Failed to fetch tanks data. Check console for details.',
+          confirmButtonText: 'OK'
+        });
       } finally {
         setLoading(false)
       }
@@ -261,11 +307,11 @@ const TankManagementPage: React.FC = () => {
                         
                         {/* Status (Toggle Button) */}
                         <td className="px-6 py-4 whitespace-nowrap align-top">
-                            <StatusToggle 
-                                tank={tank}
-                                onUpdate={handleStatusUpdate}
-                                disabled={updating === tank._id}
-                            />
+                            <StatusToggle 
+                                tank={tank}
+                                onUpdate={handleStatusUpdate}
+                                disabled={updating === tank._id}
+                            />
                         </td>
                         
                         {/* Capacity */}

@@ -3,7 +3,7 @@ import { useState, type FormEvent, type ChangeEvent, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom" 
 import { PlusCircle, Hash, Ruler, Info, Text, ArrowLeft, Edit, Loader2, User } from "lucide-react" 
 import apiRequest from "../../core/axios"
-// import type { AxiosResponse } from "axios" // Removed as apiRequest appears to return the data body directly
+import Swal from 'sweetalert2'; // This import is correct, but needs @types/sweetalert2 installed
 
 // --- INTERFACE DEFINITION ---
 
@@ -82,8 +82,15 @@ const AddTankPage: React.FC = () => {
           setFormData(tankData);
         } catch (error) {
           console.error(`Failed to fetch tank ${id}:`, error);
-          // Using alert instead of a custom modal for simplicity as per instructions
-          alert(`Failed to load tank data. Check console. Redirecting to tank inventory.`);
+          
+          // SWAL replacement for failed load
+          Swal.fire({
+            icon: 'error',
+            title: 'Load Failed',
+            text: 'Failed to load tank data. Redirecting to inventory.',
+            confirmButtonText: 'OK'
+          });
+          
           navigate('/admin/tank-management');
         } finally {
           setIsLoading(false);
@@ -135,13 +142,27 @@ const AddTankPage: React.FC = () => {
       
       // MODIFICATION: Logging the responseData directly (which is the body)
       console.log("Backend response (data body):", responseData)
-      // Using alert instead of a custom modal for simplicity as per instructions
-      alert(successMessage) 
-      navigate("/admin/tank-management")
+      
+      // SWAL replacement for success
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: successMessage,
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => {
+        navigate("/admin/tank-management");
+      });
     } catch (error: any) {
       console.error("Failed to save tank", error)
-      // Using alert instead of a custom modal for simplicity as per instructions
-      alert("Failed to save tank. Check console for details.")
+      
+      // SWAL replacement for failure
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: 'Failed to save tank. Check console for details.',
+        confirmButtonText: 'OK'
+      });
     }
   }
   
@@ -288,6 +309,8 @@ const AddTankPage: React.FC = () => {
 
         </form>
       </div>
+      
+      
     </div>
   )
 }
