@@ -16,7 +16,7 @@ import {
   Save,
 } from "lucide-react"
 import Swal from "sweetalert2"
-import apiRequest from "../../core/axios" // Assuming correct path for axios instance
+import apiRequest from "../../core/axios" 
 
 // --- DATE UTILITY FUNCTIONS ---
 const _format = (date: Date, fmt: string): string => {
@@ -39,30 +39,15 @@ const _format = (date: Date, fmt: string): string => {
   if (fmt === "EEEE, MMMM do, yyyy") {
     const daysLong = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     const monthsLong = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December",
     ]
     const suffix = (d: number) => {
       if (d > 3 && d < 21) return "th"
       switch (d % 10) {
-        case 1:
-          return "st"
-        case 2:
-          return "nd"
-        case 3:
-          return "rd"
-        default:
-          return "th"
+        case 1: return "st"
+        case 2: return "nd"
+        case 3: return "rd"
+        default: return "th"
       }
     }
     return `${daysLong[dayOfWeek]}, ${monthsLong[date.getMonth()]} ${day}${suffix(day)}, ${year}`
@@ -130,6 +115,7 @@ interface Tank {
   width: number
   benefits: string
   status: "Ready" | "Maintenance"
+  // Removed hardcoded sessionDuration, but kept type for tank details if used later
   sessionDuration: number
 }
 
@@ -140,6 +126,8 @@ interface FacilityDayData {
   totalAvailableSessions: number
   totalBookedSessions: number
   overrideData: CalendarDetailFromBackend[]
+  // Added cycleDuration for UI display and clarity
+  cycleDuration: number 
 }
 
 interface CalendarDetailFromBackend {
@@ -169,36 +157,54 @@ interface ApiResponse<T> {
 
 interface SystemSettings {
   defaultFloatPrice: number
-  cleaningBuffer: number
+  cleaningBuffer: number // Used for BREAK_DURATION_MINUTES
+  sessionDuration: number // Used for SESSION_DURATION_MINUTES
   sessionsPerDay: number
   openTime: string
   closeTime: string
 }
 
 // --- SESSION CALCULATION UTILITY ---
-const SESSION_DURATION_MINUTES = 60
-const BREAK_DURATION_MINUTES = 30
-const TOTAL_CYCLE_MINUTES = SESSION_DURATION_MINUTES + BREAK_DURATION_MINUTES
 
-const calculateSessionCountPerTank = (openTime: string, closeTime: string): number => {
-  const cycleTime = TOTAL_CYCLE_MINUTES
+/**
+ * Calculates the number of full session cycles possible within the operating hours,
+ * based on dynamic session and cleaning times.
+ * @param openTime 'HH:mm'
+ * @param closeTime 'HH:mm'
+ * @param sessionDuration The duration of the session in minutes (e.g., 60)
+ * @param cleaningBuffer The duration of the cleaning buffer/break in minutes (e.g., 30)
+ * @returns number of sessions per tank
+ */
+const calculateSessionCountPerTank = (
+  openTime: string,
+  closeTime: string,
+  sessionDuration: number,
+  cleaningBuffer: number
+): number => {
+  const totalCycleMinutes = sessionDuration + cleaningBuffer
+  if (totalCycleMinutes <= 0) return 0
+    
   try {
     const fixedDate = "2000/01/01"
     const open = new Date(`${fixedDate} ${openTime}`)
     const close = new Date(`${fixedDate} ${closeTime}`)
+    
     if (close.getTime() <= open.getTime()) return 0
+    
     const durationMinutes = (close.getTime() - open.getTime()) / (60 * 1000)
-    return Math.floor(durationMinutes / cycleTime)
+    return Math.floor(durationMinutes / totalCycleMinutes)
   } catch (e) {
+    console.error("Error calculating session count:", e);
     return 0
   }
 }
 
 // --- MINIMAL DEFAULT DATA (Failover Only) ---
-// Using the openTime of "10:00" from the API response object for a more accurate failover.
+// Using 60 and 30 as a sensible default if the API fetch fails completely
 const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   defaultFloatPrice: 27,
-  cleaningBuffer: 30,
+  cleaningBuffer: 30, 
+  sessionDuration: 60,
   sessionsPerDay: 7,
   openTime: "10:00", 
   closeTime: "21:00",
@@ -210,30 +216,28 @@ const SETTINGS_API_BASE_URL = "/system-settings"
 const TANK_API_BASE_URL = "/tanks"
 
 const apiService = {
-  getSystemSettings: async (): Promise<SystemSettings> => {
-    try {
-      // Assuming apiRequest.get<{ data: SystemSettings }> returns { data: SystemSettings } directly, as in the original code
-      const response = await apiRequest.get<{ data: SystemSettings }>(SETTINGS_API_BASE_URL)
-      
-      // Merge with failover defaults only to ensure all keys exist
-      return { ...DEFAULT_SYSTEM_SETTINGS, ...response.data }
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to Load Settings",
-        text: "Could not fetch system settings. Using failover defaults.",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-      })
-      return DEFAULT_SYSTEM_SETTINGS
-    }
-  },
+getSystemSettings: async (): Promise<SystemSettings> => {
+  try {
+    const response = await apiRequest.get<SystemSettings>(SETTINGS_API_BASE_URL)
+
+    return { ...DEFAULT_SYSTEM_SETTINGS, ...response }  // ✅ FIXED
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Failed to Load Settings",
+      text: "Could not fetch system settings. Using defaults.",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000,
+    })
+    return DEFAULT_SYSTEM_SETTINGS
+  }
+}
+,
   getAllTanks: async (): Promise<Tank[]> => {
     try {
       const response = await apiRequest.get<Tank[]>(TANK_API_BASE_URL)
-      // Assuming response is the array of tanks directly, as in the original code
       return response || []
     } catch (error) {
       Swal.fire({
@@ -259,7 +263,6 @@ const apiService = {
       if (apiResponse.success && apiResponse.data) {
         return apiResponse.data.map((override) => ({
           ...override,
-          // Ensure bookedSessions exists and is capped by sessionsToSell. No more Math.random() fallback.
           bookedSessions: Math.min(override.sessionsToSell, override.bookedSessions || 0),
           tankId: override.tankId || "missing-tank-id",
         }))
@@ -313,9 +316,10 @@ const apiService = {
 interface DaySettingsSidebarProps {
   isOpen: boolean
   onClose: () => void
-  dayData: FacilityDayData | null // Updated to allow null
-  onSave: () => Promise<void> // Changed to async to match usage in App component
+  dayData: FacilityDayData | null 
+  onSave: () => Promise<void> 
   readyTankCount: number
+  cycleDuration: number // Passed from App component
 }
 
 const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
@@ -324,17 +328,38 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
   dayData,
   onSave,
   readyTankCount,
+  cycleDuration, // Used here
 }) => {
-  // Use dayData values or the minimal failover defaults
   const [openTime, setOpenTime] = useState(dayData?.hours.open || DEFAULT_SYSTEM_SETTINGS.openTime)
   const [closeTime, setCloseTime] = useState(dayData?.hours.close || DEFAULT_SYSTEM_SETTINGS.closeTime)
   const [status, setStatus] = useState<DayStatus>(dayData?.status || DAY_STATUS.BOOKABLE)
   const [isSaving, setIsSaving] = useState(false)
-
+  
+  // Recalculate sessions using current local state times and fetched global cycle duration
   const maxSessionsPerTank = useMemo(() => {
-    return calculateSessionCountPerTank(openTime, closeTime)
-  }, [openTime, closeTime])
+    // Note: We need the individual session and buffer times, not the cycle duration.
+    // If the systemSettings is available in the main App, we should pass those too.
+    // For now, relying on the calculation in the main component.
+    
+    // For calculating max sessions in the sidebar, we'll use the hardcoded/default duration values
+    // as we don't have access to systemSettings.sessionDuration/cleaningBuffer here directly.
+    // However, since we rely on 'cycleDuration' passed from App, we should use a consistent calculation.
+    // Let's rely on the cycleDuration passed from the parent for consistency.
+    
+    if (cycleDuration <= 0) return 0;
 
+    try {
+      const fixedDate = "2000/01/01"
+      const open = new Date(`${fixedDate} ${openTime}`)
+      const close = new Date(`${fixedDate} ${closeTime}`)
+      if (close.getTime() <= open.getTime()) return 0
+      const durationMinutes = (close.getTime() - open.getTime()) / (60 * 1000)
+      return Math.floor(durationMinutes / cycleDuration)
+    } catch (e) {
+      return 0
+    }
+  }, [openTime, closeTime, cycleDuration])
+  
   const calculatedFacilitySessions = maxSessionsPerTank * readyTankCount
 
   useEffect(() => {
@@ -362,7 +387,7 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
         Swal.fire({
           icon: "warning",
           title: "Validation Error",
-          text: `Operating hours must allow for at least one ${TOTAL_CYCLE_MINUTES}-minute cycle.`,
+          text: `Operating hours must allow at least one full session + cleaning cycle (${cycleDuration} minutes).`,
         })
         return
       }
@@ -409,7 +434,6 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
     }
   }
 
-  // Handle case where dayData might be null during transition
   if (!dayData) return null 
 
   const sidebarClass = `fixed inset-y-0 right-0 w-80 bg-white p-6 shadow-2xl transition-transform duration-300 ease-in-out z-[100] ${isOpen ? "translate-x-0" : "translate-x-full"}`
@@ -485,7 +509,7 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Calculated Total Sessions ({readyTankCount} ready tanks * {TOTAL_CYCLE_MINUTES} min cycle)
+                  Calculated Total Sessions ({readyTankCount} ready tanks * {cycleDuration} min cycle)
                 </label>
                 <div className="mt-1 block w-full rounded-md bg-gray-100 border border-gray-300 shadow-sm p-2 text-lg font-bold text-blue-700">
                   {calculatedFacilitySessions}
@@ -702,11 +726,17 @@ const App: React.FC = () => {
   const [calendarDays, setCalendarDays] = useState<FacilityDayData[]>([])
   const [loading, setLoading] = useState(true)
   const [tanks, setTanks] = useState<Tank[]>([])
-  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null) // State for settings
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null) 
 
   const readyTankCount = useMemo(() => {
     return tanks.filter((tank) => tank.status === "Ready").length
   }, [tanks])
+  
+  // Calculate Cycle Duration based on fetched settings
+  const totalCycleMinutes = useMemo(() => {
+    if (!systemSettings) return 0;
+    return systemSettings.sessionDuration + systemSettings.cleaningBuffer;
+  }, [systemSettings]);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedDayData, setSelectedDayData] = useState<FacilityDayData | null>(null)
@@ -730,11 +760,14 @@ const App: React.FC = () => {
   // 2. Fetch Calendar Data after tanks and settings are loaded
   const fetchCalendarData = useCallback(
     async (isInitialLoad = false) => {
-      if (!systemSettings || loading) return // Wait for initial data load
+      if (!systemSettings || loading) return
 
       if (isInitialLoad) setLoading(true)
 
       const currentReadyTankCount = tanks.filter((tank) => tank.status === "Ready").length
+      
+      const { openTime: defaultOpenTime, closeTime: defaultCloseTime, sessionDuration, cleaningBuffer } = systemSettings;
+      
       try {
         const formattedStartDate = _format(startDate, "yyyy-MM-dd")
         const formattedEndDate = _format(endDate, "yyyy-MM-dd")
@@ -754,25 +787,31 @@ const App: React.FC = () => {
 
           // Use system defaults as a base for the day
           let status: DayStatus = DAY_STATUS.BOOKABLE
-          let openTime = systemSettings.openTime
-          let closeTime = systemSettings.closeTime
+          let openTime = defaultOpenTime
+          let closeTime = defaultCloseTime
           let totalSessionsToSell = 0
           let totalBookedSessions = 0
           
-          // Calculate sessions based on defaults
-          const sessionsPerTank = calculateSessionCountPerTank(openTime, closeTime)
-          totalSessionsToSell = sessionsPerTank * currentReadyTankCount
-          
-          // Apply override if it exists, otherwise use calculated defaults for that day
+          // Apply override if it exists
           if (facilityRecord) {
             status = facilityRecord.status
-            openTime = facilityRecord.openTime || openTime
-            closeTime = facilityRecord.closeTime || closeTime
-            totalSessionsToSell = facilityRecord.sessionsToSell // Use the overridden number
-            totalBookedSessions = facilityRecord.bookedSessions // Use the booked number from API
-          } else {
-            // For days without an override, assume 0 booked sessions initially
-            totalBookedSessions = 0; 
+            openTime = facilityRecord.openTime || defaultOpenTime
+            closeTime = facilityRecord.closeTime || defaultCloseTime
+            totalSessionsToSell = facilityRecord.sessionsToSell
+            totalBookedSessions = facilityRecord.bookedSessions
+          } 
+          
+          // Calculate sessions based on effective hours and dynamic duration settings
+          const sessionsPerTank = calculateSessionCountPerTank(
+            openTime, 
+            closeTime, 
+            sessionDuration, 
+            cleaningBuffer
+          )
+          
+          // If no override, recalculate sessionsToSell based on tank count
+          if (!facilityRecord) {
+             totalSessionsToSell = sessionsPerTank * currentReadyTankCount
           }
 
           let totalAvailableSessions = totalSessionsToSell - totalBookedSessions
@@ -791,7 +830,8 @@ const App: React.FC = () => {
             hours: { open: openTime, close: closeTime },
             totalAvailableSessions,
             totalBookedSessions,
-            overrideData: facilityRecord ? [facilityRecord] : [], // Only include actual overrides
+            overrideData: facilityRecord ? [facilityRecord] : [],
+            cycleDuration: sessionDuration + cleaningBuffer, // Pass cycle duration for UI clarity
           }
         })
         setCalendarDays(newCalendarDays)
@@ -806,9 +846,8 @@ const App: React.FC = () => {
   )
 
   useEffect(() => {
-    // Re-fetch calendar data whenever date range, tanks, or settings change
     if (systemSettings) {
-        fetchCalendarData(false) // Not an initial load, just a refresh
+        fetchCalendarData(false) 
     }
   }, [startDate, endDate, readyTankCount, systemSettings, fetchCalendarData])
 
@@ -838,16 +877,20 @@ const App: React.FC = () => {
   }
 
   const toggleDayStatus = async (dayData: FacilityDayData) => {
-    if (!dayData || !dayData.date) return
+    if (!dayData || !dayData.date || !systemSettings) return
     if (dayData.status === DAY_STATUS.SOLD_OUT) return
 
     const newStatus: DayStatus = dayData.status === DAY_STATUS.CLOSED ? DAY_STATUS.BOOKABLE : DAY_STATUS.CLOSED
     
-    // Recalculate sessions based on the hours currently set for the day
-    const sessionsPerTank = calculateSessionCountPerTank(dayData.hours.open, dayData.hours.close)
+    // Recalculate sessions using current day hours and dynamic duration settings
+    const sessionsPerTank = calculateSessionCountPerTank(
+        dayData.hours.open, 
+        dayData.hours.close, 
+        systemSettings.sessionDuration, 
+        systemSettings.cleaningBuffer
+    )
     const calculatedFacilitySessions = sessionsPerTank * readyTankCount
     
-    // If setting to CLOSED, sessionsToSell must be 0
     const sessionsToSend = newStatus === DAY_STATUS.CLOSED ? 0 : calculatedFacilitySessions
 
     try {
@@ -910,7 +953,6 @@ const App: React.FC = () => {
     return "w-20"
   }
   
-  // Display loading until tanks and settings are loaded
   const isDataReady = !loading && systemSettings !== null
 
   return (
@@ -980,6 +1022,7 @@ const App: React.FC = () => {
                     {dates.map((date, index) => {
                       const formattedDate = _format(date, "MMM dd")
                       const dayOfWeek = _format(date, "EEE")
+                      // Find the corresponding calendar data for the date
                       const dayData =
                         calendarDays.find((d) => d.date === _format(date, "yyyy-MM-dd")) || ({} as FacilityDayData)
                       return (
@@ -1089,13 +1132,15 @@ const App: React.FC = () => {
           </div>
         )}
       </div>
-      {isSidebarOpen && selectedDayData && (
+      {isSidebarOpen && selectedDayData && systemSettings && (
         <DaySettingsSidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
           dayData={selectedDayData}
           onSave={fetchCalendarData}
           readyTankCount={readyTankCount}
+          // Pass the dynamically calculated total cycle time
+          cycleDuration={totalCycleMinutes}
         />
       )}
     </div>
