@@ -16,9 +16,9 @@ import {
   Save,
 } from "lucide-react"
 import Swal from "sweetalert2"
-import apiRequest from "../../core/axios"
+import apiRequest from "../../core/axios" // Assuming correct path for axios instance
 
-// --- DATE UTILITY REPLACEMENTS ---
+// --- DATE UTILITY FUNCTIONS ---
 const _format = (date: Date, fmt: string): string => {
   const year = date.getFullYear()
   const month = date.getMonth() + 1
@@ -108,7 +108,7 @@ const _getFirstDayOfMonth = (date: Date): number => {
   return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
 }
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS & CONSTANTS ---
 const DAY_STATUS = {
   BOOKABLE: "Bookable",
   CLOSED: "Closed",
@@ -194,45 +194,14 @@ const calculateSessionCountPerTank = (openTime: string, closeTime: string): numb
   }
 }
 
-// --- BASE DATA DEFAULTS ---
-const GLOBAL_DEFAULTS: SystemSettings = {
-  defaultFloatPrice: 0,
+// --- MINIMAL DEFAULT DATA (Failover Only) ---
+// Using the openTime of "10:00" from the API response object for a more accurate failover.
+const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
+  defaultFloatPrice: 27,
   cleaningBuffer: 30,
-  sessionsPerDay: 8,
-  openTime: "09:00",
+  sessionsPerDay: 7,
+  openTime: "10:00", 
   closeTime: "21:00",
-}
-
-const DEFAULT_TANK: Tank = {
-  _id: "default-tank-id",
-  name: "Default",
-  capacity: 1,
-  length: 2.5,
-  width: 1.5,
-  benefits: "Deep relaxation, pain relief, improved sleep.",
-  status: "Ready",
-  sessionDuration: SESSION_DURATION_MINUTES,
-}
-
-const generateBaseDayData = (
-  date: Date,
-  tank: Tank,
-  settings: SystemSettings,
-  totalFacilitySessions: number,
-): CalendarDetailFromBackend => {
-  const openTime = settings.openTime
-  const closeTime = settings.closeTime
-  const sessionsAvailablePerTank = calculateSessionCountPerTank(openTime, closeTime)
-  const bookedSessionsPerTank = Math.floor(Math.random() * (sessionsAvailablePerTank * 0.5))
-  return {
-    tankId: tank._id,
-    date: _format(date, "yyyy-MM-dd"),
-    status: DAY_STATUS.BOOKABLE,
-    openTime: openTime,
-    closeTime: closeTime,
-    sessionsToSell: sessionsAvailablePerTank,
-    bookedSessions: bookedSessionsPerTank,
-  }
 }
 
 // --- API SERVICE ---
@@ -243,30 +212,34 @@ const TANK_API_BASE_URL = "/tanks"
 const apiService = {
   getSystemSettings: async (): Promise<SystemSettings> => {
     try {
+      // Assuming apiRequest.get<{ data: SystemSettings }> returns { data: SystemSettings } directly, as in the original code
       const response = await apiRequest.get<{ data: SystemSettings }>(SETTINGS_API_BASE_URL)
-      return { ...GLOBAL_DEFAULTS, ...response.data }
+      
+      // Merge with failover defaults only to ensure all keys exist
+      return { ...DEFAULT_SYSTEM_SETTINGS, ...response.data }
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Failed to Load Settings",
-        text: "Could not fetch system settings. Using default values.",
+        text: "Could not fetch system settings. Using failover defaults.",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
         timer: 3000,
       })
-      return GLOBAL_DEFAULTS
+      return DEFAULT_SYSTEM_SETTINGS
     }
   },
   getAllTanks: async (): Promise<Tank[]> => {
     try {
       const response = await apiRequest.get<Tank[]>(TANK_API_BASE_URL)
+      // Assuming response is the array of tanks directly, as in the original code
       return response || []
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Failed to Load Tanks",
-        text: "Could not fetch tanks. Falling back to 0 tanks.",
+        text: "Could not fetch tanks. Assuming 0 ready tanks.",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -286,13 +259,9 @@ const apiService = {
       if (apiResponse.success && apiResponse.data) {
         return apiResponse.data.map((override) => ({
           ...override,
-          bookedSessions: Math.min(
-            override.sessionsToSell,
-            override.bookedSessions !== undefined
-              ? override.bookedSessions
-              : Math.floor(Math.random() * (override.sessionsToSell * 0.2)),
-          ),
-          tankId: override.tankId || DEFAULT_TANK._id,
+          // Ensure bookedSessions exists and is capped by sessionsToSell. No more Math.random() fallback.
+          bookedSessions: Math.min(override.sessionsToSell, override.bookedSessions || 0),
+          tankId: override.tankId || "missing-tank-id",
         }))
       }
       return []
@@ -300,7 +269,7 @@ const apiService = {
       Swal.fire({
         icon: "error",
         title: "Failed to Load Calendar",
-        text: "Could not fetch calendar overrides.",
+        text: "Could not fetch calendar overrides. Showing defaults only.",
         toast: true,
         position: "top-end",
         showConfirmButton: false,
@@ -344,8 +313,8 @@ const apiService = {
 interface DaySettingsSidebarProps {
   isOpen: boolean
   onClose: () => void
-  dayData: FacilityDayData
-  onSave: () => void
+  dayData: FacilityDayData | null // Updated to allow null
+  onSave: () => Promise<void> // Changed to async to match usage in App component
   readyTankCount: number
 }
 
@@ -356,9 +325,10 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
   onSave,
   readyTankCount,
 }) => {
-  const [openTime, setOpenTime] = useState(dayData.hours.open)
-  const [closeTime, setCloseTime] = useState(dayData.hours.close)
-  const [status, setStatus] = useState<DayStatus>(dayData.status)
+  // Use dayData values or the minimal failover defaults
+  const [openTime, setOpenTime] = useState(dayData?.hours.open || DEFAULT_SYSTEM_SETTINGS.openTime)
+  const [closeTime, setCloseTime] = useState(dayData?.hours.close || DEFAULT_SYSTEM_SETTINGS.closeTime)
+  const [status, setStatus] = useState<DayStatus>(dayData?.status || DAY_STATUS.BOOKABLE)
   const [isSaving, setIsSaving] = useState(false)
 
   const maxSessionsPerTank = useMemo(() => {
@@ -368,9 +338,11 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
   const calculatedFacilitySessions = maxSessionsPerTank * readyTankCount
 
   useEffect(() => {
-    setOpenTime(dayData.hours.open)
-    setCloseTime(dayData.hours.close)
-    setStatus(dayData.status)
+    if (dayData) {
+      setOpenTime(dayData.hours.open)
+      setCloseTime(dayData.hours.close)
+      setStatus(dayData.status)
+    }
   }, [dayData])
 
   const handleSave = async (e: FormEvent) => {
@@ -436,6 +408,9 @@ const DaySettingsSidebar: React.FC<DaySettingsSidebarProps> = ({
       setIsSaving(false)
     }
   }
+
+  // Handle case where dayData might be null during transition
+  if (!dayData) return null 
 
   const sidebarClass = `fixed inset-y-0 right-0 w-80 bg-white p-6 shadow-2xl transition-transform duration-300 ease-in-out z-[100] ${isOpen ? "translate-x-0" : "translate-x-full"}`
   const formattedDate = _format(new Date(dayData.date), "EEEE, MMMM do, yyyy")
@@ -727,6 +702,7 @@ const App: React.FC = () => {
   const [calendarDays, setCalendarDays] = useState<FacilityDayData[]>([])
   const [loading, setLoading] = useState(true)
   const [tanks, setTanks] = useState<Tank[]>([])
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null) // State for settings
 
   const readyTankCount = useMemo(() => {
     return tanks.filter((tank) => tank.status === "Ready").length
@@ -735,17 +711,31 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedDayData, setSelectedDayData] = useState<FacilityDayData | null>(null)
 
-  const fetchTanks = useCallback(async () => {
-    const fetchedTanks = await apiService.getAllTanks()
+  // 1. Fetch Tanks and Settings first
+  const fetchInitialData = useCallback(async () => {
+    setLoading(true)
+    const [fetchedSettings, fetchedTanks] = await Promise.all([
+      apiService.getSystemSettings(),
+      apiService.getAllTanks(),
+    ])
+    setSystemSettings(fetchedSettings)
     setTanks(fetchedTanks)
+    setLoading(false)
   }, [])
 
+  useEffect(() => {
+    fetchInitialData()
+  }, [fetchInitialData])
+
+  // 2. Fetch Calendar Data after tanks and settings are loaded
   const fetchCalendarData = useCallback(
     async (isInitialLoad = false) => {
+      if (!systemSettings || loading) return // Wait for initial data load
+
       if (isInitialLoad) setLoading(true)
+
       const currentReadyTankCount = tanks.filter((tank) => tank.status === "Ready").length
       try {
-        const systemSettings = await apiService.getSystemSettings()
         const formattedStartDate = _format(startDate, "yyyy-MM-dd")
         const formattedEndDate = _format(endDate, "yyyy-MM-dd")
         const facilityOverrides = await apiService.getCalendarOverrides(formattedStartDate, formattedEndDate)
@@ -762,25 +752,31 @@ const App: React.FC = () => {
           const dateKey = _format(date, "yyyy-MM-dd")
           const facilityRecord = facilityOverrides.find((o) => o.date === dateKey)
 
+          // Use system defaults as a base for the day
           let status: DayStatus = DAY_STATUS.BOOKABLE
           let openTime = systemSettings.openTime
           let closeTime = systemSettings.closeTime
           let totalSessionsToSell = 0
           let totalBookedSessions = 0
-
+          
+          // Calculate sessions based on defaults
+          const sessionsPerTank = calculateSessionCountPerTank(openTime, closeTime)
+          totalSessionsToSell = sessionsPerTank * currentReadyTankCount
+          
+          // Apply override if it exists, otherwise use calculated defaults for that day
           if (facilityRecord) {
             status = facilityRecord.status
-            openTime = facilityRecord.openTime || systemSettings.openTime
-            closeTime = facilityRecord.closeTime || systemSettings.closeTime
-            totalSessionsToSell = facilityRecord.sessionsToSell
-            totalBookedSessions = facilityRecord.bookedSessions
+            openTime = facilityRecord.openTime || openTime
+            closeTime = facilityRecord.closeTime || closeTime
+            totalSessionsToSell = facilityRecord.sessionsToSell // Use the overridden number
+            totalBookedSessions = facilityRecord.bookedSessions // Use the booked number from API
           } else {
-            const sessionsPerTank = calculateSessionCountPerTank(openTime, closeTime)
-            totalSessionsToSell = sessionsPerTank * currentReadyTankCount
-            totalBookedSessions = Math.floor(totalSessionsToSell * 0.2)
+            // For days without an override, assume 0 booked sessions initially
+            totalBookedSessions = 0; 
           }
 
           let totalAvailableSessions = totalSessionsToSell - totalBookedSessions
+          
           if (status === DAY_STATUS.CLOSED) {
             totalAvailableSessions = 0
             totalSessionsToSell = 0
@@ -795,9 +791,7 @@ const App: React.FC = () => {
             hours: { open: openTime, close: closeTime },
             totalAvailableSessions,
             totalBookedSessions,
-            overrideData: facilityRecord
-              ? [facilityRecord]
-              : [generateBaseDayData(date, DEFAULT_TANK, systemSettings, totalSessionsToSell)],
+            overrideData: facilityRecord ? [facilityRecord] : [], // Only include actual overrides
           }
         })
         setCalendarDays(newCalendarDays)
@@ -808,20 +802,15 @@ const App: React.FC = () => {
         if (isInitialLoad) setLoading(false)
       }
     },
-    [startDate, endDate, tanks.length],
+    [startDate, endDate, tanks, systemSettings, loading],
   )
 
   useEffect(() => {
-    fetchTanks()
-  }, [fetchTanks])
-
-  useEffect(() => {
-    if (tanks.length > 0) {
-      fetchCalendarData(true)
-    } else if (loading && tanks.length === 0) {
-      fetchCalendarData(true)
+    // Re-fetch calendar data whenever date range, tanks, or settings change
+    if (systemSettings) {
+        fetchCalendarData(false) // Not an initial load, just a refresh
     }
-  }, [tanks.length, fetchCalendarData, readyTankCount])
+  }, [startDate, endDate, readyTankCount, systemSettings, fetchCalendarData])
 
   const navigateDateRange = (direction: "prev" | "next") => {
     if (!startDate || !endDate) return
@@ -853,8 +842,12 @@ const App: React.FC = () => {
     if (dayData.status === DAY_STATUS.SOLD_OUT) return
 
     const newStatus: DayStatus = dayData.status === DAY_STATUS.CLOSED ? DAY_STATUS.BOOKABLE : DAY_STATUS.CLOSED
+    
+    // Recalculate sessions based on the hours currently set for the day
     const sessionsPerTank = calculateSessionCountPerTank(dayData.hours.open, dayData.hours.close)
     const calculatedFacilitySessions = sessionsPerTank * readyTankCount
+    
+    // If setting to CLOSED, sessionsToSell must be 0
     const sessionsToSend = newStatus === DAY_STATUS.CLOSED ? 0 : calculatedFacilitySessions
 
     try {
@@ -916,6 +909,9 @@ const App: React.FC = () => {
     if (daysCount <= 14) return "w-24"
     return "w-20"
   }
+  
+  // Display loading until tanks and settings are loaded
+  const isDataReady = !loading && systemSettings !== null
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans antialiased">
@@ -962,9 +958,9 @@ const App: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
+        {!isDataReady ? (
           <div className="text-center py-20 text-xl font-medium text-gray-500">
-            <span className="animate-pulse">Loading tanks and schedules...</span>
+            <span className="animate-pulse">Loading settings and tanks...</span>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
