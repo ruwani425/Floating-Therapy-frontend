@@ -9,11 +9,14 @@ import apiRequest from "../core/axios";
 const DAY_STATUS = {
     BOOKABLE: 'Bookable',
     CLOSED: 'Closed',
-    SOLD_OUT: 'Sold Out',
+    SOLD_OUT: 'Sold Out', // Keeping the definition, but removing usage in logic
 } as const;
 type DayStatus = typeof DAY_STATUS[keyof typeof DAY_STATUS];
 
 /** * MATCHES ICalendarDetail from your backend, plus bookedSessions which is calculated/returned.
+ *
+ * NOTE: The backend response structure provided only contains `status: "Bookable"` or `status: "Closed"`.
+ * We are removing all derived "Sold Out" logic based on the user request.
  */
 interface CalendarDetailFromBackend {
     date: string; // YYYY-MM-DD
@@ -164,6 +167,7 @@ const apiService = {
             if (apiResponse.success && apiResponse.data) {
                 return apiResponse.data.map(detail => ({
                     ...detail,
+                    // Assuming bookedSessions is zero if not provided in the backend response
                     bookedSessions: detail.bookedSessions ?? 0 
                 }));
             }
@@ -215,18 +219,20 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
         const isSelected = isSameDay(date, selectedDate);
         const isTodayMarker = isToday(date);
         
-        // Dynamic Status Check (Prioritizes override status)
-        const isClosedOrFull = override?.status === DAY_STATUS.CLOSED || override?.status === DAY_STATUS.SOLD_OUT;
+        // FIX 1: Only mark day as red if the status is explicitly 'Closed' from the database. 
+        // We remove the check for DAY_STATUS.SOLD_OUT or calculated full capacity.
+        const isClosed = override?.status === DAY_STATUS.CLOSED;
 
         if (isSelected) {
             return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`;
-        } else if (isClosedOrFull) {
-            // FIX: Check for closed/sold out first, ensuring the red color overrides the "Today" blue color.
+        } else if (isClosed) {
+            // Day is explicitly marked Closed (Red)
             return `${baseClasses} bg-red-500 text-white shadow-md`;
         } else if (isTodayMarker) {
             // Only mark today as blue if it is available/bookable.
             return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`;
         } else {
+            // All other days are assumed Bookable (Default/White)
             return `${baseClasses} text-gray-700 hover:bg-gray-100`;
         }
     };
@@ -302,28 +308,26 @@ const EventSidebar: React.FC<EventSidebarProps> = ({ selectedDate, dayOverrides,
     const bookedSessions = override?.bookedSessions || 0;
     const availableSlots = Math.max(0, sessionsToSell - bookedSessions);
     
-    // FIX APPLIED HERE: Determine status with correct priority
+    // FIX 2: Determine status with new priority (only recognize CLOSED, otherwise BOOKABLE)
     let dateStatus: DayStatus;
 
     if (override?.status === DAY_STATUS.CLOSED) {
         // Priority 1: If the database explicitly says CLOSED, honor it.
         dateStatus = DAY_STATUS.CLOSED;
-    } else if (availableSlots <= 0) {
-        // Priority 2: If capacity is 0 (and it wasn't explicitly Closed), mark SOLD OUT.
-        dateStatus = DAY_STATUS.SOLD_OUT; 
     } else {
-        // Priority 3: Otherwise, use the explicit status or default to Bookable.
-        dateStatus = override?.status || DAY_STATUS.BOOKABLE;
+        // Priority 2: All other days are Bookable by default, ignoring Sold Out logic.
+        dateStatus = DAY_STATUS.BOOKABLE;
     }
 
 
     // Sidebar Display Properties
-    const isClosedOrFull = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT;
-    const dateBoxColor = isClosedOrFull ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
+    const isClosed = dateStatus === DAY_STATUS.CLOSED;
+    const dateBoxColor = isClosed ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
     
     const sessions = [
         // availableSlots logic remains based on sessionsToSell - bookedSessions
-        { label: 'Available Sessions', value: `${availableSlots} slots`, status: (isClosedOrFull || availableSlots === 0) ? 'full' : 'available' },
+        // We assume availableSlots > 0 for all non-closed days until capacity tracking is fully implemented
+        { label: 'Available Sessions', value: `${availableSlots} slots`, status: (isClosed || availableSlots === 0) ? 'full' : 'available' },
         
         // This line uses the fixed dateStatus:
         { label: 'Closed Status', value: dateStatus === DAY_STATUS.CLOSED ? 'Yes' : 'No', status: dateStatus === DAY_STATUS.CLOSED ? 'full' : 'open' },
@@ -361,7 +365,7 @@ const EventSidebar: React.FC<EventSidebarProps> = ({ selectedDate, dayOverrides,
                 
                 <div className="flex items-center pt-1 text-sm">
                     <span className="text-gray-500 mr-1">Status:</span>
-                    <span className={`font-bold ${isClosedOrFull ? 'text-[var(--theta-red)]' : 'text-[var(--theta-green)]'}`}>{dateStatus.toUpperCase()}</span>
+                    <span className={`font-bold ${isClosed ? 'text-[var(--theta-red)]' : 'text-[var(--theta-green)]'}`}>{dateStatus.toUpperCase()}</span>
                 </div>
             </div>
 
@@ -413,7 +417,7 @@ const ConsolidatedBookingForm: React.FC = () => {
         const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
         const formattedStartDate = formatDateToKey(startOfMonth); 
-        const formattedEndDate = formatDateToKey(endOfMonth);     
+        const formattedEndDate = formatDateToKey(endOfMonth);     
         
         try {
             // Fetch System Settings (Defaults) and Calendar Overrides
@@ -468,32 +472,24 @@ const ConsolidatedBookingForm: React.FC = () => {
             return;
         }
 
-        const dateStatus: DayStatus = (() => {
-            const sessionsToSell = override?.sessionsToSell || 0;
-            const bookedSessions = override?.bookedSessions || 0;
-            const availableSlots = Math.max(0, sessionsToSell - bookedSessions);
-            
-            if (override?.status === DAY_STATUS.CLOSED) {
-                return DAY_STATUS.CLOSED;
-            } else if (availableSlots <= 0) {
-                return DAY_STATUS.SOLD_OUT;
-            } else {
-                return override?.status || DAY_STATUS.BOOKABLE;
-            }
-        })();
-
-        const isClosedOrFull = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT;
+        // FIX 3: Simplify pre-submission validation. Only check for explicit CLOSED status.
+        const dateStatus: DayStatus = override?.status === DAY_STATUS.CLOSED
+            ? DAY_STATUS.CLOSED
+            : DAY_STATUS.BOOKABLE;
         
-        if (isClosedOrFull) {
-            setMessage('The selected date is unavailable for booking. Please choose another date.');
+        const isClosed = dateStatus === DAY_STATUS.CLOSED;
+        
+        if (isClosed) {
+            setMessage('The selected date is explicitly closed. Please choose another date.');
             return;
         }
-
-        const availableSlotsForTime = filteredSlots.length > 0;
-        if (!availableSlotsForTime) {
-             setMessage('No available slots on the selected date. Please choose another date.');
-             return;
+        
+        // Check if filteredSlots are empty (meaning no available times based on operating hours)
+        if (filteredSlots.length === 0) {
+            setMessage('No available time slots on the selected date within operating hours. Please choose another date.');
+            return;
         }
+        // END FIX 3
 
         setIsSubmitting(true);
         setMessage('Processing your appointment...');
@@ -522,9 +518,11 @@ const ConsolidatedBookingForm: React.FC = () => {
         // PRIORITIZE OVERRIDE TIMES, FALLBACK TO DEFAULTS
         const effectiveOpenTime = override?.openTime || defaultHours.openTime;
         const effectiveCloseTime = override?.closeTime || defaultHours.closeTime;
+        
+        // If the database explicitly marks the day as closed, return no slots.
         const status = override?.status || DAY_STATUS.BOOKABLE;
 
-        if (status === DAY_STATUS.CLOSED || status === DAY_STATUS.SOLD_OUT) return [];
+        if (status === DAY_STATUS.CLOSED) return [];
         
         // Generate time slots based on the dynamic operational hours (90 min cycle)
         const slots = generateTimeSlots(effectiveOpenTime, effectiveCloseTime);
@@ -652,7 +650,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                                         // Display status based on the determined dateStatus in the sidebar logic
                                         (dayOverrides[formatDateToKey(selectedDate)]?.status === DAY_STATUS.CLOSED)
                                             ? "We are closed on this date." 
-                                            : "No available slots on the selected date (Capacity full or operational hours too short)."
+                                            : "No available slots on the selected date (Likely outside operational hours or a capacity issue that is not explicitly handled by the backend)."
                                     ) : "Please select a date."}
                                 </div>
                             )}
