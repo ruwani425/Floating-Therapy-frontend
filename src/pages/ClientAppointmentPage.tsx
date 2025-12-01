@@ -9,9 +9,31 @@ import apiRequest from "../core/axios";
 const DAY_STATUS = {
     BOOKABLE: 'Bookable',
     CLOSED: 'Closed',
-    SOLD_OUT: 'Sold Out', // Keeping the definition, but removed usage in logic
+    SOLD_OUT: 'Sold Out',
 } as const;
 type DayStatus = typeof DAY_STATUS[keyof typeof DAY_STATUS];
+
+/** The generic API Response wrapper. */
+interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    message?: string;
+}
+
+/** Appointment data expected back upon a successful POST request. */
+interface AppointmentResponseData {
+    _id: string; // The MongoDB ID of the created appointment
+    date: string;
+    time: string;
+    email: string;
+    contactNumber: string;
+    specialNote?: string;
+    status: 'Pending' | 'Confirmed' | 'Canceled';
+}
+
+/** Specific response type for the POST /appointments endpoint. */
+interface AppointmentApiResponse extends ApiResponse<AppointmentResponseData | null> {}
+
 
 /** * MATCHES ICalendarDetail from your backend. */
 interface CalendarDetailFromBackend {
@@ -19,23 +41,15 @@ interface CalendarDetailFromBackend {
     status: DayStatus;
     openTime?: string; // Optional override time
     closeTime?: string; // Optional override time
-    sessionsToSell: number; // Total slots available for the day (across all tanks)
-    bookedSessions: number; // Total slots booked (Used for frontend calculation - defaulting to 0)
+    sessionsToSell: number; // Total slots available for the day
+    bookedSessions: number; // Total slots booked (defaults to 0 if null)
 }
 
-/** The overall response structure expected from the backend GET endpoints. */
-interface ApiResponse<T> {
-    success: boolean;
-    data: T;
-    message?: string;
-}
-
-/** * MATCHES your SystemSettings interface exactly.
- */
+/** System Settings used for defaults and calculations. */
 interface SystemSettings {
     defaultFloatPrice: number;
-    cleaningBuffer: number;
-    sessionDuration: number; // NEW: Session duration in minutes
+    cleaningBuffer: number; // in minutes
+    sessionDuration: number; // in minutes
     sessionsPerDay: number;
     openTime: string; 
     closeTime: string; 
@@ -44,9 +58,9 @@ interface SystemSettings {
 // Default settings used as a fallback
 const GLOBAL_DEFAULTS: SystemSettings = {
     defaultFloatPrice: 0,
-    cleaningBuffer: 30, // Default in minutes
-    sessionDuration: 60, // Default in minutes (1 hour)
-    sessionsPerDay: 8, // Example default
+    cleaningBuffer: 30, 
+    sessionDuration: 60,
+    sessionsPerDay: 8,
     openTime: '09:00', 
     closeTime: '21:00' 
 };
@@ -116,16 +130,13 @@ const generateTimeSlots = (openTime: string, closeTime: string, sessionDuration:
         let current = new Date(`${fixedDate} ${openTime}`);
         const close = new Date(`${fixedDate} ${closeTime}`);
 
-        // Calculate cycle duration dynamically
         const SESSION_DURATION_MS = sessionDuration * 60 * 1000;
         const TOTAL_CYCLE_MS = (sessionDuration + cleaningBuffer) * 60 * 1000;
 
-        // The session must finish *before* the close time
         while (current.getTime() + SESSION_DURATION_MS <= close.getTime()) {
             const timeString = current.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
             slots.push(timeString);
             
-            // Move to the next slot start time (session duration + cleaning buffer)
             current = new Date(current.getTime() + TOTAL_CYCLE_MS);
         }
     } catch (e) {
@@ -143,7 +154,6 @@ const apiService = {
     getSystemSettings: async (): Promise<SystemSettings> => {
         try {
             const response = await apiRequest.get<ApiResponse<SystemSettings>>(SETTINGS_API_BASE_URL); 
-            // Merge defaults with fetched settings to ensure all required fields are present
             return { ...GLOBAL_DEFAULTS, ...response.data }; 
         } catch (error) {
             console.error("Failed to fetch system settings. Using fallback defaults.", error);
@@ -153,17 +163,16 @@ const apiService = {
     
     getCalendarOverrides: async (formattedStartDate: string, formattedEndDate: string): Promise<CalendarDetailFromBackend[]> => {
         try {
-            // apiResponse is correctly typed as ApiResponse<CalendarDetailFromBackend[]>
+            // response is typed as ApiResponse<CalendarDetailFromBackend[]>
             const apiResponse = await apiRequest.get<ApiResponse<CalendarDetailFromBackend[]>>(CALENDAR_API_BASE_URL, {
                 params: { startDate: formattedStartDate, endDate: formattedEndDate }
             });
             
-            // FIX APPLIED HERE: Check the success flag on apiResponse and access the data array via apiResponse.data
             if (apiResponse.success && apiResponse.data) {
                 // apiResponse.data is CalendarDetailFromBackend[]
                 return apiResponse.data.map(detail => ({
                     ...detail,
-                    // Use a safe check for bookedSessions
+                    // Ensure bookedSessions defaults safely
                     bookedSessions: (detail as any).bookedSessions ?? 0 
                 }));
             }
@@ -215,6 +224,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentDate, onDateChan
         const isSelected = isSameDay(date, selectedDate);
         const isTodayMarker = isToday(date);
         
+        // Only marks closed based on explicit status
         const isClosed = override?.status === DAY_STATUS.CLOSED;
 
         if (isSelected) {
@@ -306,7 +316,6 @@ const EventSidebar: React.FC<EventSidebarProps> = ({ selectedDate, dayOverrides,
     } else {
         dateStatus = DAY_STATUS.BOOKABLE;
     }
-
 
     const isClosed = dateStatus === DAY_STATUS.CLOSED;
     const dateBoxColor = isClosed ? THEME_COLORS['--theta-red'] : THEME_COLORS['--accent-color'];
@@ -476,20 +485,54 @@ const ConsolidatedBookingForm: React.FC = () => {
         setIsSubmitting(true);
         setMessage('Processing your appointment...');
         setSuccessMessage(null);
+        
+        try {
+            const bookingData = {
+                date: dateKey,
+                time: selectedTime,
+                email: email,
+                contactNumber: contactNumber,
+                specialNote: specialNote,
+            };
+            
+            // Correctly type the response for TypeScript safety
+            const response = await apiRequest.post<AppointmentApiResponse>('/appointments', bookingData); 
 
-        // --- Mock API call simulation for booking submission ---
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
-        
-        setIsSubmitting(false);
-        setSuccessMessage(`Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. We will contact you at ${contactNumber}.`);
-        setMessage(null); 
-        
-        setSelectedTime('');
-        setSelectedDate(null);
+            if (response.success) {
+                setIsSubmitting(false);
+                // Safely access _id from the data field
+                const confirmationId = response.data?._id || 'N/A'; 
+                setSuccessMessage(`Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Confirmation ID: ${confirmationId}`);
+                setMessage(null); 
+                
+                // Clear form state
+                setSelectedTime('');
+                setSelectedDate(null);
+                setContactNumber('');
+                setEmail('');
+                setSpecialNote('');
+
+                // Re-fetch calendar data to reflect the newly booked session immediately
+                // Note: The previous logic relied on local state refresh, but fetching data is safer.
+                fetchCalendarData(currentMonth);
+
+            } else {
+                setIsSubmitting(false);
+                // Accessing message property on the typed response object
+                setMessage(response.message || 'Booking failed: Server rejected the request.');
+            }
+
+        } catch (error: any) {
+            setIsSubmitting(false);
+            // Handling network errors
+            const errorMessage = error.response?.data?.message || 'A network error occurred while trying to book.';
+            setMessage(errorMessage);
+            console.error('Booking submission error:', error);
+        }
     };
 
 
-    // --- Time Slot Calculation Logic (Updated to use dynamic settings) ---
+    // --- Time Slot Calculation Logic ---
     const filteredSlots = useMemo(() => {
         if (!selectedDate || loadingCalendar) return []; 
 
@@ -509,8 +552,8 @@ const ConsolidatedBookingForm: React.FC = () => {
         const slots = generateTimeSlots(
             effectiveOpenTime, 
             effectiveCloseTime, 
-            defaultHours.sessionDuration, // Use dynamic session duration
-            defaultHours.cleaningBuffer   // Use dynamic cleaning buffer
+            defaultHours.sessionDuration, 
+            defaultHours.cleaningBuffer   
         );
         
         return slots;
