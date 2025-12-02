@@ -15,13 +15,13 @@ import {
   Users,
 } from "lucide-react"
 
-import apiRequest from "../core/axios"
+import apiRequest from "../core/axios" // Assuming apiRequest is imported from "../core/axios"
 
 // --- 1. TypeScript Interfaces & Data ---
 
 const DAY_STATUS = {
   BOOKABLE: "Bookable",
-  CLOSED: "Closed", // <-- FIX APPLIED HERE: Matches API response "Closed"
+  CLOSED: "Closed", // FIX: Matches the API response casing ("Closed")
   SOLD_OUT: "Sold Out",
 } as const
 type DayStatus = (typeof DAY_STATUS)[keyof typeof DAY_STATUS]
@@ -38,6 +38,7 @@ interface AppointmentResponseData {
   _id: string // The MongoDB ID of the created appointment
   date: string
   time: string
+  name: string // Added name field
   email: string
   contactNumber: string
   specialNote?: string
@@ -60,14 +61,14 @@ interface CalendarDetailFromBackend {
 /** System Settings used for defaults and calculations. */
 interface SystemSettings {
   defaultFloatPrice: number
-  cleaningBuffer: number // in minutes
-  sessionDuration: number // in minutes
-  sessionsPerDay: number
-  openTime: string
-  closeTime: string
-  numberOfTanks: number
-  tankStaggerInterval: number
-  actualCloseTime?: string
+  cleaningBuffer: number;
+  sessionDuration: number | string;
+  sessionsPerDay: number;
+  openTime: string;
+  closeTime: string;
+  numberOfTanks: number;
+  tankStaggerInterval: number;
+  actualCloseTime?: string;
 }
 
 // --- THEME & UTILITIES ---
@@ -349,6 +350,9 @@ const apiService = {
 const ConsolidatedBookingForm: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  
+  const [name, setName] = useState("") 
+  
   const [contactNumber, setContactNumber] = useState("")
   const [email, setEmail] = useState("")
   const [specialNote, setSpecialNote] = useState("")
@@ -361,7 +365,7 @@ const ConsolidatedBookingForm: React.FC = () => {
   const [loadingCalendar, setLoadingCalendar] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // --- Dynamic Data Fetching ---
+  // --- Dynamic Data Fetching (unchanged) ---
   const fetchCalendarData = useCallback(
     async (date: Date) => {
       setLoadingCalendar(true)
@@ -430,20 +434,14 @@ const ConsolidatedBookingForm: React.FC = () => {
     const dateKey = selectedDate ? formatDateToKey(selectedDate) : null
     const override = dateKey ? dayOverrides[dateKey] : null
 
-    if (!selectedDate || !selectedTime || !email || !contactNumber) {
-      setMessage("Please select an available date, time, and provide your email and contact number.")
+    // Safety checks
+    if (!selectedDate || !selectedTime || !email || !contactNumber || !name || !defaultHours) {
+      setMessage("Please select an available date, time, and provide all contact details. System settings must be loaded.")
       return
     }
 
-    // Determine status for validation
-    let dateStatus: DayStatus
-    if (override?.status === DAY_STATUS.CLOSED) {
-      dateStatus = DAY_STATUS.CLOSED
-    } else if (override?.status === DAY_STATUS.SOLD_OUT) {
-      dateStatus = DAY_STATUS.SOLD_OUT
-    } else {
-      dateStatus = DAY_STATUS.BOOKABLE
-    }
+    // Determine status for validation 
+    let dateStatus: DayStatus = override?.status || DAY_STATUS.BOOKABLE;
 
     const isUnavailable = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT
 
@@ -462,15 +460,37 @@ const ConsolidatedBookingForm: React.FC = () => {
     setSuccessMessage(null)
 
     try {
-      const bookingData = {
+      // 1. Prepare the consolidated payload for the backend transaction
+      // The core fields are placed at the root to satisfy typical backend validation,
+      // and the transactional context is nested.
+      const transactionData = {
+        // REQUIRED APPOINTMENT FIELDS (at root for validation)
+        name: name,
         date: dateKey,
         time: selectedTime,
         email: email,
         contactNumber: contactNumber,
         specialNote: specialNote,
+
+        // CONTEXT FOR BACKEND TRANSACTION
+        calendarContext: {
+          date: dateKey,
+          hasCalendarOverride: !!override, 
+          currentSessionsToSell: override?.sessionsToSell, 
+          defaultSystemSettings: {
+            sessionDuration: defaultHours.sessionDuration,
+            cleaningBuffer: defaultHours.cleaningBuffer,
+            numberOfTanks: defaultHours.numberOfTanks,
+            tankStaggerInterval: defaultHours.tankStaggerInterval,
+            openTime: defaultHours.openTime,
+            closeTime: defaultHours.closeTime,
+            sessionsPerDay: defaultHours.sessionsPerDay,
+          },
+        }
       }
 
-      const response = await apiRequest.post<AppointmentApiResponse>("/appointments", bookingData)
+      // 2. Perform the single atomic request to the backend
+      const response = await apiRequest.post<AppointmentApiResponse>("/appointments", transactionData) 
 
       if (response.success) {
         setIsSubmitting(false)
@@ -480,13 +500,16 @@ const ConsolidatedBookingForm: React.FC = () => {
         )
         setMessage(null)
 
+        // Reset states
         setSelectedTime("")
         setSelectedDate(null)
+        setName("") 
         setContactNumber("")
         setEmail("")
         setSpecialNote("")
 
-        fetchCalendarData(currentMonth)
+        // 3. Re-fetch calendar data to instantly display the updated available slot count
+        fetchCalendarData(currentMonth) 
       } else {
         setIsSubmitting(false)
         setMessage(response.message || "Booking failed: Server rejected the request.")
@@ -499,7 +522,7 @@ const ConsolidatedBookingForm: React.FC = () => {
     }
   }
 
-  // --- Generate Session Details for Selected Date ---
+  // --- Generate Session Details for Selected Date (unchanged) ---
   const sessionDetails = useMemo(() => {
     if (!selectedDate || !defaultHours) return [] // Check if defaultHours is loaded
 
@@ -516,14 +539,14 @@ const ConsolidatedBookingForm: React.FC = () => {
     return generateSessionDetails(
       effectiveOpenTime,
       effectiveCloseTime,
-      defaultHours.sessionDuration,
+      Number(defaultHours.sessionDuration),
       defaultHours.cleaningBuffer,
       defaultHours.numberOfTanks,
       defaultHours.tankStaggerInterval,
     )
   }, [selectedDate, dayOverrides, defaultHours])
 
-  // --- Extract All Available Time Slots from Session Details ---
+  // --- Extract All Available Time Slots from Session Details (unchanged) ---
   const availableTimeSlots = useMemo(() => {
     const slots: string[] = []
     sessionDetails.forEach((tank) => {
@@ -824,6 +847,29 @@ const ConsolidatedBookingForm: React.FC = () => {
             </div>
 
             <div className="space-y-6">
+              
+              {/* NEW FIELD: Full Name */}
+              <div>
+                <label htmlFor="name" className="block text-lg font-semibold text-gray-700 mb-2">
+                  Full Name
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center border border-gray-300 rounded-lg focus-within:border-[var(--accent-color)] transition shadow-sm">
+                  <User className="w-5 h-5 ml-3 text-gray-400" />
+                  <input
+                    id="name"
+                    type="text"
+                    name="name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Your Full Name"
+                    className={`${inputClass} focus:ring-0`}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-lg font-semibold text-gray-700 mb-2">
                   Email Address
@@ -834,6 +880,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                   <input
                     id="email"
                     type="email"
+                    name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -854,6 +901,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                   <input
                     id="contact"
                     type="tel"
+                    name="contactNumber"
                     value={contactNumber}
                     onChange={(e) => setContactNumber(e.target.value)}
                     required
@@ -874,6 +922,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                   <textarea
                     id="note"
                     rows={4}
+                    name="specialNote"
                     value={specialNote}
                     onChange={(e) => setSpecialNote(e.target.value)}
                     placeholder="E.g., mobility issues, prefer morning session..."
@@ -888,14 +937,14 @@ const ConsolidatedBookingForm: React.FC = () => {
                 <button
                   type="submit"
                   className="w-full px-10 py-3.5 text-lg font-bold rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-xl"
-                  disabled={isSubmitting || !selectedTime || !email || !contactNumber}
+                  disabled={isSubmitting || !selectedTime || !email || !contactNumber || !name}
                   style={{
                     backgroundColor:
-                      isSubmitting || !selectedTime || !email || !contactNumber
+                      isSubmitting || !selectedTime || !email || !contactNumber || !name
                         ? THEME_COLORS["--light-blue-200"]
                         : THEME_COLORS["--theta-blue"],
                     color:
-                      isSubmitting || !selectedTime || !email || !contactNumber
+                      isSubmitting || !selectedTime || !email || !contactNumber || !name
                         ? THEME_COLORS["--dark-blue-800"]
                         : "white",
                   }}
@@ -952,7 +1001,7 @@ const CustomCalendar: React.FC<{
 
     if (isSelected) {
       return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`
-    } else if (status === DAY_STATUS.CLOSED) { // This now correctly checks for "Closed"
+    } else if (status === DAY_STATUS.CLOSED) {
       return `${baseClasses} bg-[var(--theta-red)] text-white shadow-md`
     } else if (status === DAY_STATUS.SOLD_OUT) {
       return `${baseClasses} bg-[var(--theta-orange)] text-white shadow-md`
@@ -1047,7 +1096,7 @@ const EventSidebar: React.FC<{
   const calculatedSessions = calculateStaggeredSessions(
     effectiveOpenTime,
     effectiveCloseTime,
-    defaultHours.sessionDuration,
+    Number(defaultHours.sessionDuration),
     defaultHours.cleaningBuffer,
     defaultHours.numberOfTanks,
     defaultHours.tankStaggerInterval,
@@ -1058,7 +1107,7 @@ const EventSidebar: React.FC<{
   const availableSlots = Math.max(0, sessionsToSell - bookedSessions)
 
   let dateStatus: DayStatus
-  if (override?.status === DAY_STATUS.CLOSED) { // This now correctly checks for "Closed"
+  if (override?.status === DAY_STATUS.CLOSED) {
     dateStatus = DAY_STATUS.CLOSED
   } else if (override?.status === DAY_STATUS.SOLD_OUT) {
     dateStatus = DAY_STATUS.SOLD_OUT
