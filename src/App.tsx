@@ -20,6 +20,7 @@ import ReservationsPage from "./pages/admin/ReservationPage";
 import CalendarManagement from "./pages/admin/CalenderManage";
 import SystemSettings from "./pages/admin/SystemSettingPage";
 import AppointmentsPage from "./pages/admin/AdminAppointmentViewPage";
+import PackageManagementPage from "./pages/admin/PackageManagementView";
 
 export default function App() {
   return (
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="add-tank/edit/:id" element={<AddTankPage />} /> 
             <Route path="reservations" element={<ReservationsPage />} />
             <Route path="system-settings" element={<SystemSettings/>}/>
+            <Route path="package-management" element={<PackageManagementPage/>}/>
             <Route
               path="calendar-management"
               element={<CalendarManagement />}

@@ -141,7 +141,7 @@ const dashboardOptions = [
   },
   {
     title: "Services & Pricing",
-    path: "/admin/pricing",
+    path: "/admin/package-management",
     description: "Update therapy services and package rates.",
     icon: DollarSign,
   },
