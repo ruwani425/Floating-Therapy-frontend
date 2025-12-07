@@ -1,6 +1,6 @@
 "use client";
 import type React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Search,
   Clock,
@@ -13,17 +13,21 @@ import {
   Eye,
   Package,
   User,
+  Edit, 
+  Save, 
 } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiRequest from "../../core/axios";
 
+// --- THEME & CONSTANTS ---
 const COLOR_BG_LIGHT = "#F0F8FF";
 const COLOR_TEXT_DARK = "#1B4965";
 const COLOR_ACCENT = "#A8D8EA";
 const COLOR_MUTED = "#5E7B9D";
 const COLOR_CARD_BG = "#FFFFFF";
+const COLOR_EDIT_BLUE = "#3B82F6"; // Tailwind blue-500
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
@@ -31,6 +35,7 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+// --- INTERFACES ---
 interface PackageDetails {
   _id: string;
   packageName: string;
@@ -49,12 +54,12 @@ interface PackageDetails {
 }
 
 interface Appointment {
-  reservationId: string;
-  id: string;
-  clientName: string | null;
-  email: string | null;
-  contactNumber: string | null;
-  sessionDate: string;
+  reservationId: string;
+  id: string;
+  clientName: string | null;
+  email: string | null;
+  contactNumber: string | null;
+  sessionDate: string;
   sessionTime: string;
   status: "pending" | "completed" | "cancelled";
   specialNote: string | null;
@@ -66,15 +71,16 @@ interface Appointment {
 }
 
 interface PaginationMeta {
-  currentPage: number;
-  totalPages: number;
-  totalRecords: number;
-  recordsPerPage: number;
-  limit: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalRecords: number;
+  recordsPerPage: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
+// --- API SERVICE ---
 const reservationApiService = {
   updateAppointmentStatus: async (
     id: string,
@@ -93,6 +99,45 @@ const reservationApiService = {
       throw new Error("Failed to update status on server.");
     }
   },
+
+  // API METHOD: Update Date and Time
+  updateAppointmentDetails: async (
+    id: string,
+    date: string,
+    time: string
+  ): Promise<Appointment | null> => {
+    try {
+      const response = await apiRequest.put<{ success: boolean; data: any }>(
+        `/appointments/${id}`, 
+        { date, time }
+      );
+      if (response.success && response.data) {
+        const app = response.data;
+        // Re-map the response, converting time to 24hr format for state consistency
+        return {
+          id: app._id,
+          reservationId: app.reservationId,
+          clientName: app.name || "N/A",
+          email: app.email,
+          contactNumber: app.contactNumber,
+          specialNote: app.specialNote,
+          sessionDate: app.date,
+          sessionTime: convert12hrTo24hr(app.time), // Use helper for consistency
+          status: (app.status as string)?.toLowerCase() || "pending",
+          name: app.name,
+          date: app.date,
+          time: app.time, // The original 12hr/24hr format is here, but we use sessionTime below
+          isPackageUser: app.isPackageUser || false,
+          packageDetails: app.packageDetails || null,
+        } as Appointment;
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to update appointment details:", error);
+      throw error;
+    }
+  },
+
   getAppointments: async (
     page = 1,
     limit = 20,
@@ -119,11 +164,8 @@ const reservationApiService = {
   },
 };
 
-interface StatusDropdownProps {
-  appointmentId: string;
-  currentStatus: Appointment["status"];
-  onStatusChangeSuccess: () => void;
-}
+
+// --- HELPER FUNCTIONS ---
 
 const getStatusBadge = (status: string) => {
   // Keeping badge colors light and contrasting against the card background
@@ -142,6 +184,62 @@ const getStatusBadge = (status: string) => {
     icon: statusIcons[status],
   };
 };
+
+/**
+ * Utility function to format Sri Lankan numbers for WhatsApp.
+ */
+const formatSLNumberForWhatsApp = (contactNumber: string | null): string => {
+    if (!contactNumber) return "";
+    
+    // 1. Remove non-digit characters (for safety)
+    let cleanedNumber = contactNumber.replace(/\D/g, '');
+    
+    // 2. Check for the domestic leading zero and remove it
+    if (cleanedNumber.startsWith('0')) {
+        cleanedNumber = cleanedNumber.substring(1);
+    }
+
+    // 3. Prepend the hardcoded Sri Lankan country code '94'
+    return '94' + cleanedNumber;
+};
+
+
+// NEW FIX: Converts 12hr format (e.g., "12:20 PM") to 24hr format (e.g., "12:20")
+const convert12hrTo24hr = (time12h: string): string => {
+    // Check if the format is already 24-hour (e.g., "20:21")
+    if (time12h.includes(':') && !time12h.includes('M')) {
+        return time12h;
+    }
+    
+    // Attempt to handle 12-hour format
+    const parts = time12h.split(' ');
+    const time = parts[0];
+    const period = parts.length > 1 ? parts[1].toUpperCase() : '';
+
+    if (!time) return "00:00"; 
+
+    const [hoursStr, minutes] = time.split(':');
+    let h = parseInt(hoursStr, 10);
+    
+    if (period === 'PM' && h !== 12) {
+        h += 12;
+    } else if (period === 'AM' && h === 12) {
+        h = 0; // Midnight (12:xx AM)
+    }
+
+    // Ensure minutes are present and padded
+    const paddedMinutes = (minutes || '00').padStart(2, '0');
+    return `${String(h).padStart(2, '0')}:${paddedMinutes}`;
+};
+
+
+// --- SUB-COMPONENTS ---
+
+interface StatusDropdownProps {
+  appointmentId: string;
+  currentStatus: Appointment["status"];
+  onStatusChangeSuccess: () => void;
+}
 
 const StatusDropdown: React.FC<StatusDropdownProps> = ({
   appointmentId,
@@ -231,28 +329,230 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   );
 };
 
-/**
- * Utility function to format Sri Lankan numbers for WhatsApp.
- * Assumes the input number is in the domestic format (e.g., "0703973327")
- * and converts it to the international format required by WhatsApp (e.g., "94703973327").
- */
-const formatSLNumberForWhatsApp = (contactNumber: string | null): string => {
-    if (!contactNumber) return "";
-    
-    // 1. Remove non-digit characters (for safety)
-    let cleanedNumber = contactNumber.replace(/\D/g, '');
-    
-    // 2. Check for the domestic leading zero and remove it
-    if (cleanedNumber.startsWith('0')) {
-        cleanedNumber = cleanedNumber.substring(1);
-    }
 
-    // 3. Prepend the hardcoded Sri Lankan country code '94'
-    // NOTE: This assumes all numbers are local Sri Lankan numbers.
-    return '94' + cleanedNumber;
+interface AppointmentDetailsModalProps {
+  appointment: Appointment;
+  onClose: () => void;
+  onUpdate: (updatedAppointment: Appointment) => void;
+}
+
+const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
+  appointment,
+  onClose,
+  onUpdate,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // FIXED: NewDate and NewTime are already correctly initialized as YYYY-MM-DD and HH:MM 
+  // because they were converted in fetchAppointments (via sessionDate/sessionTime).
+  const [newDate, setNewDate] = useState(appointment.sessionDate);
+  const [newTime, setNewTime] = useState(appointment.sessionTime);
+
+  const handleSave = async () => {
+    if (isSaving) return;
+
+    if (newDate === appointment.sessionDate && newTime === appointment.sessionTime) {
+      Swal.fire({
+        icon: "info",
+        title: "No Changes",
+        text: "Date and time are unchanged.",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedData = await reservationApiService.updateAppointmentDetails(
+        appointment.id,
+        newDate,
+        newTime
+      );
+
+      if (updatedData) {
+        Swal.fire({
+          icon: "success",
+          title: "Rescheduled!",
+          text: `Appointment moved to ${newDate} at ${newTime}.`,
+          toast: true,
+          position: "top-end",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        onUpdate(updatedData); // Notify parent to refresh/update table data
+        setIsEditing(false);
+      } else {
+        throw new Error("Update response was invalid.");
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Could not save changes.",
+        background: COLOR_CARD_BG,
+        color: COLOR_TEXT_DARK,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Data pairs for read-only fields
+  const readOnlyFields = [
+    { label: "Reservation ID", value: appointment.reservationId, icon: "mdi:identifier" },
+    { label: "Client Name", value: appointment.clientName || "N/A", icon: "lucide:user" },
+    { label: "Email", value: appointment.email || "N/A", icon: "lucide:mail" },
+    { label: "Contact No.", value: appointment.contactNumber || "N/A", icon: "lucide:phone" },
+    { label: "User Type", value: appointment.isPackageUser ? "Package User" : "Single Float", icon: "lucide:package" },
+    { label: "Status", value: appointment.status.toUpperCase(), icon: "lucide:clock" },
+    { label: "Notes", value: appointment.specialNote || "None", icon: "mdi:note-text-outline" },
+  ];
+
+  // Utility for displaying status badge in the modal
+  const { styles: statusStyles } = getStatusBadge(appointment.status);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" onClick={onClose}>
+      <div
+        className="relative max-w-3xl w-full rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100"
+        style={{ backgroundColor: COLOR_CARD_BG }}
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+      >
+        {/* Header */}
+        <div
+          className="sticky top-0 flex items-center justify-between p-6 border-b"
+          style={{
+            backgroundColor: COLOR_TEXT_DARK,
+            borderColor: COLOR_MUTED + "30",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="h-6 w-6 text-white" />
+            <h2 className="text-2xl font-bold text-white">
+              Appointment Details
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors"
+          >
+            <X className="h-5 w-5 text-white" />
+          </button>
+          
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+            <h3 className="text-xl font-semibold" style={{ color: COLOR_TEXT_DARK }}>
+              Session: {appointment.reservationId}
+            </h3>
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusStyles}`}>
+              {appointment.status.toUpperCase()}
+            </span>
+          </div>
+
+          {/* Editable Fields: Date and Time */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg" style={{ backgroundColor: COLOR_BG_LIGHT }}>
+            {/* Date Field */}
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: COLOR_MUTED }}>
+                Date
+              </label>
+              <input
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                disabled={!isEditing || isSaving}
+                className="w-full rounded-md border p-2 font-semibold transition-all disabled:opacity-80"
+                style={{ borderColor: COLOR_MUTED + "40", color: COLOR_TEXT_DARK }}
+              />
+            </div>
+
+            {/* Time Field */}
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: COLOR_MUTED }}>
+                Time
+              </label>
+              <input
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+                disabled={!isEditing || isSaving}
+                className="w-full rounded-md border p-2 font-semibold transition-all disabled:opacity-80"
+                style={{ borderColor: COLOR_MUTED + "40", color: COLOR_TEXT_DARK }}
+              />
+            </div>
+          </div>
+
+          {/* Read-Only Details Grid */}
+          <h3 className="text-lg font-bold mt-6 mb-4" style={{ color: COLOR_TEXT_DARK }}>
+            Client & Details (Read-Only)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {readOnlyFields.map((field) => (
+              <div key={field.label} className="border-b pb-2" style={{ borderColor: COLOR_MUTED + "20" }}>
+                <p className="text-xs font-medium" style={{ color: COLOR_MUTED }}>
+                  {field.label}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Icon icon={field.icon} className="h-4 w-4" style={{ color: COLOR_MUTED }} />
+                  <p className="text-sm font-semibold truncate" style={{ color: COLOR_TEXT_DARK }} title={field.value}>
+                    {field.label === "Status" ? field.value : field.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer: Action Buttons */}
+        <div className="sticky bottom-0 p-6 border-t flex justify-end gap-3" style={{ backgroundColor: COLOR_CARD_BG, borderColor: COLOR_MUTED + "30" }}>
+          
+          {isEditing ? (
+            <>
+              <button
+                onClick={() => setIsEditing(false)}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all border"
+                style={{ backgroundColor: COLOR_CARD_BG, color: COLOR_MUTED, borderColor: COLOR_MUTED }}
+              >
+                <X className="h-5 w-5" />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all hover:opacity-90"
+                style={{ backgroundColor: COLOR_EDIT_BLUE, color: 'white' }}
+              >
+                <Save className="h-5 w-5" />
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: COLOR_EDIT_BLUE, color: 'white' }}
+            >
+              <Edit className="h-5 w-5" />
+              Edit Date/Time
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 
+// --- MAIN COMPONENT ---
 export default function ReservationsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -269,6 +569,34 @@ export default function ReservationsPage() {
   const [selectedPackageDetails, setSelectedPackageDetails] =
     useState<PackageDetails | null>(null);
   const [showPackageModal, setShowPackageModal] = useState(false);
+
+  // NEW STATE: For Appointment Details Modal
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Function to handle opening the appointment modal
+  const handleOpenAppointmentModal = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailsModalOpen(true);
+  };
+
+  // Function to handle closing the appointment modal and clearing state
+  const handleCloseAppointmentModal = () => {
+    setSelectedAppointment(null);
+    setIsDetailsModalOpen(false);
+  };
+
+  // Function to update the table data after a successful edit
+  const handleAppointmentUpdate = (updatedAppointment: Appointment) => {
+    setAppointments(prevAppointments => 
+      prevAppointments.map(app => 
+        app.id === updatedAppointment.id ? updatedAppointment : app
+      )
+    );
+    // Also update the currently viewed appointment in the modal for seamless interaction
+    setSelectedAppointment(updatedAppointment); 
+  };
+
 
   const fetchAppointments = useCallback(
     async (page = 1) => {
@@ -287,55 +615,58 @@ export default function ReservationsPage() {
 
         const mappedAppointments = response.data.map((app: any) => ({
           id: app._id,
-          reservationId: app.reservationId,
+          reservationId: app.reservationId,
           clientName: app.name || "N/A",
           email: app.email,
           contactNumber: app.contactNumber,
           specialNote: app.specialNote,
           sessionDate: app.date,
-          sessionTime: app.time,
+          // FIXED: Convert time to 24hr format for state and editable input consistency
+          sessionTime: convert12hrTo24hr(app.time), 
           status: (app.status as string)?.toLowerCase() || "pending",
           isPackageUser: app.isPackageUser || false,
           packageDetails: app.packageDetails || null,
         })) as Appointment[];
 
-        setAppointments(mappedAppointments);
-        setPagination({
-                  ...response.pagination,
-                  recordsPerPage: response.pagination.limit, // Map 'limit' to 'recordsPerPage'
-        });
-        setCurrentPage(page);
-      } catch (err: any) {
-      console.error("Error fetching appointments:", err);
-      setError(err?.message || "Failed to load appointments");
-      } finally {
-      setIsLoading(false);
-      }
-      },
-      [startDate, endDate]
-      );
+        setAppointments(mappedAppointments);
+        setPagination({
+                  ...response.pagination,
+                  recordsPerPage: response.pagination.limit, // Map 'limit' to 'recordsPerPage'
+        });
+        setCurrentPage(page);
+      } catch (err: any) {
+      console.error("Error fetching appointments:", err);
+      setError(err?.message || "Failed to load appointments");
+      } finally {
+      setIsLoading(false);
+      }
+      },
+      [startDate, endDate]
+      );
 
-  useEffect(() => {
-  fetchAppointments(1);
-  }, [startDate, endDate, fetchAppointments]);
+  useEffect(() => {
+  fetchAppointments(1);
+  }, [startDate, endDate, fetchAppointments]);
 
-// Filtering Logic remains unchanged
+// FIXED: Define filteredAppointments using useMemo for efficient filtering
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const clientName = appointment.clientName || "";
+      const email = appointment.email || "";
+      const contactNumber = appointment.contactNumber || "";
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const clientName = appointment.clientName || "";
-    const email = appointment.email || "";
-    const contactNumber = appointment.contactNumber || "";
+      const matchesSearch =
+        clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.reservationId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contactNumber.includes(searchTerm);
 
-    const matchesSearch =
-      clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contactNumber.includes(searchTerm);
+      const matchesStatus =
+        statusFilter === "all" || appointment.status === statusFilter;
 
-    const matchesStatus =
-      statusFilter === "all" || appointment.status === statusFilter;
-
-    return !!appointment && matchesSearch && matchesStatus;
-  });
+      return !!appointment && matchesSearch && matchesStatus;
+    });
+  }, [appointments, searchTerm, statusFilter]);
 
   const handlePreviousPage = () => {
     if (pagination?.hasPrevPage) {
@@ -474,7 +805,7 @@ export default function ReservationsPage() {
             />
             <input
               type="text"
-              placeholder="Search by client name, email, or contact number..."
+              placeholder="Search by client name, email, contact number, or Reservation ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-md border pl-10 pr-4 py-2 placeholder:text-gray-400 focus:outline-none focus:ring-2"
@@ -654,10 +985,10 @@ export default function ReservationsPage() {
                       }
                     >
                       <td
-                        className="px-6 py-4 font-medium"
+                        className="px-6 py-4 font-medium cursor-pointer hover:underline"
                         style={{ color: COLOR_TEXT_DARK }}
+                        onClick={() => handleOpenAppointmentModal(appointment)} 
                       >
-                        {/* MODIFIED: Use the actual reservationId */}
                         {appointment.reservationId}
                       </td>
                       <td
@@ -1150,6 +1481,15 @@ export default function ReservationsPage() {
               </div>
             </div>
           </div>
+        )}
+        
+        {/* NEW: Appointment Details/Edit Modal */}
+        {isDetailsModalOpen && selectedAppointment && (
+          <AppointmentDetailsModal
+            appointment={selectedAppointment}
+            onClose={handleCloseAppointmentModal}
+            onUpdate={handleAppointmentUpdate}
+          />
         )}
       </div>
     </div>
