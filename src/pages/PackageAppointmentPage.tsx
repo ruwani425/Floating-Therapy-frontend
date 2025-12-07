@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation, Link, useNavigate } from 'react-router-dom'; 
-import { Clock, Star, Zap, User, Mail, Phone, Calendar, Send, Package, CheckCircle, ChevronLeft, MapPin } from "lucide-react"; 
+import { Clock, Star, Zap, User, Mail, Phone, Send, Package, CheckCircle, ChevronLeft, MapPin } from "lucide-react"; 
 import apiRequest from "../core/axios"; 
-// 🛑 NEW: Import SweetAlert2 (assuming it's installed and available)
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
+import { useAuth } from '../components/AuthProvider'; 
 
 // --- Color Constants (Replicated from PricingPage for consistency) ---
 const COLOR_PRIMARY = "#3a7ca5"; // var(--theta-blue)
@@ -79,10 +79,8 @@ const packageApiService = {
 // --- Helper Component: Package Summary Card ---
 
 const PackageSummaryCard: React.FC<{ pkg: PackageData }> = ({ pkg }) => {
-  const BASE_FLOAT_PRICE = 15000;
-  const originalPackageValue = BASE_FLOAT_PRICE * pkg.sessions;
-  const formattedTotalPrice = pkg.totalPrice.toLocaleString("en-US");
-  const finalPerFloat = (pkg.totalPrice / pkg.sessions).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const formattedTotalPrice = pkg.totalPrice.toLocaleString("en-US");
+  const finalPerFloat = (pkg.totalPrice / pkg.sessions).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   return (
     <div className="p-6 sm:p-8 rounded-xl shadow-lg bg-white border-2" style={{ borderColor: COLOR_ACCENT_LIGHT }}>
@@ -126,50 +124,97 @@ const PackageSummaryCard: React.FC<{ pkg: PackageData }> = ({ pkg }) => {
 // --- Main Component ---
 
 const PackageAppointmentPage: React.FC = () => {
-  const packageId = useQueryPackageId();
-  const navigate = useNavigate(); 
-  
-  const [pkg, setPkg] = useState<PackageData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'fail'>('idle');
+  const packageId = useQueryPackageId();
+  const navigate = useNavigate(); 
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  const [pkg, setPkg] = useState<PackageData | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'fail'>('idle');
 
-  // Initializing formData with the 'address' field
-  const [formData, setFormData] = useState<InternalFormData>({
-    fullName: '',
-    email: '',
-    phone: '',
+  // Initializing formData without email field
+  const [formData, setFormData] = useState<InternalFormData>({
+    fullName: '',
+    email: '', // Will be populated from user profile
+    phone: '',
     address: '',
-    message: '',
-  });
+    message: '',
+  });
 
-  const fetchPackageDetails = useCallback(async (id: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const details = await packageApiService.fetchPackageDetails(id);
-      if (details) {
-        setPkg(details);
-      } else {
-        setError("Selected package not found or no longer active.");
-      }
-    } catch (err: any) {
-      console.error("Fetch error:", err);
-      setError(err?.message || "Failed to load package details. Please try refreshing.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // Check authentication and redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'Please log in to continue with your package activation.',
+        confirmButtonText: 'Go to Login',
+        confirmButtonColor: COLOR_PRIMARY,
+      }).then(() => {
+        navigate('/login');
+      });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
-  useEffect(() => {
-    if (packageId) {
-      fetchPackageDetails(packageId);
-    } else {
-      setIsLoading(false);
-      setError("No package selected. Please return to the pricing page.");
-    }
-  }, [packageId, fetchPackageDetails]);
+  // Fetch user profile to get email
+  const fetchUserProfile = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response: any = await apiRequest.get('/users/me');
+      if (response.success && response.data) {
+        setUserEmail(response.data.email);
+        setFormData(prev => ({ ...prev, email: response.data.email }));
+        console.log('✅ User email loaded:', response.data.email);
+      }
+    } catch (err: any) {
+      console.error("Failed to fetch user profile:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load your profile. Please try refreshing the page.',
+        confirmButtonColor: COLOR_PRIMARY,
+      });
+    }
+  }, [isAuthenticated]);
+
+  const fetchPackageDetails = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const details = await packageApiService.fetchPackageDetails(id);
+      if (details) {
+        setPkg(details);
+      } else {
+        setError("Selected package not found or no longer active.");
+      }
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setError(err?.message || "Failed to load package details. Please try refreshing.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated, authLoading, fetchUserProfile]);
+
+  // Fetch package details
+  useEffect(() => {
+    if (packageId && isAuthenticated && !authLoading) {
+      fetchPackageDetails(packageId);
+    } else if (!packageId && !authLoading) {
+      setIsLoading(false);
+      setError("No package selected. Please return to the pricing page.");
+    }
+  }, [packageId, isAuthenticated, authLoading, fetchPackageDetails]);
 
   // Handle changes for input and textarea fields
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -184,23 +229,24 @@ const PackageAppointmentPage: React.FC = () => {
       return;
     }
 
-    // Simple validation (address is required)
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.address) {
-        setError("Please fill out all required fields.");
-        return;
-    }
+    // Simple validation (address is required, email comes from user profile)
+    if (!formData.fullName || !formData.phone || !formData.address || !userEmail) {
+        setError("Please fill out all required fields.");
+        return;
+    }
 
     setIsSubmitting(true);
     setSubmissionStatus('idle');
     setError(null);
 
-    try {
-      // Construct the payload
-      const dataToSubmit: ActivationPayload = {
-        ...formData,
-        packageId: pkg._id,
+    try {
+      // Construct the payload with user's email from profile
+      const dataToSubmit: ActivationPayload = {
+        ...formData,
+        email: userEmail, // Use email from authenticated user profile
+        packageId: pkg._id,
         preferredDate: new Date().toISOString(), 
-      };
+      };
       
       await packageApiService.submitActivation(dataToSubmit); 
       
@@ -227,15 +273,20 @@ const PackageAppointmentPage: React.FC = () => {
     }
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center py-20 text-lg font-medium" style={{ color: COLOR_TEXT_MUTED }}>
-          <Clock className="w-6 h-6 inline animate-spin mr-2" />
-          Loading package details...
-        </div>
-      );
-    }
+  const renderContent = () => {
+    if (authLoading || isLoading) {
+      return (
+        <div className="text-center py-20 text-lg font-medium" style={{ color: COLOR_TEXT_MUTED }}>
+          <Clock className="w-6 h-6 inline animate-spin mr-2" />
+          {authLoading ? 'Checking authentication...' : 'Loading package details...'}
+        </div>
+      );
+    }
+
+    // Don't render if not authenticated (will redirect)
+    if (!isAuthenticated) {
+      return null;
+    }
 
     if (error && !pkg) {
       return (
@@ -309,25 +360,28 @@ const PackageAppointmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <div className="relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-base transition duration-150"
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </div>
+              {/* Email (Read-only from user profile) */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <div className="relative rounded-md shadow-sm bg-gray-50">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5" style={{ color: COLOR_PRIMARY }} />
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    readOnly
+                    value={userEmail}
+                    className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 cursor-not-allowed text-base"
+                    placeholder="Loading..."
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500 flex items-center">
+                  <CheckCircle className="w-3 h-3 mr-1 text-green-500" />
+                  Your email from your account profile
+                </p>
+              </div>
 
               {/* Phone */}
               <div>

@@ -1,6 +1,6 @@
-"use client"
-import type React from "react"
-import { useState, useMemo, useEffect, useCallback } from "react"
+"use client";
+import type React from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   CalendarCheck,
   Clock,
@@ -12,66 +12,86 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
-} from "lucide-react"
-import apiRequest from "../core/axios"
+} from "lucide-react";
+import apiRequest from "../core/axios";
+import { useAuth } from "../components/AuthProvider";
 
 // --- 1. TypeScript Interfaces & Data ---
 const DAY_STATUS = {
   BOOKABLE: "Bookable",
   CLOSED: "Closed",
   SOLD_OUT: "Sold Out",
-} as const
+} as const;
 
-type DayStatus = (typeof DAY_STATUS)[keyof typeof DAY_STATUS]
+type DayStatus = (typeof DAY_STATUS)[keyof typeof DAY_STATUS];
 
 interface ApiResponse<T> {
-  success: boolean
-  data: T
-  message?: string
+  success: boolean;
+  data: T;
+  message?: string;
 }
 
 interface AppointmentResponseData {
-  _id: string
-  date: string
-  time: string
-  name: string
-  email: string
-  contactNumber: string
-  specialNote?: string
-  status: "pending" | "completed" | "canceled"
+  _id: string;
+  date: string;
+  time: string;
+  name: string;
+  email: string;
+  contactNumber: string;
+  specialNote?: string;
+  status: "pending" | "completed" | "canceled";
 }
 
-interface AppointmentApiResponse extends ApiResponse<AppointmentResponseData | null> {}
+interface AppointmentApiResponse
+  extends ApiResponse<AppointmentResponseData | null> {}
 
 interface CalendarDetailFromBackend {
-  date: string
-  status: DayStatus
-  openTime?: string
-  closeTime?: string
-  sessionsToSell: number
-  bookedSessions: number
+  date: string;
+  status: DayStatus;
+  openTime?: string;
+  closeTime?: string;
+  sessionsToSell: number;
+  bookedSessions: number;
 }
 
 interface SystemSettings {
-  defaultFloatPrice: number
-  cleaningBuffer: number
-  sessionDuration: number | string
-  sessionsPerDay: number
-  openTime: string
-  closeTime: string
-  numberOfTanks: number
-  tankStaggerInterval: number
-  actualCloseTime?: string
+  defaultFloatPrice: number;
+  cleaningBuffer: number;
+  sessionDuration: number | string;
+  sessionsPerDay: number;
+  openTime: string;
+  closeTime: string;
+  numberOfTanks: number;
+  tankStaggerInterval: number;
+  actualCloseTime?: string;
 }
 
 interface BookedCountByDate {
-  date: string
-  count: number
+  date: string;
+  count: number;
 }
 
 interface BookedTimesByDate {
-  date: string
-  times: string[]
+  date: string;
+  times: string[];
+}
+
+interface UserPackage {
+  _id: string;
+  packageId: {
+    _id: string;
+    name: string;
+    duration: string;
+    sessions: number;
+    totalPrice: number;
+  };
+  packageName: string;
+  totalSessions: number;
+  usedCount: number;
+  remainingSessions: number;
+  startDate: string;
+  expiryDate: string;
+  status: string;
 }
 
 // --- THEME & UTILITIES ---
@@ -85,52 +105,64 @@ const THEME_COLORS: { [key: string]: string } = {
   "--theta-green": "#10B981",
   "--dark-blue-800": "#003F5C",
   "--accent-color": "#2DA0CC",
-}
+};
 
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const getDaysInMonth = (date: Date): Date[] => {
-  const year = date.getFullYear()
-  const month = date.getMonth()
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const days: Date[] = []
-  const startDayOfWeek = firstDay.getDay()
-  const prevMonth = new Date(year, month, 0)
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const days: Date[] = [];
+  const startDayOfWeek = firstDay.getDay();
+  const prevMonth = new Date(year, month, 0);
   for (let i = startDayOfWeek; i > 0; i--) {
-    days.unshift(new Date(prevMonth.getFullYear(), prevMonth.getMonth(), prevMonth.getDate() - i + 1))
+    days.unshift(
+      new Date(
+        prevMonth.getFullYear(),
+        prevMonth.getMonth(),
+        prevMonth.getDate() - i + 1
+      )
+    );
   }
   for (let i = 1; i <= lastDay.getDate(); i++) {
-    days.push(new Date(year, month, i))
+    days.push(new Date(year, month, i));
   }
-  const remainingSlots = 42 - days.length
-  const nextMonth = new Date(year, month + 1, 1)
+  const remainingSlots = 42 - days.length;
+  const nextMonth = new Date(year, month + 1, 1);
   for (let i = 0; i < remainingSlots; i++) {
-    days.push(new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonth.getDate() + i))
+    days.push(
+      new Date(
+        nextMonth.getFullYear(),
+        nextMonth.getMonth(),
+        nextMonth.getDate() + i
+      )
+    );
   }
-  return days
-}
+  return days;
+};
 
 const formatDateToKey = (date: Date): string => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
-}
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const isSameDay = (date1: Date | null, date2: Date | null): boolean => {
-  if (!date1 || !date2) return false
-  return date1.toDateString() === date2.toDateString()
-}
+  if (!date1 || !date2) return false;
+  return date1.toDateString() === date2.toDateString();
+};
 
-const isToday = (date: Date): boolean => isSameDay(date, new Date())
+const isToday = (date: Date): boolean => isSameDay(date, new Date());
 
 const hexToRgba = (hex: string, alpha: number): string => {
-  const r = Number.parseInt(hex.slice(1, 3), 16)
-  const g = Number.parseInt(hex.slice(3, 5), 16)
-  const b = Number.parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
 
 const calculateStaggeredSessions = (
   openTime: string,
@@ -138,79 +170,80 @@ const calculateStaggeredSessions = (
   duration: number,
   buffer: number,
   numberOfTanks: number,
-  staggerInterval: number,
+  staggerInterval: number
 ): {
-  sessionsPerTank: number
-  actualCloseTime: string
-  totalSessions: number
+  sessionsPerTank: number;
+  actualCloseTime: string;
+  totalSessions: number;
 } => {
   if (!openTime || !closeTime || !duration || !buffer || numberOfTanks <= 0) {
     return {
       sessionsPerTank: 0,
       actualCloseTime: closeTime || "00:00",
       totalSessions: 0,
-    }
+    };
   }
 
   const timeToMinutes = (time: string): number => {
     try {
-      const [hours, minutes] = time.split(":").map(Number)
-      if (isNaN(hours) || isNaN(minutes)) return 0
-      return hours * 60 + minutes
+      const [hours, minutes] = time.split(":").map(Number);
+      if (isNaN(hours) || isNaN(minutes)) return 0;
+      return hours * 60 + minutes;
     } catch {
-      return 0
+      return 0;
     }
-  }
+  };
 
   const minutesToTime = (minutes: number): string => {
-    if (isNaN(minutes)) return "00:00"
-    const hrs = Math.floor(minutes / 60) % 24
-    const mins = minutes % 60
-    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`
-  }
+    if (isNaN(minutes)) return "00:00";
+    const hrs = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
 
-  const openMinutes = timeToMinutes(openTime)
-  let closeMinutes = timeToMinutes(closeTime)
-  if (closeMinutes <= openMinutes) closeMinutes += 24 * 60
+  const openMinutes = timeToMinutes(openTime);
+  let closeMinutes = timeToMinutes(closeTime);
+  if (closeMinutes <= openMinutes) closeMinutes += 24 * 60;
 
-  const sessionLength = Number(duration) + Number(buffer)
+  const sessionLength = Number(duration) + Number(buffer);
   if (sessionLength <= 0 || isNaN(sessionLength)) {
-    return { sessionsPerTank: 0, actualCloseTime: closeTime, totalSessions: 0 }
+    return { sessionsPerTank: 0, actualCloseTime: closeTime, totalSessions: 0 };
   }
 
-  let maxSessionsPerTank = 0
-  let latestEndTime = openMinutes
+  let maxSessionsPerTank = 0;
+  let latestEndTime = openMinutes;
 
   for (let tankIndex = 0; tankIndex < numberOfTanks; tankIndex++) {
-    const tankStartMinutes = openMinutes + tankIndex * Number(staggerInterval || 0)
-    const availableTime = closeMinutes - tankStartMinutes
-    const tankSessions = Math.floor(availableTime / sessionLength)
+    const tankStartMinutes =
+      openMinutes + tankIndex * Number(staggerInterval || 0);
+    const availableTime = closeMinutes - tankStartMinutes;
+    const tankSessions = Math.floor(availableTime / sessionLength);
     if (tankSessions > 0) {
-      const tankEndTime = tankStartMinutes + tankSessions * sessionLength
-      latestEndTime = Math.max(latestEndTime, tankEndTime)
-      maxSessionsPerTank = Math.max(maxSessionsPerTank, tankSessions)
+      const tankEndTime = tankStartMinutes + tankSessions * sessionLength;
+      latestEndTime = Math.max(latestEndTime, tankEndTime);
+      maxSessionsPerTank = Math.max(maxSessionsPerTank, tankSessions);
     }
   }
 
-  const totalSessions = maxSessionsPerTank * numberOfTanks
+  const totalSessions = maxSessionsPerTank * numberOfTanks;
 
   return {
     sessionsPerTank: maxSessionsPerTank || 0,
     actualCloseTime: minutesToTime(latestEndTime),
     totalSessions: isNaN(totalSessions) ? 0 : totalSessions,
-  }
-}
+  };
+};
 
 interface SessionDetail {
-  tankNumber: number
-  tankName: string
+  tankNumber: number;
+  tankName: string;
   sessions: {
-    sessionNumber: number
-    startTime: string
-    endTime: string
-    cleaningStart: string
-    cleaningEnd: string
-  }[]
+    sessionNumber: number;
+    startTime: string;
+    endTime: string;
+    cleaningStart: string;
+    cleaningEnd: string;
+  }[];
 }
 
 const generateSessionDetails = (
@@ -219,43 +252,46 @@ const generateSessionDetails = (
   sessionDuration: number,
   cleaningBuffer: number,
   numberOfTanks: number,
-  tankStaggerInterval: number,
+  tankStaggerInterval: number
 ): SessionDetail[] => {
-  const sessionDetails: SessionDetail[] = []
+  const sessionDetails: SessionDetail[] = [];
 
   const timeToMinutes = (time: string): number => {
     try {
-      const [hours, minutes] = time.split(":").map(Number)
-      if (isNaN(hours) || isNaN(minutes)) return 0
-      return hours * 60 + minutes
+      const [hours, minutes] = time.split(":").map(Number);
+      if (isNaN(hours) || isNaN(minutes)) return 0;
+      return hours * 60 + minutes;
     } catch {
-      return 0
+      return 0;
     }
-  }
+  };
 
   const minutesToTime = (minutes: number): string => {
-    if (isNaN(minutes)) return "00:00"
-    const hrs = Math.floor(minutes / 60) % 24
-    const mins = minutes % 60
-    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`
-  }
+    if (isNaN(minutes)) return "00:00";
+    const hrs = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
 
   const minutesToTime12Hour = (minutes: number): string => {
-    if (isNaN(minutes)) return "12:00 AM"
-    const hrs = Math.floor(minutes / 60) % 24
-    const mins = minutes % 60
-    const period = hrs >= 12 ? "PM" : "AM"
-    const displayHours = hrs % 12 || 12
-    return `${String(displayHours).padStart(2, "0")}:${String(mins).padStart(2, "0")} ${period}`
-  }
+    if (isNaN(minutes)) return "12:00 AM";
+    const hrs = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    const period = hrs >= 12 ? "PM" : "AM";
+    const displayHours = hrs % 12 || 12;
+    return `${String(displayHours).padStart(2, "0")}:${String(mins).padStart(
+      2,
+      "0"
+    )} ${period}`;
+  };
 
-  const openMinutes = timeToMinutes(openTime)
-  const sessionDurationNum = Number(sessionDuration) || 0
-  const cleaningBufferNum = Number(cleaningBuffer) || 0
-  const staggerInterval = Number(tankStaggerInterval) || 0
-  const sessionLength = sessionDurationNum + cleaningBufferNum
+  const openMinutes = timeToMinutes(openTime);
+  const sessionDurationNum = Number(sessionDuration) || 0;
+  const cleaningBufferNum = Number(cleaningBuffer) || 0;
+  const staggerInterval = Number(tankStaggerInterval) || 0;
+  const sessionLength = sessionDurationNum + cleaningBufferNum;
 
-  if (sessionLength <= 0) return []
+  if (sessionLength <= 0) return [];
 
   const result = calculateStaggeredSessions(
     openTime,
@@ -263,17 +299,17 @@ const generateSessionDetails = (
     sessionDurationNum,
     cleaningBufferNum,
     numberOfTanks,
-    staggerInterval,
-  )
+    staggerInterval
+  );
 
   for (let tankIndex = 0; tankIndex < numberOfTanks; tankIndex++) {
-    const tankStartMinutes = openMinutes + tankIndex * staggerInterval
-    const sessions = []
+    const tankStartMinutes = openMinutes + tankIndex * staggerInterval;
+    const sessions = [];
 
     for (let i = 0; i < result.sessionsPerTank; i++) {
-      const sessionStartMinutes = tankStartMinutes + i * sessionLength
-      const sessionEndMinutes = sessionStartMinutes + sessionDurationNum
-      const cleaningEndMinutes = sessionEndMinutes + cleaningBufferNum
+      const sessionStartMinutes = tankStartMinutes + i * sessionLength;
+      const sessionEndMinutes = sessionStartMinutes + sessionDurationNum;
+      const cleaningEndMinutes = sessionEndMinutes + cleaningBufferNum;
 
       sessions.push({
         sessionNumber: i + 1,
@@ -281,211 +317,312 @@ const generateSessionDetails = (
         endTime: minutesToTime12Hour(sessionEndMinutes),
         cleaningStart: minutesToTime(sessionEndMinutes),
         cleaningEnd: minutesToTime(cleaningEndMinutes),
-      })
+      });
     }
 
     sessionDetails.push({
       tankNumber: tankIndex + 1,
       tankName: `Tank ${tankIndex + 1}`,
       sessions,
-    })
+    });
   }
 
-  return sessionDetails
-}
+  return sessionDetails;
+};
 
 // --- API SERVICE ---
-const CALENDAR_API_BASE_URL = "/calendar"
-const SETTINGS_API_BASE_URL = "/system-settings"
+const CALENDAR_API_BASE_URL = "/calendar";
+const SETTINGS_API_BASE_URL = "/system-settings";
 
 const apiService = {
-  getBookingCounts: async (formattedStartDate: string, formattedEndDate: string): Promise<BookedCountByDate[]> => {
+  getBookingCounts: async (
+    formattedStartDate: string,
+    formattedEndDate: string
+  ): Promise<BookedCountByDate[]> => {
     try {
-      console.log("[v0] Fetching booking counts for:", formattedStartDate, "to", formattedEndDate)
-      const apiResponse = await apiRequest.get<ApiResponse<BookedCountByDate[]>>("/appointments/counts", {
+      console.log(
+        "[v0] Fetching booking counts for:",
+        formattedStartDate,
+        "to",
+        formattedEndDate
+      );
+      const apiResponse = await apiRequest.get<
+        ApiResponse<BookedCountByDate[]>
+      >("/appointments/counts", {
         params: { startDate: formattedStartDate, endDate: formattedEndDate },
-      })
-      const dataArray = apiResponse && apiResponse.data ? apiResponse.data : []
+      });
+      const dataArray = apiResponse && apiResponse.data ? apiResponse.data : [];
       if (Array.isArray(dataArray)) {
-        return dataArray
+        return dataArray;
       }
-      return []
+      return [];
     } catch (error) {
-      console.error("[v0] Failed to fetch booking counts:", error)
-      return []
+      console.error("[v0] Failed to fetch booking counts:", error);
+      return [];
     }
   },
   getBookedTimesByDate: async (date: string): Promise<string[]> => {
     try {
-      console.log("[v0] Fetching booked times for date:", date)
-      const response = await apiRequest.get<ApiResponse<string[]>>(`/appointments/booked-times/${date}`)
-      const dataArray = response && response.data ? response.data : []
+      console.log("[v0] Fetching booked times for date:", date);
+      const response = await apiRequest.get<ApiResponse<string[]>>(
+        `/appointments/booked-times/${date}`
+      );
+      const dataArray = response && response.data ? response.data : [];
       if (Array.isArray(dataArray)) {
-        return dataArray
+        return dataArray;
       }
-      return []
+      return [];
     } catch (error) {
-      console.error("[v0] Failed to fetch booked times:", error)
-      return []
+      console.error("[v0] Failed to fetch booked times:", error);
+      return [];
     }
   },
   getSystemSettings: async (): Promise<SystemSettings> => {
     try {
-      console.log("[v0] Fetching system settings from:", SETTINGS_API_BASE_URL)
-      const response = await apiRequest.get<SystemSettings>(SETTINGS_API_BASE_URL)
-      console.log("[v0] System settings response:", response)
-      if (response && typeof response === "object" && "defaultFloatPrice" in response) {
-        return response
+      console.log("[v0] Fetching system settings from:", SETTINGS_API_BASE_URL);
+      const response = await apiRequest.get<SystemSettings>(
+        SETTINGS_API_BASE_URL
+      );
+      console.log("[v0] System settings response:", response);
+      if (
+        response &&
+        typeof response === "object" &&
+        "defaultFloatPrice" in response
+      ) {
+        return response;
       }
-      throw new Error("Invalid settings response format or missing data")
+      throw new Error("Invalid settings response format or missing data");
     } catch (error) {
-      console.error("[v0] Failed to fetch system settings:", error)
-      throw error
+      console.error("[v0] Failed to fetch system settings:", error);
+      throw error;
     }
   },
   getCalendarOverrides: async (
     formattedStartDate: string,
-    formattedEndDate: string,
+    formattedEndDate: string
   ): Promise<CalendarDetailFromBackend[]> => {
     try {
-      console.log("[v0] Fetching calendar overrides for:", formattedStartDate, "to", formattedEndDate)
-      const apiResponse = await apiRequest.get<ApiResponse<CalendarDetailFromBackend[]>>(CALENDAR_API_BASE_URL, {
+      console.log(
+        "[v0] Fetching calendar overrides for:",
+        formattedStartDate,
+        "to",
+        formattedEndDate
+      );
+      const apiResponse = await apiRequest.get<
+        ApiResponse<CalendarDetailFromBackend[]>
+      >(CALENDAR_API_BASE_URL, {
         params: { startDate: formattedStartDate, endDate: formattedEndDate },
-      })
-      console.log("[v0] Calendar response:", apiResponse)
-      const dataArray = apiResponse && apiResponse.data ? apiResponse.data : []
+      });
+      console.log("[v0] Calendar response:", apiResponse);
+      const dataArray = apiResponse && apiResponse.data ? apiResponse.data : [];
       if (Array.isArray(dataArray)) {
         return dataArray.map((detail) => ({
           ...detail,
           bookedSessions: (detail as any).bookedSessions ?? 0,
-        }))
+        }));
       }
-      return []
+      return [];
     } catch (error) {
-      console.error("[v0] Failed to fetch calendar overrides:", error)
-      return []
+      console.error("[v0] Failed to fetch calendar overrides:", error);
+      return [];
     }
   },
-}
+};
 
 const ConsolidatedBookingForm: React.FC = () => {
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [name, setName] = useState("")
-  const [contactNumber, setContactNumber] = useState("")
-  const [email, setEmail] = useState("")
-  const [specialNote, setSpecialNote] = useState("")
-  const [selectedTime, setSelectedTime] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [dayOverrides, setDayOverrides] = useState<Record<string, CalendarDetailFromBackend>>({})
-  const [defaultHours, setDefaultHours] = useState<SystemSettings | null>(null)
-  const [loadingCalendar, setLoadingCalendar] = useState(false)
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
-  const [bookedCounts, setBookedCounts] = useState<Record<string, number>>({})
-  const [bookedTimesByDate, setBookedTimesByDate] = useState<Record<string, string[]>>({})
+  const { isAuthenticated } = useAuth();
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [name, setName] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [isEmailFromProfile, setIsEmailFromProfile] = useState(false);
+  const [specialNote, setSpecialNote] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [dayOverrides, setDayOverrides] = useState<
+    Record<string, CalendarDetailFromBackend>
+  >({});
+  const [defaultHours, setDefaultHours] = useState<SystemSettings | null>(null);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [bookedCounts, setBookedCounts] = useState<Record<string, number>>({});
+  const [bookedTimesByDate, setBookedTimesByDate] = useState<
+    Record<string, string[]>
+  >({});
+  const [userPackages, setUserPackages] = useState<UserPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+
+  // Fetch user profile to auto-populate email if logged in
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (isAuthenticated) {
+        try {
+          const response: any = await apiRequest.get("/users/me");
+          if (response.success && response.data) {
+            setEmail(response.data.email);
+            setIsEmailFromProfile(true);
+            console.log("✅ User email auto-populated:", response.data.email);
+          }
+        } catch (err: any) {
+          console.error("Failed to fetch user profile:", err);
+          // If fetch fails, user can still manually enter email
+          setIsEmailFromProfile(false);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [isAuthenticated]);
+
+  // Fetch user's active packages
+  const fetchUserPackages = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUserPackages([]);
+      return;
+    }
+
+    setLoadingPackages(true);
+    try {
+      const response: any = await apiRequest.get(
+        "/package-activations/user/active"
+      );
+      console.log("📦 [fetchUserPackages] Response:", response);
+
+      if (response.success && Array.isArray(response.data)) {
+        setUserPackages(response.data);
+        console.log(
+          "✅ [fetchUserPackages] Loaded packages:",
+          response.data.length
+        );
+      } else {
+        setUserPackages([]);
+      }
+    } catch (err: any) {
+      console.error("❌ [fetchUserPackages] Error:", err);
+      setUserPackages([]);
+    } finally {
+      setLoadingPackages(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchUserPackages();
+  }, [fetchUserPackages]);
 
   const fetchCalendarData = useCallback(
     async (date: Date) => {
-      setLoadingCalendar(true)
-      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
-      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0)
-      const formattedStartDate = formatDateToKey(startOfMonth)
-      const formattedEndDate = formatDateToKey(endOfMonth)
+      setLoadingCalendar(true);
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      const formattedStartDate = formatDateToKey(startOfMonth);
+      const formattedEndDate = formatDateToKey(endOfMonth);
 
       try {
         const [settings, overrides, counts] = await Promise.all([
           apiService.getSystemSettings(),
           apiService.getCalendarOverrides(formattedStartDate, formattedEndDate),
           apiService.getBookingCounts(formattedStartDate, formattedEndDate),
-        ])
+        ]);
 
-        setDefaultHours(settings)
-        const overridesMap = overrides.reduce(
-          (acc, curr) => {
-            acc[curr.date] = curr
-            return acc
-          },
-          {} as Record<string, CalendarDetailFromBackend>,
-        )
-        setDayOverrides(overridesMap)
+        setDefaultHours(settings);
+        const overridesMap = overrides.reduce((acc, curr) => {
+          acc[curr.date] = curr;
+          return acc;
+        }, {} as Record<string, CalendarDetailFromBackend>);
+        setDayOverrides(overridesMap);
 
-        const countsMap = counts.reduce(
-          (acc, curr) => {
-            acc[curr.date] = curr.count
-            return acc
-          },
-          {} as Record<string, number>,
-        )
-        setBookedCounts(countsMap)
+        const countsMap = counts.reduce((acc, curr) => {
+          acc[curr.date] = curr.count;
+          return acc;
+        }, {} as Record<string, number>);
+        setBookedCounts(countsMap);
 
         if (isInitialLoad) {
-          const today = new Date()
-          if (today.getMonth() === date.getMonth() && today.getFullYear() === date.getFullYear()) {
-            setSelectedDate(today)
+          const today = new Date();
+          if (
+            today.getMonth() === date.getMonth() &&
+            today.getFullYear() === date.getFullYear()
+          ) {
+            setSelectedDate(today);
           }
-          setIsInitialLoad(false)
+          setIsInitialLoad(false);
         }
       } catch (e) {
-        setMessage("Failed to load appointment schedule. Please check your system settings.")
-        console.error(e)
+        setMessage(
+          "Failed to load appointment schedule. Please check your system settings."
+        );
+        console.error(e);
       } finally {
-        setLoadingCalendar(false)
+        setLoadingCalendar(false);
       }
     },
-    [isInitialLoad],
-  )
+    [isInitialLoad]
+  );
 
   useEffect(() => {
-    fetchCalendarData(currentMonth)
-  }, [currentMonth, fetchCalendarData])
+    fetchCalendarData(currentMonth);
+  }, [currentMonth, fetchCalendarData]);
 
   const handleDateSelect = (date: Date) => {
-    setSelectedDate(date)
-    setSelectedTime("")
-    setMessage(null)
-    const dateKey = formatDateToKey(date)
+    setSelectedDate(date);
+    setSelectedTime("");
+    setMessage(null);
+    const dateKey = formatDateToKey(date);
     if (!bookedTimesByDate[dateKey]) {
       apiService.getBookedTimesByDate(dateKey).then((times) => {
-        setBookedTimesByDate((prev) => ({ ...prev, [dateKey]: times }))
-      })
+        setBookedTimesByDate((prev) => ({ ...prev, [dateKey]: times }));
+      });
     }
-  }
+  };
 
   const handleMonthNavigate = (date: Date) => {
-    setCurrentMonth(date)
-    setSelectedDate(null)
-  }
+    setCurrentMonth(date);
+    setSelectedDate(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const dateKey = selectedDate ? formatDateToKey(selectedDate) : null
-    const override = dateKey ? dayOverrides[dateKey] : null
+    e.preventDefault();
+    const dateKey = selectedDate ? formatDateToKey(selectedDate) : null;
+    const override = dateKey ? dayOverrides[dateKey] : null;
 
-    if (!selectedDate || !selectedTime || !email || !contactNumber || !name || !defaultHours) {
+    if (
+      !selectedDate ||
+      !selectedTime ||
+      !email ||
+      !contactNumber ||
+      !name ||
+      !defaultHours
+    ) {
       setMessage(
-        "Please select an available date, time, and provide all contact details. System settings must be loaded.",
-      )
-      return
+        "Please select an available date, time, and provide all contact details. System settings must be loaded."
+      );
+      return;
     }
 
-    const dateStatus: DayStatus = override?.status || DAY_STATUS.BOOKABLE
-    const isUnavailable = dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT
+    const dateStatus: DayStatus = override?.status || DAY_STATUS.BOOKABLE;
+    const isUnavailable =
+      dateStatus === DAY_STATUS.CLOSED || dateStatus === DAY_STATUS.SOLD_OUT;
 
     if (isUnavailable) {
-      setMessage(`The selected date is currently ${dateStatus.toUpperCase()}. Please choose another date.`)
-      return
+      setMessage(
+        `The selected date is currently ${dateStatus.toUpperCase()}. Please choose another date.`
+      );
+      return;
     }
 
     if (sessionDetails.length === 0) {
-      setMessage("No available time slots on the selected date within operational hours. Please choose another date.")
-      return
+      setMessage(
+        "No available time slots on the selected date within operational hours. Please choose another date."
+      );
+      return;
     }
 
-    setIsSubmitting(true)
-    setMessage("Processing your appointment...")
-    setSuccessMessage(null)
+    setIsSubmitting(true);
+    setMessage("Processing your appointment...");
+    setSuccessMessage(null);
 
     try {
       const transactionData = {
@@ -495,6 +632,7 @@ const ConsolidatedBookingForm: React.FC = () => {
         email: email,
         contactNumber: contactNumber,
         specialNote: specialNote,
+        packageActivationId: selectedPackage, // Include selected package if any
         calendarContext: {
           date: dateKey,
           hasCalendarOverride: !!override,
@@ -509,47 +647,60 @@ const ConsolidatedBookingForm: React.FC = () => {
             sessionsPerDay: defaultHours.sessionsPerDay,
           },
         },
-      }
+      };
 
-      const response = await apiRequest.post<AppointmentApiResponse>("/appointments", transactionData)
+      const response = await apiRequest.post<AppointmentApiResponse>(
+        "/appointments",
+        transactionData
+      );
 
       if (response.success) {
-        setIsSubmitting(false)
-        const confirmationId = response.data?._id || "N/A"
+        setIsSubmitting(false);
+        const confirmationId = response.data?._id || "N/A";
         setSuccessMessage(
-          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Confirmation ID: ${confirmationId}`,
-        )
-        setMessage(null)
+          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Confirmation ID: ${confirmationId}`
+        );
+        setMessage(null);
 
-        setSelectedTime("")
-        setSelectedDate(null)
-        setName("")
-        setContactNumber("")
-        setEmail("")
-        setSpecialNote("")
+        setSelectedTime("");
+        setSelectedDate(null);
+        setName("");
+        setContactNumber("");
+        // Only clear email if it's not from profile (guest user)
+        if (!isEmailFromProfile) {
+          setEmail("");
+        }
+        setSpecialNote("");
+        setSelectedPackage(null);
 
-        fetchCalendarData(currentMonth)
+        fetchCalendarData(currentMonth);
+        fetchUserPackages(); // Refresh packages to show updated session counts
       } else {
-        setIsSubmitting(false)
-        setMessage(response.message || "Booking failed: Server rejected the request.")
+        setIsSubmitting(false);
+        setMessage(
+          response.message || "Booking failed: Server rejected the request."
+        );
       }
     } catch (error: any) {
-      setIsSubmitting(false)
-      const errorMessage = error.response?.data?.message || "A network error occurred while trying to book."
-      setMessage(errorMessage)
-      console.error("Booking submission error:", error)
+      setIsSubmitting(false);
+      const errorMessage =
+        error.response?.data?.message ||
+        "A network error occurred while trying to book.";
+      setMessage(errorMessage);
+      console.error("Booking submission error:", error);
     }
-  }
+  };
 
   const sessionDetails = useMemo(() => {
-    if (!selectedDate || !defaultHours) return []
-    const dateKey = formatDateToKey(selectedDate)
-    const override = dayOverrides[dateKey]
-    const effectiveOpenTime = override?.openTime || defaultHours.openTime
-    const effectiveCloseTime = override?.closeTime || defaultHours.closeTime
+    if (!selectedDate || !defaultHours) return [];
+    const dateKey = formatDateToKey(selectedDate);
+    const override = dayOverrides[dateKey];
+    const effectiveOpenTime = override?.openTime || defaultHours.openTime;
+    const effectiveCloseTime = override?.closeTime || defaultHours.closeTime;
 
-    const status = override?.status || DAY_STATUS.BOOKABLE
-    if (status === DAY_STATUS.CLOSED || status === DAY_STATUS.SOLD_OUT) return []
+    const status = override?.status || DAY_STATUS.BOOKABLE;
+    if (status === DAY_STATUS.CLOSED || status === DAY_STATUS.SOLD_OUT)
+      return [];
 
     return generateSessionDetails(
       effectiveOpenTime,
@@ -557,29 +708,29 @@ const ConsolidatedBookingForm: React.FC = () => {
       Number(defaultHours.sessionDuration),
       defaultHours.cleaningBuffer,
       defaultHours.numberOfTanks,
-      defaultHours.tankStaggerInterval,
-    )
-  }, [selectedDate, dayOverrides, defaultHours])
+      defaultHours.tankStaggerInterval
+    );
+  }, [selectedDate, dayOverrides, defaultHours]);
 
   const availableTimeSlots = useMemo(() => {
-    const slots: string[] = []
+    const slots: string[] = [];
     sessionDetails.forEach((tank) => {
       tank.sessions.forEach((session) => {
         if (!slots.includes(session.startTime)) {
-          slots.push(session.startTime)
+          slots.push(session.startTime);
         }
-      })
-    })
-    return slots
-  }, [sessionDetails])
+      });
+    });
+    return slots;
+  }, [sessionDetails]);
 
   const bookedTimesForSelectedDate = useMemo(() => {
-    if (!selectedDate) return []
-    const dateKey = formatDateToKey(selectedDate)
-    return bookedTimesByDate[dateKey] || []
-  }, [selectedDate, bookedTimesByDate])
+    if (!selectedDate) return [];
+    const dateKey = formatDateToKey(selectedDate);
+    return bookedTimesByDate[dateKey] || [];
+  }, [selectedDate, bookedTimesByDate]);
 
-  const inputClass = "input-style"
+  const inputClass = "input-style";
   const CustomStyles = `
     :root {
       --theta-blue: ${THEME_COLORS["--theta-blue"]};
@@ -598,7 +749,7 @@ const ConsolidatedBookingForm: React.FC = () => {
       border-radius: 0.5rem;
       transition: all 0.15s ease-in-out;
     }
-  `
+  `;
 
   return (
     <div className="bg-[var(--light-blue-50)] min-h-screen pt-0">
@@ -607,8 +758,12 @@ const ConsolidatedBookingForm: React.FC = () => {
         {successMessage && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-10 bg-white/95 backdrop-blur-sm rounded-xl">
             <CalendarCheck className="w-16 h-16 text-[var(--theta-blue)] mb-4 animate-bounce" />
-            <h2 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2">Appointment Confirmed!</h2>
-            <p className="text-lg text-gray-600 mb-6 text-center">{successMessage}</p>
+            <h2 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2">
+              Appointment Confirmed!
+            </h2>
+            <p className="text-lg text-gray-600 mb-6 text-center">
+              {successMessage}
+            </p>
             <button
               onClick={() => setSuccessMessage(null)}
               className="px-6 py-3 bg-[var(--theta-blue)] text-white rounded-full font-semibold hover:bg-[var(--theta-blue-dark)] transition"
@@ -623,32 +778,225 @@ const ConsolidatedBookingForm: React.FC = () => {
             Make an Appointment
           </h1>
 
+          {/* User Packages Section */}
+          {isAuthenticated && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-[var(--dark-blue-800)]">
+                  Your Active Packages
+                </h2>
+                {loadingPackages && (
+                  <span className="text-sm text-gray-500">Loading...</span>
+                )}
+              </div>
+
+              {userPackages.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {userPackages.map((pkg) => {
+                    const isSelected = selectedPackage === pkg._id;
+                    const isExpiringSoon =
+                      pkg.expiryDate &&
+                      new Date(pkg.expiryDate).getTime() -
+                        new Date().getTime() <
+                        7 * 24 * 60 * 60 * 1000; // Less than 7 days
+
+                    return (
+                      <div
+                        key={pkg._id}
+                        onClick={() =>
+                          setSelectedPackage(isSelected ? null : pkg._id)
+                        }
+                        className={`
+                          relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                          ${
+                            isSelected
+                              ? "border-[var(--accent-color)] bg-blue-50 shadow-lg scale-105"
+                              : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
+                          }
+                        `}
+                      >
+                        {/* Selected indicator */}
+                        {isSelected && (
+                          <div className="absolute top-3 right-3">
+                            <CheckCircle
+                              className="w-6 h-6"
+                              style={{ color: THEME_COLORS["--accent-color"] }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Package Name */}
+                        <h3
+                          className="text-lg font-bold mb-3 pr-8"
+                          style={{
+                            color: isSelected
+                              ? THEME_COLORS["--accent-color"]
+                              : THEME_COLORS["--dark-blue-800"],
+                          }}
+                        >
+                          {pkg.packageName}
+                        </h3>
+
+                        {/* Session Progress Bar */}
+                        <div className="mb-4">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="font-semibold text-gray-700">
+                              Sessions
+                            </span>
+                            <span className="font-bold text-[var(--theta-blue)]">
+                              {pkg.remainingSessions} / {pkg.totalSessions}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                pkg.remainingSessions === 0
+                                  ? "bg-red-500"
+                                  : pkg.remainingSessions <= 2
+                                  ? "bg-orange-500"
+                                  : "bg-green-500"
+                              }`}
+                              style={{
+                                width: `${
+                                  ((pkg.totalSessions - pkg.remainingSessions) /
+                                    pkg.totalSessions) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Used: {pkg.usedCount}</span>
+                            <span>Remaining: {pkg.remainingSessions}</span>
+                          </div>
+                        </div>
+
+                        {/* Dates */}
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              Start:{" "}
+                              {new Date(pkg.startDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-2 ${
+                              isExpiringSoon
+                                ? "text-orange-600 font-semibold"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              Expires:{" "}
+                              {new Date(pkg.expiryDate).toLocaleDateString()}
+                              {isExpiringSoon && " ⚠️"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Disabled overlay if no sessions remaining */}
+                        {pkg.remainingSessions === 0 && (
+                          <div className="absolute inset-0 bg-gray-900 bg-opacity-30 rounded-xl flex items-center justify-center">
+                            <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
+                              No Sessions Left
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                !loadingPackages && (
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                    <p className="text-gray-600 mb-2">
+                      You don't have any active packages yet.
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Purchase a package to enjoy multiple sessions at a
+                      discounted rate!
+                    </p>
+                  </div>
+                )
+              )}
+
+              {selectedPackage && (
+                <div
+                  className="p-4 rounded-lg border-2 flex items-start gap-3"
+                  style={{
+                    backgroundColor: hexToRgba(
+                      THEME_COLORS["--accent-color"],
+                      0.1
+                    ),
+                    borderColor: THEME_COLORS["--accent-color"],
+                  }}
+                >
+                  <CheckCircle
+                    className="w-5 h-5 flex-shrink-0 mt-0.5"
+                    style={{ color: THEME_COLORS["--accent-color"] }}
+                  />
+                  <div>
+                    <p
+                      className="font-bold"
+                      style={{ color: THEME_COLORS["--accent-color"] }}
+                    >
+                      Package Selected
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      This appointment will use one session from your selected
+                      package.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-start space-x-6 mb-6">
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: THEME_COLORS["--theta-red"] }}></div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: THEME_COLORS["--theta-red"] }}
+              ></div>
               <span className="text-sm text-gray-700">Closed (Admin)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: THEME_COLORS["--theta-orange"] }}></div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: THEME_COLORS["--theta-orange"] }}
+              ></div>
               <span className="text-sm text-gray-700">Sold Out</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: THEME_COLORS["--theta-blue"] }}></div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: THEME_COLORS["--theta-blue"] }}
+              ></div>
               <span className="text-sm text-gray-700">Today (Available)</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: THEME_COLORS["--accent-color"] }}></div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: THEME_COLORS["--accent-color"] }}
+              ></div>
               <span className="text-sm text-gray-700">Selected Date</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "#E5E7EB" }}></div>
+              <div
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: "#E5E7EB" }}
+              ></div>
               <span className="text-sm text-gray-700">Available</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-x-10 mb-12 border border-gray-100 rounded-lg shadow-md p-6">
             {loadingCalendar ? (
-              <div className="lg:col-span-4 text-center py-20 text-gray-500 font-medium">Loading schedule...</div>
+              <div className="lg:col-span-4 text-center py-20 text-gray-500 font-medium">
+                Loading schedule...
+              </div>
             ) : !defaultHours ? (
               <div className="lg:col-span-4 text-center py-20 text-red-500 font-medium">
                 Unable to load system settings. Please try again later.
@@ -682,17 +1030,27 @@ const ConsolidatedBookingForm: React.FC = () => {
           >
             <div className="space-y-8">
               <div className="flex items-center justify-between mb-4">
-                <label className="block text-xl font-semibold text-gray-700">Select Available Time</label>
+                <label className="block text-xl font-semibold text-gray-700">
+                  Select Available Time
+                </label>
                 {selectedDate && sessionDetails.length > 0 && defaultHours && (
                   <div className="flex items-center gap-3">
                     <span className="px-3 py-1 rounded-full bg-blue-100 text-[var(--theta-blue)] font-bold text-sm">
-                      {defaultHours.numberOfTanks} Tank{defaultHours.numberOfTanks !== 1 ? "s" : ""}
+                      {defaultHours.numberOfTanks} Tank
+                      {defaultHours.numberOfTanks !== 1 ? "s" : ""}
                     </span>
                     <div>
-                      <span className="font-bold text-lg" style={{ color: THEME_COLORS["--theta-green"] }}>
-                        {availableTimeSlots.length - bookedTimesForSelectedDate.length}
+                      <span
+                        className="font-bold text-lg"
+                        style={{ color: THEME_COLORS["--theta-green"] }}
+                      >
+                        {availableTimeSlots.length -
+                          bookedTimesForSelectedDate.length}
                       </span>
-                      <span className="text-gray-600 text-sm"> slots available</span>
+                      <span className="text-gray-600 text-sm">
+                        {" "}
+                        slots available
+                      </span>
                     </div>
                   </div>
                 )}
@@ -708,12 +1066,15 @@ const ConsolidatedBookingForm: React.FC = () => {
                         Quick Select - All Available Times
                       </h3>
                       <span className="px-3 py-1 rounded-full bg-green-600 text-white font-bold text-sm">
-                        {availableTimeSlots.length - bookedTimesForSelectedDate.length} Open
+                        {availableTimeSlots.length -
+                          bookedTimesForSelectedDate.length}{" "}
+                        Open
                       </span>
                     </div>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                       {availableTimeSlots.map((time) => {
-                        const isBooked = bookedTimesForSelectedDate.includes(time)
+                        const isBooked =
+                          bookedTimesForSelectedDate.includes(time);
                         return (
                           <button
                             type="button"
@@ -723,15 +1084,17 @@ const ConsolidatedBookingForm: React.FC = () => {
                               isBooked
                                 ? "bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed opacity-60"
                                 : selectedTime === time
-                                  ? "bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-lg scale-105"
-                                  : "bg-white text-gray-700 border-green-300 hover:bg-green-50 hover:border-green-500 shadow-sm"
+                                ? "bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-lg scale-105"
+                                : "bg-white text-gray-700 border-green-300 hover:bg-green-50 hover:border-green-500 shadow-sm"
                             }`}
                             disabled={isSubmitting || isBooked}
                           >
                             {time}
-                            {isBooked && <span className="block text-xs mt-1">Booked</span>}
+                            {isBooked && (
+                              <span className="block text-xs mt-1">Booked</span>
+                            )}
                           </button>
-                        )
+                        );
                       })}
                     </div>
                   </div>
@@ -739,27 +1102,44 @@ const ConsolidatedBookingForm: React.FC = () => {
                   {/* Detailed Tank Sessions - Same as Admin Calendar */}
                   <div className="space-y-4">
                     <h3 className="text-base font-bold text-gray-700 flex items-center gap-2 border-b pb-2">
-                      <Users className="w-5 h-5" style={{ color: THEME_COLORS["--theta-blue"] }} />
+                      <Users
+                        className="w-5 h-5"
+                        style={{ color: THEME_COLORS["--theta-blue"] }}
+                      />
                       Complete Schedule - All Tanks
-                      <span className="text-xs text-gray-500 ml-auto">Click a session to select the time</span>
+                      <span className="text-xs text-gray-500 ml-auto">
+                        Click a session to select the time
+                      </span>
                     </h3>
                     {sessionDetails.map((tankDetail) => (
                       <div
                         key={tankDetail.tankNumber}
                         className="border-2 rounded-xl p-4"
-                        style={{ borderColor: hexToRgba(THEME_COLORS["--theta-blue"], 0.2) }}
+                        style={{
+                          borderColor: hexToRgba(
+                            THEME_COLORS["--theta-blue"],
+                            0.2
+                          ),
+                        }}
                       >
                         {/* Tank Header */}
                         <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
                           <div className="flex items-center gap-3">
                             <div
                               className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow"
-                              style={{ backgroundColor: THEME_COLORS["--theta-blue"] }}
+                              style={{
+                                backgroundColor: THEME_COLORS["--theta-blue"],
+                              }}
                             >
                               {tankDetail.tankNumber}
                             </div>
                             <div>
-                              <h4 className="font-bold text-base" style={{ color: THEME_COLORS["--dark-blue-800"] }}>
+                              <h4
+                                className="font-bold text-base"
+                                style={{
+                                  color: THEME_COLORS["--dark-blue-800"],
+                                }}
+                              >
                                 {tankDetail.tankName}
                               </h4>
                               <p className="text-xs font-semibold text-gray-600">
@@ -770,7 +1150,10 @@ const ConsolidatedBookingForm: React.FC = () => {
                           <span
                             className="px-3 py-1 rounded-lg text-xs font-bold"
                             style={{
-                              backgroundColor: hexToRgba(THEME_COLORS["--theta-green"], 0.2),
+                              backgroundColor: hexToRgba(
+                                THEME_COLORS["--theta-green"],
+                                0.2
+                              ),
                               color: THEME_COLORS["--theta-green"],
                             }}
                           >
@@ -781,18 +1164,23 @@ const ConsolidatedBookingForm: React.FC = () => {
                         {/* Sessions Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                           {tankDetail.sessions.map((session) => {
-                            const isBooked = bookedTimesForSelectedDate.includes(session.startTime)
+                            const isBooked =
+                              bookedTimesForSelectedDate.includes(
+                                session.startTime
+                              );
                             return (
                               <button
                                 type="button"
                                 key={`${tankDetail.tankNumber}-${session.sessionNumber}`}
-                                onClick={() => setSelectedTime(session.startTime)}
+                                onClick={() =>
+                                  setSelectedTime(session.startTime)
+                                }
                                 className={`p-3 rounded-lg text-left transition-all duration-150 border-2 ${
                                   isBooked
                                     ? "bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed opacity-60"
                                     : selectedTime === session.startTime
-                                      ? "bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-lg scale-105"
-                                      : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-[var(--theta-blue)] shadow-sm"
+                                    ? "bg-[var(--accent-color)] text-white border-[var(--accent-color)] shadow-lg scale-105"
+                                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-[var(--theta-blue)] shadow-sm"
                                 }`}
                                 disabled={isSubmitting || isBooked}
                               >
@@ -802,19 +1190,21 @@ const ConsolidatedBookingForm: React.FC = () => {
                                       isBooked
                                         ? "bg-gray-200 text-gray-600"
                                         : selectedTime === session.startTime
-                                          ? "bg-white/20 text-white"
-                                          : "bg-blue-100 text-blue-700"
+                                        ? "bg-white/20 text-white"
+                                        : "bg-blue-100 text-blue-700"
                                     }`}
                                   >
-                                    {isBooked ? "✗ Booked" : `#${session.sessionNumber}`}
+                                    {isBooked
+                                      ? "✗ Booked"
+                                      : `#${session.sessionNumber}`}
                                   </span>
                                   <CheckCircle
                                     className={`w-4 h-4 ${
                                       isBooked
                                         ? "text-gray-400"
                                         : selectedTime === session.startTime
-                                          ? "text-white"
-                                          : "text-green-500"
+                                        ? "text-white"
+                                        : "text-green-500"
                                     }`}
                                   />
                                 </div>
@@ -823,25 +1213,17 @@ const ConsolidatedBookingForm: React.FC = () => {
                                   <div className="flex items-center gap-1">
                                     <Clock className="w-3 h-3 opacity-70" />
                                     <div>
-                                      <p className="text-xs font-bold">{session.startTime}</p>
-                                      <p className="text-xs font-bold">{session.endTime}</p>
+                                      <p className="text-xs font-bold">
+                                        {session.startTime}
+                                      </p>
+                                      <p className="text-xs font-bold">
+                                        {session.endTime}
+                                      </p>
                                     </div>
-                                  </div>
-                                  {/* Cleaning Time */}
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-3 h-3 flex-shrink-0 flex items-center justify-center">
-                                      <div
-                                        className="w-2 h-2 rounded-full"
-                                        style={{ backgroundColor: THEME_COLORS["--theta-orange"] }}
-                                      />
-                                    </div>
-                                    <p className="text-[10px] opacity-80">
-                                      Clean: {session.cleaningStart} - {session.cleaningEnd}
-                                    </p>
                                   </div>
                                 </div>
                               </button>
-                            )
+                            );
                           })}
                         </div>
                       </div>
@@ -851,22 +1233,31 @@ const ConsolidatedBookingForm: React.FC = () => {
               ) : (
                 <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm text-center font-medium">
                   {selectedDate
-                    ? dayOverrides[formatDateToKey(selectedDate)]?.status === DAY_STATUS.CLOSED ||
-                      dayOverrides[formatDateToKey(selectedDate)]?.status === DAY_STATUS.SOLD_OUT
-                      ? `We are ${dayOverrides[formatDateToKey(selectedDate)]?.status.toUpperCase()} on this date.`
+                    ? dayOverrides[formatDateToKey(selectedDate)]?.status ===
+                        DAY_STATUS.CLOSED ||
+                      dayOverrides[formatDateToKey(selectedDate)]?.status ===
+                        DAY_STATUS.SOLD_OUT
+                      ? `We are ${dayOverrides[
+                          formatDateToKey(selectedDate)
+                        ]?.status.toUpperCase()} on this date.`
                       : "No available slots on the selected date within operational hours."
                     : "Please select a date."}
                 </div>
               )}
 
               {message && (
-                <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-medium shadow-sm">{message}</div>
+                <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-medium shadow-sm">
+                  {message}
+                </div>
               )}
             </div>
 
             <div className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-lg font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="name"
+                  className="block text-lg font-semibold text-gray-700 mb-2"
+                >
                   Full Name
                   <span className="text-red-500">*</span>
                 </label>
@@ -887,12 +1278,31 @@ const ConsolidatedBookingForm: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-lg font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-lg font-semibold text-gray-700 mb-2"
+                >
                   Email Address
                   <span className="text-red-500">*</span>
+                  {isEmailFromProfile && (
+                    <span className="ml-2 text-xs font-medium text-green-600">
+                      ✓ From your account
+                    </span>
+                  )}
                 </label>
-                <div className="flex items-center border border-gray-300 rounded-lg focus-within:border-[var(--accent-color)] transition shadow-sm">
-                  <Mail className="w-5 h-5 ml-3 text-gray-400" />
+                <div
+                  className={`flex items-center border border-gray-300 rounded-lg focus-within:border-[var(--accent-color)] transition shadow-sm ${
+                    isEmailFromProfile ? "bg-gray-50" : ""
+                  }`}
+                >
+                  <Mail
+                    className="w-5 h-5 ml-3"
+                    style={{
+                      color: isEmailFromProfile
+                        ? THEME_COLORS["--theta-green"]
+                        : "#9CA3AF",
+                    }}
+                  />
                   <input
                     id="email"
                     type="email"
@@ -900,15 +1310,31 @@ const ConsolidatedBookingForm: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="name@example.com"
-                    className={`${inputClass} focus:ring-0`}
-                    disabled={isSubmitting}
+                    placeholder={
+                      isEmailFromProfile
+                        ? "Email from your profile"
+                        : "name@example.com"
+                    }
+                    className={`${inputClass} focus:ring-0 ${
+                      isEmailFromProfile ? "bg-gray-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={isSubmitting || isEmailFromProfile}
+                    readOnly={isEmailFromProfile}
                   />
                 </div>
+                {isEmailFromProfile && (
+                  <p className="mt-1 text-xs text-gray-600 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    Using email from your logged-in account
+                  </p>
+                )}
               </div>
 
               <div>
-                <label htmlFor="contact" className="block text-lg font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="contact"
+                  className="block text-lg font-semibold text-gray-700 mb-2"
+                >
                   Contact Number
                   <span className="text-red-500">*</span>
                 </label>
@@ -929,7 +1355,10 @@ const ConsolidatedBookingForm: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="note" className="block text-lg font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="note"
+                  className="block text-lg font-semibold text-gray-700 mb-2"
+                >
                   Special Note (Optional)
                 </label>
                 <div className="flex items-start border border-gray-300 rounded-lg focus-within:border-[var(--accent-color)] transition shadow-sm">
@@ -951,14 +1380,28 @@ const ConsolidatedBookingForm: React.FC = () => {
                 <button
                   type="submit"
                   className="w-full px-10 py-3.5 text-lg font-bold rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-xl"
-                  disabled={isSubmitting || !selectedTime || !email || !contactNumber || !name}
+                  disabled={
+                    isSubmitting ||
+                    !selectedTime ||
+                    !email ||
+                    !contactNumber ||
+                    !name
+                  }
                   style={{
                     backgroundColor:
-                      isSubmitting || !selectedTime || !email || !contactNumber || !name
+                      isSubmitting ||
+                      !selectedTime ||
+                      !email ||
+                      !contactNumber ||
+                      !name
                         ? THEME_COLORS["--light-blue-200"]
                         : THEME_COLORS["--theta-blue"],
                     color:
-                      isSubmitting || !selectedTime || !email || !contactNumber || !name
+                      isSubmitting ||
+                      !selectedTime ||
+                      !email ||
+                      !contactNumber ||
+                      !name
                         ? THEME_COLORS["--dark-blue-800"]
                         : "white",
                   }}
@@ -972,61 +1415,82 @@ const ConsolidatedBookingForm: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const CustomCalendar: React.FC<{
-  currentDate: Date
-  onDateChange: (date: Date) => void
-  onMonthChange: (date: Date) => void
-  selectedDate: Date | null
-  dayOverrides: Record<string, CalendarDetailFromBackend>
-}> = ({ currentDate, onDateChange, onMonthChange, selectedDate, dayOverrides }) => {
-  const calendarDays = useMemo(() => getDaysInMonth(currentDate), [currentDate])
+  currentDate: Date;
+  onDateChange: (date: Date) => void;
+  onMonthChange: (date: Date) => void;
+  selectedDate: Date | null;
+  dayOverrides: Record<string, CalendarDetailFromBackend>;
+}> = ({
+  currentDate,
+  onDateChange,
+  onMonthChange,
+  selectedDate,
+  dayOverrides,
+}) => {
+  const calendarDays = useMemo(
+    () => getDaysInMonth(currentDate),
+    [currentDate]
+  );
 
   const handlePrevMonth = () => {
-    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
-    onMonthChange(prevMonth)
-  }
+    const prevMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() - 1,
+      1
+    );
+    onMonthChange(prevMonth);
+  };
 
   const handleNextMonth = () => {
-    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    onMonthChange(nextMonth)
-  }
+    const nextMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      1
+    );
+    onMonthChange(nextMonth);
+  };
 
   const getTileClass = (date: Date) => {
-    const dateKey = formatDateToKey(date)
-    const override = dayOverrides[dateKey]
-    const isCurrentMonth = date.getMonth() === currentDate.getMonth()
+    const dateKey = formatDateToKey(date);
+    const override = dayOverrides[dateKey];
+    const isCurrentMonth = date.getMonth() === currentDate.getMonth();
     const baseClasses =
-      "flex items-center justify-center h-10 w-10 text-center text-sm font-semibold rounded-full transition duration-150 cursor-pointer"
-    const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0))
+      "flex items-center justify-center h-10 w-10 text-center text-sm font-semibold rounded-full transition duration-150 cursor-pointer";
+    const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0));
 
     if (!isCurrentMonth || isPastDate) {
-      return `${baseClasses} text-gray-400 cursor-not-allowed`
+      return `${baseClasses} text-gray-400 cursor-not-allowed`;
     }
 
-    const isSelected = isSameDay(date, selectedDate)
-    const isTodayMarker = isToday(date)
-    const status = override?.status
+    const isSelected = isSameDay(date, selectedDate);
+    const isTodayMarker = isToday(date);
+    const status = override?.status;
 
     if (isSelected) {
-      return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`
+      return `${baseClasses} bg-[var(--accent-color)] text-white shadow-lg border-2 border-white`;
     } else if (status === DAY_STATUS.CLOSED) {
-      return `${baseClasses} bg-[var(--theta-red)] text-white shadow-md`
+      return `${baseClasses} bg-[var(--theta-red)] text-white shadow-md`;
     } else if (status === DAY_STATUS.SOLD_OUT) {
-      return `${baseClasses} bg-[var(--theta-orange)] text-white shadow-md`
+      return `${baseClasses} bg-[var(--theta-orange)] text-white shadow-md`;
     } else if (isTodayMarker) {
-      return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`
+      return `${baseClasses} bg-[var(--theta-blue)] text-white shadow-md`;
     } else {
-      return `${baseClasses} bg-white text-gray-700 hover:bg-gray-100`
+      return `${baseClasses} bg-white text-gray-700 hover:bg-gray-100`;
     }
-  }
+  };
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between px-2 pb-6 text-[var(--dark-blue-800)]">
-        <button type="button" onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100 transition">
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          className="p-2 rounded-full hover:bg-gray-100 transition"
+        >
           <ChevronLeft className="w-7 h-7 text-gray-700" />
         </button>
         <h3 className="text-2xl font-semibold">
@@ -1035,14 +1499,21 @@ const CustomCalendar: React.FC<{
             year: "numeric",
           })}
         </h3>
-        <button type="button" onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-100 transition">
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          className="p-2 rounded-full hover:bg-gray-100 transition"
+        >
           <ChevronRight className="w-7 h-7 text-gray-700" />
         </button>
       </div>
 
       <div className="grid grid-cols-7 text-center text-gray-500 font-semibold mb-2">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="h-8 flex items-center justify-center text-sm">
+          <div
+            key={day}
+            className="h-8 flex items-center justify-center text-sm"
+          >
             {day}
           </div>
         ))}
@@ -1050,9 +1521,9 @@ const CustomCalendar: React.FC<{
 
       <div className="grid grid-cols-7">
         {calendarDays.map((date, index) => {
-          const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-          const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0))
-          const isClickable = isCurrentMonth && !isPastDate
+          const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+          const isPastDate = date < new Date(new Date().setHours(0, 0, 0, 0));
+          const isClickable = isCurrentMonth && !isPastDate;
 
           return (
             <div key={index} className="flex items-center justify-center p-1">
@@ -1065,18 +1536,18 @@ const CustomCalendar: React.FC<{
                 {date.getDate()}
               </button>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const EventSidebar: React.FC<{
-  selectedDate: Date | null
-  dayOverrides: Record<string, CalendarDetailFromBackend>
-  defaultHours: SystemSettings | null
-  bookedCounts: Record<string, number>
+  selectedDate: Date | null;
+  dayOverrides: Record<string, CalendarDetailFromBackend>;
+  defaultHours: SystemSettings | null;
+  bookedCounts: Record<string, number>;
 }> = ({ selectedDate, dayOverrides, defaultHours, bookedCounts }) => {
   if (!selectedDate || !defaultHours) {
     return (
@@ -1086,20 +1557,23 @@ const EventSidebar: React.FC<{
             className="w-16 h-16 mx-auto mb-4"
             style={{ color: THEME_COLORS["--theta-blue"], opacity: 0.3 }}
           />
-          <p className="text-lg font-semibold text-gray-600 mb-2">Select a Date</p>
+          <p className="text-lg font-semibold text-gray-600 mb-2">
+            Select a Date
+          </p>
           <p className="text-sm text-gray-500">
-            Click on any available date in the calendar to view session details and book your appointment
+            Click on any available date in the calendar to view session details
+            and book your appointment
           </p>
         </div>
       </div>
-    )
+    );
   }
 
-  const displayDate = selectedDate
-  const dateKey = formatDateToKey(displayDate)
-  const override = dayOverrides[dateKey]
-  const effectiveOpenTime = override?.openTime || defaultHours.openTime
-  const effectiveCloseTime = override?.closeTime || defaultHours.closeTime
+  const displayDate = selectedDate;
+  const dateKey = formatDateToKey(displayDate);
+  const override = dayOverrides[dateKey];
+  const effectiveOpenTime = override?.openTime || defaultHours.openTime;
+  const effectiveCloseTime = override?.closeTime || defaultHours.closeTime;
 
   const calculatedSessions = calculateStaggeredSessions(
     effectiveOpenTime,
@@ -1107,38 +1581,42 @@ const EventSidebar: React.FC<{
     Number(defaultHours.sessionDuration),
     defaultHours.cleaningBuffer,
     defaultHours.numberOfTanks,
-    defaultHours.tankStaggerInterval,
-  )
+    defaultHours.tankStaggerInterval
+  );
 
-  const totalBookedCount = bookedCounts[dateKey] || 0
-  const sessionsToSell = override?.sessionsToSell ?? calculatedSessions.totalSessions
-  const bookedSessionsForAvailability = override?.bookedSessions || 0
-  const availableSlots = Math.max(0, sessionsToSell - bookedSessionsForAvailability)
+  const totalBookedCount = bookedCounts[dateKey] || 0;
+  const sessionsToSell =
+    override?.sessionsToSell ?? calculatedSessions.totalSessions;
 
-  let dateStatus: DayStatus
+  let dateStatus: DayStatus;
   if (override?.status === DAY_STATUS.CLOSED) {
-    dateStatus = DAY_STATUS.CLOSED
+    dateStatus = DAY_STATUS.CLOSED;
   } else if (override?.status === DAY_STATUS.SOLD_OUT) {
-    dateStatus = DAY_STATUS.SOLD_OUT
+    dateStatus = DAY_STATUS.SOLD_OUT;
   } else {
-    dateStatus = DAY_STATUS.BOOKABLE
+    dateStatus = DAY_STATUS.BOOKABLE;
   }
 
-  const isClosed = dateStatus === DAY_STATUS.CLOSED
-  const isSoldOut = dateStatus === DAY_STATUS.SOLD_OUT
-  const isClosedOrSoldOut = isClosed || isSoldOut
-  const operationalHours = dateStatus !== DAY_STATUS.CLOSED ? `${effectiveOpenTime} - ${effectiveCloseTime}` : "CLOSED"
+  const isClosed = dateStatus === DAY_STATUS.CLOSED;
+  const isSoldOut = dateStatus === DAY_STATUS.SOLD_OUT;
+  const isClosedOrSoldOut = isClosed || isSoldOut;
+  const operationalHours =
+    dateStatus !== DAY_STATUS.CLOSED
+      ? `${effectiveOpenTime} - ${effectiveCloseTime}`
+      : "CLOSED";
 
   const dateBoxColor = isClosed
     ? THEME_COLORS["--theta-red"]
     : isSoldOut
-      ? THEME_COLORS["--theta-orange"]
-      : THEME_COLORS["--accent-color"]
+    ? THEME_COLORS["--theta-orange"]
+    : THEME_COLORS["--accent-color"];
 
   const sessions = [
     {
       label: "Tank Count",
-      value: `${defaultHours.numberOfTanks} tank${defaultHours.numberOfTanks !== 1 ? "s" : ""}`,
+      value: `${defaultHours.numberOfTanks} tank${
+        defaultHours.numberOfTanks !== 1 ? "s" : ""
+      }`,
       status: "info",
     },
     {
@@ -1156,16 +1634,6 @@ const EventSidebar: React.FC<{
       value: `${totalBookedCount} bookings`,
       status: totalBookedCount > 0 ? "full" : "info",
     },
-    // {
-    //   label: "Booked (Avail. Calc)",
-    //   value: `${bookedSessionsForAvailability} sessions`,
-    //   status: bookedSessionsForAvailability > 0 ? "full" : "info",
-    // },
-    // {
-    //   label: "Available",
-    //   value: `${availableSlots} slots`,
-    //   status: isClosedOrSoldOut || availableSlots === 0 ? "full" : "available",
-    // },
     {
       label: "Status",
       value: dateStatus.toUpperCase(),
@@ -1177,29 +1645,33 @@ const EventSidebar: React.FC<{
       value: calculatedSessions.actualCloseTime,
       status: "info",
     },
-  ]
+  ];
 
-  const dateNum = displayDate.getDate().toString().padStart(2, "0")
-  const month = displayDate.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+  const dateNum = displayDate.getDate().toString().padStart(2, "0");
+  const month = displayDate
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "available":
       case "open":
-        return "text-green-600 border-green-300 bg-green-50"
+        return "text-green-600 border-green-300 bg-green-50";
       case "full":
-        return isSoldOut ? "text-orange-600 border-orange-300 bg-orange-50" : "text-red-600 border-red-300 bg-red-50"
+        return isSoldOut
+          ? "text-orange-600 border-orange-300 bg-orange-50"
+          : "text-red-600 border-red-300 bg-red-50";
       case "info":
       default:
-        return "text-gray-700"
+        return "text-gray-700";
     }
-  }
+  };
 
   const statusTextColor = isClosed
     ? "text-[var(--theta-red)]"
     : isSoldOut
-      ? "text-[var(--theta-orange)]"
-      : "text-[var(--theta-green)]"
+    ? "text-[var(--theta-orange)]"
+    : "text-[var(--theta-green)]";
 
   return (
     <div className="w-full max-w-sm ml-auto space-y-4 pt-1">
@@ -1213,23 +1685,41 @@ const EventSidebar: React.FC<{
         </div>
         <div className="flex items-center pt-1 text-sm">
           <span className="text-gray-500 mr-1">Status:</span>
-          <span className={`font-bold ${statusTextColor}`}>{dateStatus.toUpperCase()}</span>
+          <span className={`font-bold ${statusTextColor}`}>
+            {dateStatus.toUpperCase()}
+          </span>
         </div>
       </div>
 
       <div className="space-y-4 pt-4">
         <p className="text-sm font-bold text-[var(--dark-blue-800)] uppercase flex items-center gap-2">
-          <Clock className="w-4 h-4" style={{ color: THEME_COLORS["--theta-blue"] }} />
+          <Clock
+            className="w-4 h-4"
+            style={{ color: THEME_COLORS["--theta-blue"] }}
+          />
           Session Details
         </p>
         <div className="border-t border-gray-200 pt-3 space-y-3">
           {sessions.map((session, index) => (
             <div key={index} className="flex justify-between items-center">
-              <p className="text-sm text-gray-600 font-medium">{session.label}</p>
-              {session.label === "Operating Hours" || session.label === "Actual Close Time" ? (
-                <p className={`text-sm font-bold ${getStatusColor(session.status)}`}>{session.value}</p>
+              <p className="text-sm text-gray-600 font-medium">
+                {session.label}
+              </p>
+              {session.label === "Operating Hours" ||
+              session.label === "Actual Close Time" ? (
+                <p
+                  className={`text-sm font-bold ${getStatusColor(
+                    session.status
+                  )}`}
+                >
+                  {session.value}
+                </p>
               ) : (
-                <p className={`text-sm font-bold px-3 py-1 rounded-lg border ${getStatusColor(session.status)}`}>
+                <p
+                  className={`text-sm font-bold px-3 py-1 rounded-lg border ${getStatusColor(
+                    session.status
+                  )}`}
+                >
                   {session.value}
                 </p>
               )}
@@ -1247,21 +1737,29 @@ const EventSidebar: React.FC<{
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <Users className="w-5 h-5" style={{ color: THEME_COLORS["--theta-blue"] }} />
-            <p className="text-sm font-bold" style={{ color: THEME_COLORS["--theta-blue"] }}>
+            <Users
+              className="w-5 h-5"
+              style={{ color: THEME_COLORS["--theta-blue"] }}
+            />
+            <p
+              className="text-sm font-bold"
+              style={{ color: THEME_COLORS["--theta-blue"] }}
+            >
               Staggered Tank Schedule
             </p>
           </div>
           <p className="text-xs text-gray-600 font-medium">
-            {defaultHours.numberOfTanks} tanks with {defaultHours.tankStaggerInterval} min intervals
+            {defaultHours.numberOfTanks} tanks with{" "}
+            {defaultHours.tankStaggerInterval} min intervals
           </p>
           <p className="text-xs text-gray-600 mt-1">
-            Each session: {defaultHours.sessionDuration} min + {defaultHours.cleaningBuffer} min cleaning
+            Each session: {defaultHours.sessionDuration} min +{" "}
+            {defaultHours.cleaningBuffer} min cleaning
           </p>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ConsolidatedBookingForm
+export default ConsolidatedBookingForm;

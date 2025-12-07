@@ -30,6 +30,7 @@ import {
   ArrowDown,
   Waves,
   LogOut,
+  Package,
 } from "lucide-react"
 
 import {
@@ -139,18 +140,24 @@ const dashboardOptions = [
     description: "Manage all system users and members.",
     icon: User,
   },
-  {
-    title: "Services & Pricing",
-    path: "/admin/package-management",
-    description: "Update therapy services and package rates.",
-    icon: DollarSign,
-  },
-  {
-    title: "Reports & Analytics",
-    path: "/admin/reports",
-    description: "View performance metrics and insights.",
-    icon: TrendingUp,
-  },
+  {
+    title: "Services & Pricing",
+    path: "/admin/package-management",
+    description: "Update therapy services and package rates.",
+    icon: DollarSign,
+  },
+  {
+    title: "Package Activations",
+    path: "/admin/package-activations",
+    description: "Manage customer package activation requests.",
+    icon: Package,
+  },
+  {
+    title: "Reports & Analytics",
+    path: "/admin/reports",
+    description: "View performance metrics and insights.",
+    icon: TrendingUp,
+  },
   {
     title: "Content Management",
     path: "/admin/content",

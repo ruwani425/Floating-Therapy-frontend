@@ -21,8 +21,10 @@ import CalendarManagement from "./pages/admin/CalenderManage";
 import SystemSettings from "./pages/admin/SystemSettingPage";
 import AppointmentsPage from "./pages/admin/AdminAppointmentViewPage";
 import PackageManagementPage from "./pages/admin/PackageManagementView";
+import PackageActivationManage from "./pages/admin/PackageActivationManage";
 import PricingPage from "./pages/PricingPage";
 import PackageAppointmentPage from "./pages/PackageAppointmentPage";
+import UserProfilePage from "./pages/UserProfilePage";
 
 export default function App() {
   return (
@@ -40,6 +42,7 @@ export default function App() {
             <Route path="appointments" element={<ClientAppointmentPage />} />
             <Route path="pricing" element={<PricingPage />} />
             <Route path="package-appointments" element={<PackageAppointmentPage />} />
+            <Route path="profile" element={<UserProfilePage />} />
             <Route
               path="*"
               element={
@@ -60,6 +63,7 @@ export default function App() {
             <Route path="reservations" element={<ReservationsPage />} />
             <Route path="system-settings" element={<SystemSettings/>}/>
             <Route path="package-management" element={<PackageManagementPage/>}/>
+            <Route path="package-activations" element={<PackageActivationManage/>}/>
             <Route
               path="calendar-management"
               element={<CalendarManagement />}

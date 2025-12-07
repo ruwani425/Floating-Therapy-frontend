@@ -23,13 +23,13 @@ const THETA_COLORS = {
 
 // --- INTERFACE DEFINITION ---
 interface SystemSettingsProps {
-  _id?: string; 
-  defaultFloatPrice: number | string 
-  cleaningBuffer: number | string
-  sessionDuration: number | string // Included in interface
-  sessionsPerDay: number | string  
-  openTime: string
-  closeTime: string
+  _id?: string; 
+  defaultFloatPrice: number | string 
+  cleaningBuffer: number | string
+  sessionDuration: number | string // Included in interface
+  sessionsPerDay: number | string  
+  openTime: string
+  closeTime: string
   numberOfTanks: number | string // NEW: Number of floating tanks
   tankStaggerInterval: number | string // NEW: Gap between tank start times (in minutes)
   actualCloseTime?: string // NEW: Calculated actual closing time
@@ -161,7 +161,7 @@ const calculateStaggeredSessions = (
 
     // Handle next-day closing
     if (closeMinutes <= openMinutes) {
-        closeMinutes += 24 * 60;
+        closeMinutes += 24 * 60; 
     }
     
     const sessionLength = duration + buffer;
@@ -204,18 +204,18 @@ const calculateStaggeredSessions = (
 
 // --- MAIN COMPONENT ---
 const SystemSettings = () => {
-  // 1. Define the default state for a brand new, unsaved document
-  const defaultState: SystemSettingsProps = {
-    defaultFloatPrice: 0,
+  // 1. Define the default state for a brand new, unsaved document
+  const defaultState: SystemSettingsProps = {
+    defaultFloatPrice: 0,
     cleaningBuffer: 30,
     sessionDuration: 60,
-    sessionsPerDay: 0,
+    sessionsPerDay: 0,
     openTime: "08:00",
     closeTime: "22:00",
     numberOfTanks: 2, // NEW DEFAULT
     tankStaggerInterval: 30, // NEW DEFAULT (30 minutes gap)
     actualCloseTime: "22:00",
-  };
+  };
 
   const [settings, setSettings] = useState<SystemSettingsProps>(defaultState)
   const [initialSettings, setInitialSettings] = useState<SystemSettingsProps>(defaultState) 
@@ -226,7 +226,7 @@ const SystemSettings = () => {
   const [isLoading, setIsLoading] = useState(false) 
   const [fetchError, setFetchError] = useState<string | null>(null)
 
-  // --- CALCULATED VALUE ---
+  // --- CALCULATED VALUE ---
   const { calculatedSessionCount, calculatedCloseTime } = useMemo(() => {
     // Extract current values, ensuring they are treated as numbers (0 if blank/invalid string)
     const duration = Number(settings.sessionDuration) || 0;
@@ -247,9 +247,9 @@ const SystemSettings = () => {
   }, [settings.openTime, settings.closeTime, settings.sessionDuration, settings.cleaningBuffer, settings.numberOfTanks, settings.tankStaggerInterval]);
 
   // --- EFFECT TO UPDATE CALCULATED FIELDS IN STATE ---
-  useEffect(() => {
+  useEffect(() => {
     // Update the calculated fields in the state whenever they change
-    setSettings(prev => {
+    setSettings(prev => {
       const needsUpdate = prev.sessionsPerDay !== calculatedSessionCount || prev.actualCloseTime !== calculatedCloseTime;
       if (needsUpdate) {
         // Only update the values, do not touch hasChanges here
@@ -258,9 +258,9 @@ const SystemSettings = () => {
           sessionsPerDay: calculatedSessionCount,
           actualCloseTime: calculatedCloseTime 
         };
-      }
-      return prev;
-    });
+      }
+      return prev;
+    });
   }, [calculatedSessionCount, calculatedCloseTime]);
 
 
@@ -301,37 +301,37 @@ const SystemSettings = () => {
   }, [])
 
   // --- HANDLERS ---
-  const handleInputChange = useCallback((field: SettingField, value: number | string) => {
-    setSettings((prev) => {
-      // Create new settings object based on input change
-      const newSettings = { ...prev, [field]: value } as SystemSettingsProps;
+  const handleInputChange = useCallback((field: SettingField, value: number | string) => {
+    setSettings((prev) => {
+      // Create new settings object based on input change
+      const newSettings = { ...prev, [field]: value } as SystemSettingsProps;
       
       // Calculate changes based on editable fields only
-      const hasChanged = (Object.keys(defaultState) as Array<keyof SystemSettingsProps>)
+      const hasChanged = (Object.keys(defaultState) as Array<keyof SystemSettingsProps>)
         .filter(key => key !== 'sessionsPerDay' && key !== 'actualCloseTime') // Exclude calculated fields
         .some(key => newSettings[key] !== initialSettings[key]);
 
-      setHasChanges(hasChanged);
-      setSaveSuccess(false);
-      return newSettings;
-    });
-  }, [initialSettings])
+      setHasChanges(hasChanged);
+      setSaveSuccess(false);
+      return newSettings;
+    });
+  }, [initialSettings])
 
   const handleSave = async () => {
     if (!hasChanges || isSaving || isLoading) return; // Prevent saving if loading/saving/no changes
     
-    // Prepare data for the database, converting transient empty strings to 0
-    const finalSettings: SystemSettingsProps = { ...settings };
-    (Object.keys(finalSettings) as Array<keyof SystemSettingsProps>).forEach(key => {
-        // Convert numerical string fields (which might be "") to 0 or their number value
+    // Prepare data for the database, converting transient empty strings to 0
+    const finalSettings: SystemSettingsProps = { ...settings };
+    (Object.keys(finalSettings) as Array<keyof SystemSettingsProps>).forEach(key => {
+        // Convert numerical string fields (which might be "") to 0 or their number value
         if (typeof finalSettings[key] === 'string' && 
             (key === 'defaultFloatPrice' || key === 'cleaningBuffer' || key === 'sessionDuration' || 
              key === 'numberOfTanks' || key === 'tankStaggerInterval')) {
-            finalSettings[key] = (finalSettings[key] === "" ? 0 : Number(finalSettings[key])) as number;
-        }
-    });
+            finalSettings[key] = (finalSettings[key] === "" ? 0 : Number(finalSettings[key])) as number;
+        }
+    });
     // Ensure calculated fields are explicitly stored
-    finalSettings.sessionsPerDay = calculatedSessionCount;
+    finalSettings.sessionsPerDay = calculatedSessionCount; 
     finalSettings.actualCloseTime = calculatedCloseTime; 
 
     try {
@@ -576,12 +576,12 @@ const SystemSettings = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
+            </div>
+          </div>
+        )}
 
-        {/* Settings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Settings Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Pricing Section */}
           <div className="rounded-lg p-6 border" style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}>
             <div className="flex items-center gap-3 mb-6">
@@ -627,36 +627,36 @@ const SystemSettings = () => {
                 disabled={isSaving}
               />
             </div>
-          </div>
+          </div>
 
-          {/* Capacity Section */}
-          <div className="rounded-lg p-6 border" style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}>
-            <div className="flex items-center gap-3 mb-6">
+          {/* Capacity Section */}
+          <div className="rounded-lg p-6 border" style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}>
+            <div className="flex items-center gap-3 mb-6">
               <h2 className="text-lg font-semibold" style={{ color: THETA_COLORS.primaryDark }}>Session Capacity</h2>
-            </div>
+            </div>
             {/* Session Duration (Editable Field) */}
-            <InputField
-              label="Float Session Duration"
-              field="sessionDuration"
-              type="number"
-              value={settings.sessionDuration}
-              unit="min"
-              description="The duration of a single floating session"
-              onChange={handleInputChange}
-              disabled={isSaving}
-            />
+            <InputField
+              label="Float Session Duration"
+              field="sessionDuration"
+              type="number"
+              value={settings.sessionDuration}
+              unit="min"
+              description="The duration of a single floating session"
+              onChange={handleInputChange}
+              disabled={isSaving}
+            />
             {/* Max Sessions Per Day (Per Tank) */}
             <div className="mt-6">
-              <InputField
+              <InputField
                 label="Max Sessions Per Day (Per Tank)"
-                field="sessionsPerDay"
-                type="number"
+                field="sessionsPerDay"
+                type="number"
                 value={calculatedSessionCount}
                 description="Calculated sessions per tank with staggered start times"
                 onChange={() => {}}
-                disabled={isSaving}
+                disabled={isSaving}
                 readOnly={true}
-              />
+              />
             </div>
             {/* Total Sessions Per Day (All Tanks) */}
             <div className="mt-6">
@@ -678,32 +678,32 @@ const SystemSettings = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div>
 
-          {/* Operating Hours Section */}
-          <div className="md:col-span-2 rounded-lg p-6 border" style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}>
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-lg font-semibold" style={{ color: THETA_COLORS.primaryDark }}>Operating Hours</h2>
-            </div>
+          {/* Operating Hours Section */}
+          <div className="md:col-span-2 rounded-lg p-6 border" style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}>
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-lg font-semibold" style={{ color: THETA_COLORS.primaryDark }}>Operating Hours</h2>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <InputField
+              <InputField
                 label="Opening Time (First Tank)"
-                field="openTime"
-                type="time"
-                value={settings.openTime}
+                field="openTime"
+                type="time"
+                value={settings.openTime}
                 description="When the first tank starts"
-                onChange={handleInputChange}
-                disabled={isSaving}
-              />
-              <InputField
+                onChange={handleInputChange}
+                disabled={isSaving}
+              />
+              <InputField
                 label="Target Closing Time"
-                field="closeTime"
-                type="time"
-                value={settings.closeTime}
+                field="closeTime"
+                type="time"
+                value={settings.closeTime}
                 description="Latest time for last session"
-                onChange={handleInputChange}
-                disabled={isSaving}
-              />
+                onChange={handleInputChange}
+                disabled={isSaving}
+              />
               <InputField
                 label="Actual Closing Time"
                 field="actualCloseTime"
@@ -714,19 +714,19 @@ const SystemSettings = () => {
                 disabled={isSaving}
                 readOnly={true}
               />
-              <InputField
-                label="Cleaning Buffer"
-                field="cleaningBuffer"
-                type="number"
-                value={settings.cleaningBuffer}
-                unit="min"
-                description="Time between sessions for cleaning"
-                onChange={handleInputChange}
-                disabled={isSaving}
-              />
-            </div>
-            
-          </div>
+              <InputField
+                label="Cleaning Buffer"
+                field="cleaningBuffer"
+                type="number"
+                value={settings.cleaningBuffer}
+                unit="min"
+                description="Time between sessions for cleaning"
+                onChange={handleInputChange}
+                disabled={isSaving}
+              />
+            </div>
+            
+          </div>
         </div>
 
         {/* Action Buttons */}
