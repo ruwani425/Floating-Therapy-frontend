@@ -998,8 +998,18 @@ export default function ReservationsPage() {
                         {appointment.clientName || "N/A"}
                       </td>
                       <td className="px-6 py-4" style={{ color: COLOR_MUTED }}>
-                        {appointment.email || "N/A"}
-                      </td>
+                        {appointment.email ? (
+                          <a 
+                            href={`mailto:${appointment.email}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            title={`Email ${appointment.email}`}
+                          >
+                            {appointment.email}
+                          </a>
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a
                           // MODIFIED: Uses the formatted number for WhatsApp link
@@ -1483,7 +1493,6 @@ export default function ReservationsPage() {
           </div>
         )}
         
-        {/* NEW: Appointment Details/Edit Modal */}
         {isDetailsModalOpen && selectedAppointment && (
           <AppointmentDetailsModal
             appointment={selectedAppointment}
