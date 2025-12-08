@@ -345,7 +345,7 @@ const ReservationCard: React.FC<{ res: ClientReservation }> = ({ res }) => {
             </div>
             {res.specialNote && (
                 <p className="text-xs mt-3 p-2 rounded" style={{ backgroundColor: COLOR_BG_LIGHT, color: COLOR_MUTED }}>
-                    **Note:** {res.specialNote}
+                    Note: {res.specialNote}
                 </p>
             )}
         </div>
