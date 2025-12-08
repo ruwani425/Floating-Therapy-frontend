@@ -7,166 +7,165 @@ import { getCookie, AUTH_TOKEN_KEY } from '../utils/cookieUtils';
 import Avatar from '../components/Avatar';
 import type { AuthUser } from '../redux/authSlice';
 
-// --- ADDED: Generic API Response Type ---
+// --- Interfaces for Typing ---
 interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
+  success: boolean;
+  message: string;
+  data: T;
 }
 
-// --- UPDATED: UserProfile interface to align with DB/API response ---
 interface UserProfile extends AuthUser {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'client';
-  profileImage?: string;
-  createdAt: string;
-  updatedAt: string;
+  _id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'client';
+  profileImage?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// --- EXISTING: PackageActivation Interface ---
 interface PackageActivation {
-  _id: string;
-  packageName: string;
-  status: 'Pending' | 'Contacted' | 'Confirmed' | 'Rejected';
-  preferredDate: string;
-  createdAt: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  message?: string;
-  packageId: {
-    name: string;
-    duration: string;
-    sessions: number;
-    totalPrice: number;
-  };
+  _id: string;
+  packageName: string;
+  status: 'Pending' | 'Contacted' | 'Confirmed' | 'Rejected';
+  preferredDate: string;
+  createdAt: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  message?: string;
+  packageId: {
+    name: string;
+    duration: string;
+    sessions: number;
+    totalPrice: number;
+  };
 }
 
-// --- NEW: Appointment (Reservation) Interface ---
 interface Appointment {
-  _id: string;
-  date: string; // YYYY-MM-DD format
-  time: string; // HH:mm format
-  status: 'Pending' | 'Confirmed' | 'Canceled' | 'Completed';
-  service: string;
-  specialNote?: string;
-  isPackageUser: boolean;
-  createdAt: string;
+  _id: string;
+  reservationId: string; // Added field
+  date: string; // YYYY-MM-DD format
+  time: string; // HH:mm format
+  status: 'pending' | 'confirmed' | 'canceled' | 'completed'; // Matches controller output
+  name: string;
+  contactNumber: string;
+  specialNote?: string;
+  isPackageUser: boolean; 
+  createdAt: string;
 }
 
 const COLORS = {
-  primary: '#5B8DC4',
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  gray50: '#F9FAFB',
-  gray100: '#F3F4F6',
-  gray200: '#E5E7EB',
-  gray600: '#4B5563',
-  gray700: '#374151',
-  gray800: '#1F2937',
-  white: '#FFFFFF',
+  primary: '#5B8DC4',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  gray50: '#F9FAFB',
+  gray100: '#F3F4F6',
+  gray200: '#E5E7EB',
+  gray600: '#4B5563',
+  gray700: '#374151',
+  gray800: '#1F2937',
+  white: '#FFFFFF',
 };
 
 const UserProfilePage: React.FC = () => {
-  const { user: authUser } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [packages, setPackages] = useState<PackageActivation[]>([]);
-  const [reservations, setReservations] = useState<Appointment[]>([]); // NEW state for reservations
-  const [loading, setLoading] = useState(true);
-  const [loadingPackages, setLoadingPackages] = useState(true);
-  const [loadingReservations, setLoadingReservations] = useState(true); // NEW loading state
-  const [activeTab, setActiveTab] = useState<'packages' | 'reservations'>('packages'); // NEW tab state
+  const { user: authUser } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [packages, setPackages] = useState<PackageActivation[]>([]);
+  const [reservations, setReservations] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [loadingReservations, setLoadingReservations] = useState(true);
+  const [activeTab, setActiveTab] = useState<'packages' | 'reservations'>('packages');
 
-  useEffect(() => {
-    fetchProfile();
-    fetchMyPackages();
-    // Fetch reservations immediately to populate data
-    fetchMyReservations(); 
-  }, []);
+  useEffect(() => {
+    fetchProfile();
+    fetchMyPackages();
+    fetchMyReservations();
+  }, []);
 
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const token = getCookie(AUTH_TOKEN_KEY);
-      
-      if (!token) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Authentication Required',
-          text: 'Please log in to access this page',
-        });
-        return;
-      }
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const token = getCookie(AUTH_TOKEN_KEY);
+      
+      if (!token) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Authentication Required',
+          text: 'Please log in to access this page',
+        });
+        return;
+      }
 
-      const response: ApiResponse<UserProfile> = await apiRequest.get('/users/me');
+      const response: ApiResponse<UserProfile> = await apiRequest.get('/users/me');
 
-      if (response.success) {
-        setProfile(response.data);
-      }
-    } catch (error: any) {
-      console.error('Error fetching profile:', error);
+      if (response.success) {
+        setProfile(response.data);
+      }
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.message || 'Failed to fetch profile',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMyPackages = async () => {
+    try {
+      setLoadingPackages(true);
+      
+      const response: ApiResponse<PackageActivation[]> = await apiRequest.get('/users/me/packages');
+
+      if (response.success) {
+        setPackages(response.data);
+      }
+    } catch (error: any) {
+      console.error('Error fetching packages:', error);
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
+
+  const fetchMyReservations = async () => {
+    try {
+      setLoadingReservations(true);
+      
+      const response: ApiResponse<Appointment[]> = await apiRequest.get('/appointments/me');
+
+      if (response.success) {
+        setReservations(response.data); 
+      }
+    } catch (error: any) {
+      console.error('Error fetching reservations:', error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to fetch profile',
+        text: error.response?.data?.message || 'Failed to fetch reservations',
       });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMyPackages = async () => {
-    try {
-      setLoadingPackages(true);
-      
-      const response: ApiResponse<PackageActivation[]> = await apiRequest.get('/users/me/packages');
-
-      if (response.success) {
-        setPackages(response.data);
-      }
-    } catch (error: any) {
-      console.error('Error fetching packages:', error);
-    } finally {
-      setLoadingPackages(false);
-    }
-  };
-
-  // --- NEW: Fetch Reservations Function ---
-  const fetchMyReservations = async () => {
-    try {
-      setLoadingReservations(true);
-      
-      // NOTE: You need to ensure a GET route exists for '/appointments/me' or similar
-      // The current backend routes don't explicitly show this, so we'll assume it exists.
-      const response: ApiResponse<Appointment[]> = await apiRequest.get('/appointments/me'); 
-
-      if (response.success) {
-        setReservations(response.data);
-      }
-    } catch (error: any) {
-      console.error('Error fetching reservations:', error);
-      // Handle 404/403 gracefully if endpoint is missing/restricted
-    } finally {
-      setLoadingReservations(false);
-    }
-  };
+    } finally {
+      setLoadingReservations(false);
+    }
+  };
 
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-      case 'Completed':
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+      case 'completed':
         return <CheckCircle className="w-5 h-5" style={{ color: COLORS.success }} />;
-      case 'Pending':
+      case 'pending':
         return <Clock className="w-5 h-5" style={{ color: COLORS.warning }} />;
-      case 'Contacted':
+      case 'contacted':
         return <Phone className="w-5 h-5" style={{ color: COLORS.primary }} />;
-      case 'Rejected':
-      case 'Canceled':
+      case 'rejected':
+      case 'canceled':
         return <XCircle className="w-5 h-5" style={{ color: COLORS.error }} />;
       default:
         return <AlertCircle className="w-5 h-5" style={{ color: COLORS.gray600 }} />;
@@ -174,16 +173,16 @@ const UserProfilePage: React.FC = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-      case 'Completed':
+    switch (status.toLowerCase()) {
+      case 'confirmed':
+      case 'completed':
         return COLORS.success;
-      case 'Pending':
+      case 'pending':
         return COLORS.warning;
-      case 'Contacted':
+      case 'contacted':
         return COLORS.primary;
-      case 'Rejected':
-      case 'Canceled':
+      case 'rejected':
+      case 'canceled':
         return COLORS.error;
       default:
         return COLORS.gray600;
@@ -191,21 +190,8 @@ const UserProfilePage: React.FC = () => {
   };
 
   const getReservationStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-        return COLORS.success;
-      case 'Pending':
-        return COLORS.warning;
-      case 'Canceled':
-        return COLORS.error;
-      case 'Completed':
-        return COLORS.gray600;
-      default:
-        return COLORS.gray600;
-    }
+    return getStatusColor(status);
   };
-
-  // ... (loading state check remains the same)
 
   if (loading) {
     return (
@@ -249,7 +235,6 @@ const UserProfilePage: React.FC = () => {
       );
     }
     
-    // Existing package list rendering logic
     return (
       <div className="space-y-4">
         {packages.map((pkg) => (
@@ -389,7 +374,14 @@ const UserProfilePage: React.FC = () => {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h4 className="text-xl font-bold mb-1" style={{ color: COLORS.gray800 }}>
-                  {res.service}
+                  <span className="font-semibold text-sm" style={{ color: COLORS.gray600, marginRight: '8px' }}>ID:</span>
+                  <span
+                    className="font-extrabold"
+                    // FIX: Apply status color to the reservation ID
+                    style={{ color: getReservationStatusColor(res.status) }}
+                  >
+                    {res.reservationId}
+                  </span>
                 </h4>
                 <p className="text-sm font-medium" style={{ color: COLORS.gray600 }}>
                   {res.isPackageUser ? 'Package Session' : 'Standard Booking'}
@@ -441,7 +433,7 @@ const UserProfilePage: React.FC = () => {
     <div className="min-h-screen pt-20" style={{ backgroundColor: COLORS.gray50 }}>
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Card (Left Side) - Remains largely the same */}
+          {/* Profile Card (Left Side) */}
           <div className="lg:col-span-1">
             <div className="rounded-xl border p-6 shadow-md sticky top-24" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray200 }}>
               <div className="text-center">
