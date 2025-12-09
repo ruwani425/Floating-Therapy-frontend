@@ -590,7 +590,7 @@ const SystemSettings = () => {
                                 {session.sessionStart} - {session.sessionEnd}
                               </span>
                             </div>
-                            <div className className="text-xs" style={{ color: THETA_COLORS.textLight }}>
+                            <div className ="text-xs" style={{ color: THETA_COLORS.textLight }}>
                               Cleaning: {session.sessionEnd} - {session.cleaningEnd}
                             </div>
                           </div>
