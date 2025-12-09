@@ -277,7 +277,6 @@ const PackageCard: React.FC<{ pkg: ClientPackage }> = ({ pkg }) => {
                 </span>
             </div>
 
-            {/* Session Summary */}
             <div className="mb-4">
                 <div className="flex justify-between text-sm mb-1">
                     <span className="font-semibold" style={{ color: COLOR_MUTED }}>SESSIONS REMAINING</span>
@@ -296,7 +295,6 @@ const PackageCard: React.FC<{ pkg: ClientPackage }> = ({ pkg }) => {
                 </div>
             </div>
 
-            {/* Dates */}
             <div className="text-xs space-y-1" style={{ color: COLOR_MUTED }}>
                 <p>Start Date: {pkg.startDate ? new Date(pkg.startDate).toLocaleDateString() : 'N/A'}</p>
                 <p>Expiry Date: {pkg.expiryDate ? new Date(pkg.expiryDate).toLocaleDateString() : 'N/A'}</p>

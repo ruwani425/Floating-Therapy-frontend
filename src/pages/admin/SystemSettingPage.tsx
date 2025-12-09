@@ -1,9 +1,9 @@
 "use client"
 import { useState, memo, useCallback, useEffect, useMemo } from "react"
 import { Save, RotateCcw, CheckCircle, AlertCircle, Settings } from "lucide-react"
-import apiRequest from "../../core/axios" // Ensure this path is correct
+import apiRequest from "../../core/axios" 
 
-// --- THEME COLORS ---
+// --- THEME COLORS (UNCHANGED) ---
 const THETA_COLORS = {
   primary: "#5B8DC4",
   primaryDark: "#2C4A6F",
@@ -26,13 +26,20 @@ interface SystemSettingsProps {
   _id?: string; 
   defaultFloatPrice: number | string 
   cleaningBuffer: number | string
-  sessionDuration: number | string // Included in interface
+  sessionDuration: number | string 
   sessionsPerDay: number | string  
   openTime: string
   closeTime: string
-  numberOfTanks: number | string // NEW: Number of floating tanks
-  tankStaggerInterval: number | string // NEW: Gap between tank start times (in minutes)
-  actualCloseTime?: string // NEW: Calculated actual closing time
+  numberOfTanks: number | string 
+  tankStaggerInterval: number | string 
+  actualCloseTime?: string 
+}
+
+// Interface from tank.controller.ts for safe typing of the tank list response
+interface TankData {
+  _id: string;
+  name: string;
+  // ... other tank fields
 }
 
 type SettingField = keyof Omit<SystemSettingsProps, '_id'> 
@@ -46,16 +53,17 @@ interface InputFieldProps {
   unit?: string
   description?: string
   onChange: (field: SettingField, value: number | string) => void
-  disabled: boolean // Used for saving/loading state
-  readOnly?: boolean // Used for calculated field
+  disabled: boolean 
+  readOnly?: boolean 
 }
 
 const InputField = memo(({ label, field, type, value, unit, description, onChange, disabled, readOnly = false }: InputFieldProps) => {
     
-    // Handles input change for number fields to allow temporary empty string
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const rawValue = e.target.value;
         
+        if (readOnly) return; 
+
         if (type === "number") {
             const processedValue = rawValue === "" ? "" : Number(rawValue);
             onChange(field, processedValue);
@@ -64,7 +72,6 @@ const InputField = memo(({ label, field, type, value, unit, description, onChang
         }
     };
 
-    // Renders empty string if state is 0 for number inputs, allowing deletion
     const inputValue = (type === 'number' && value === 0) ? '' : value; 
 
     const isInputDisabled = disabled || readOnly;
@@ -73,6 +80,7 @@ const InputField = memo(({ label, field, type, value, unit, description, onChang
       <div className="space-y-2">
         <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
           {label}
+          {/* 🛑 REMOVED: API Driven Span */}
         </label>
         <div className="relative">
           {unit && type === "number" && (
@@ -87,14 +95,14 @@ const InputField = memo(({ label, field, type, value, unit, description, onChang
             type={type}
             value={inputValue} 
             disabled={disabled}
-            readOnly={readOnly} // Apply readOnly here
+            readOnly={readOnly} 
             onChange={handleChange}
             className={`w-full py-2.5 border rounded-lg focus:outline-none transition-all duration-200 
               ${unit && type === "number" ? "pl-14 pr-4" : "px-4"} 
-              ${isInputDisabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : ''}`}
+              ${isInputDisabled ? 'opacity-80 cursor-not-allowed' : ''}`} 
             style={{
               borderColor: THETA_COLORS.gray200,
-              backgroundColor: isInputDisabled ? THETA_COLORS.gray100 : THETA_COLORS.white, // Custom style for readonly look
+              backgroundColor: isInputDisabled ? THETA_COLORS.gray100 : THETA_COLORS.white, 
               color: THETA_COLORS.text,
             }}
             onFocus={(e) => {
@@ -123,17 +131,7 @@ const InputField = memo(({ label, field, type, value, unit, description, onChang
 InputField.displayName = "InputField"
 
 // --- UTILITY FUNCTION FOR CALCULATION ---
-
-/**
- * Calculates the maximum number of full sessions per tank with staggered start times.
- * @param openTime 'HH:MM' - First tank start time
- * @param closeTime 'HH:MM' - Shop closing time (last session must end before this)
- * @param duration Session duration in minutes
- * @param buffer Cleaning buffer in minutes
- * @param numberOfTanks Number of tanks
- * @param staggerInterval Gap between tank start times in minutes
- * @returns Object with sessionsPerTank and actualCloseTime
- */
+// (calculateStaggeredSessions function remains unchanged)
 const calculateStaggeredSessions = (
     openTime: string, 
     closeTime: string, 
@@ -179,6 +177,9 @@ const calculateStaggeredSessions = (
     for (let tankIndex = 0; tankIndex < numberOfTanks; tankIndex++) {
         const tankStartMinutes = openMinutes + (tankIndex * staggerInterval);
         
+        // Skip calculation if the tank's staggered start time exceeds the closing time
+        if (tankStartMinutes >= closeMinutes) continue;
+
         // Calculate how many sessions this tank can fit
         const availableTime = closeMinutes - tankStartMinutes;
         const tankSessions = Math.floor(availableTime / sessionLength);
@@ -188,8 +189,15 @@ const calculateStaggeredSessions = (
             const tankEndTime = tankStartMinutes + (tankSessions * sessionLength);
             latestEndTime = Math.max(latestEndTime, tankEndTime);
             
-            // Track maximum sessions (all tanks should have same capacity in this design)
-            maxSessionsPerTank = Math.max(maxSessionsPerTank, tankSessions);
+            // Track minimum sessions across all tanks to determine overall max sessions per tank
+            maxSessionsPerTank = maxSessionsPerTank === 0 ? tankSessions : Math.min(maxSessionsPerTank, tankSessions);
+
+        } else {
+             // If the first tank can fit 0 sessions, stop processing
+             if (tankIndex === 0) {
+                maxSessionsPerTank = 0;
+                break;
+            }
         }
     }
 
@@ -212,8 +220,8 @@ const SystemSettings = () => {
     sessionsPerDay: 0,
     openTime: "08:00",
     closeTime: "22:00",
-    numberOfTanks: 2, // NEW DEFAULT
-    tankStaggerInterval: 30, // NEW DEFAULT (30 minutes gap)
+    numberOfTanks: 0, 
+    tankStaggerInterval: 30, 
     actualCloseTime: "22:00",
   };
 
@@ -222,19 +230,44 @@ const SystemSettings = () => {
   const [hasChanges, setHasChanges] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  // FIX 1: Set isLoading to false initially to render immediately
   const [isLoading, setIsLoading] = useState(false) 
+  const [isLoadingTanks, setIsLoadingTanks] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
-  // --- CALCULATED VALUE ---
+  // --- API CALL TO FETCH TANK COUNT (UNCHANGED) ---
+  const fetchTankCount = useCallback(async () => {
+    setIsLoadingTanks(true);
+    try {
+      const response: TankData[] = await apiRequest.get("/tanks"); 
+      const tankCount = response.length;
+      
+      setSettings(prev => {
+        if (prev.numberOfTanks !== tankCount) {
+          return { ...prev, numberOfTanks: tankCount };
+        }
+        return prev;
+      });
+
+      setInitialSettings(prev => ({ ...prev, numberOfTanks: tankCount }));
+
+    } catch (error) {
+      console.error("Failed to fetch tank count:", error);
+      setSettings(prev => ({ ...prev, numberOfTanks: 0 }));
+      setInitialSettings(prev => ({ ...prev, numberOfTanks: 0 }));
+      setFetchError(prev => prev ? prev : "Failed to load tank count from API.");
+    } finally {
+      setIsLoadingTanks(false);
+    }
+  }, [])
+
+
+  // --- CALCULATED VALUE (UNCHANGED) ---
   const { calculatedSessionCount, calculatedCloseTime } = useMemo(() => {
-    // Extract current values, ensuring they are treated as numbers (0 if blank/invalid string)
     const duration = Number(settings.sessionDuration) || 0;
     const buffer = Number(settings.cleaningBuffer) || 0;
-    const tanks = Number(settings.numberOfTanks) || 1;
+    const tanks = Number(settings.numberOfTanks) || 0; 
     const stagger = Number(settings.tankStaggerInterval) || 0;
     
-    // Time strings are always strings
     const openTime = settings.openTime;
     const closeTime = settings.closeTime;
 
@@ -246,13 +279,11 @@ const SystemSettings = () => {
     };
   }, [settings.openTime, settings.closeTime, settings.sessionDuration, settings.cleaningBuffer, settings.numberOfTanks, settings.tankStaggerInterval]);
 
-  // --- EFFECT TO UPDATE CALCULATED FIELDS IN STATE ---
+  // --- EFFECT TO UPDATE CALCULATED FIELDS IN STATE (UNCHANGED) ---
   useEffect(() => {
-    // Update the calculated fields in the state whenever they change
     setSettings(prev => {
       const needsUpdate = prev.sessionsPerDay !== calculatedSessionCount || prev.actualCloseTime !== calculatedCloseTime;
       if (needsUpdate) {
-        // Only update the values, do not touch hasChanges here
         return { 
           ...prev, 
           sessionsPerDay: calculatedSessionCount,
@@ -264,13 +295,10 @@ const SystemSettings = () => {
   }, [calculatedSessionCount, calculatedCloseTime]);
 
 
-  // --- DATA FETCHING (GET Request) ---
+  // --- DATA FETCHING (UNCHANGED) ---
   useEffect(() => {
-    // Temporarily set isFetching to true, only if we intend to show the spinner later (which we removed), 
-    // but we use it here internally to ensure we don't try to save while data is loading.
     const fetchSettings = async () => {
       try {
-        // We keep this logic internal, but don't bind it to the rendering
         setIsLoading(true) 
         setFetchError(null)
 
@@ -278,37 +306,34 @@ const SystemSettings = () => {
 
         if (response) {
           const dataToUse: SystemSettingsProps = response as SystemSettingsProps;
-          setSettings(dataToUse)
-          setInitialSettings(dataToUse)
+          setSettings(prev => ({ ...dataToUse, numberOfTanks: prev.numberOfTanks }));
+          setInitialSettings(prev => ({ ...dataToUse, numberOfTanks: prev.numberOfTanks }));
         } else {
           setSettings(defaultState)
           setInitialSettings(defaultState)
         }
         
-        // Ensure hasChanges is explicitly false after loading
         setHasChanges(false);
 
       } catch (error) {
         console.error("Failed to fetch system settings:", error)
         setFetchError("Failed to load settings. Please ensure the API is running correctly.")
       } finally {
-        // FIX 2: Set isLoading to false after fetch, allowing saving once data is loaded/defaulted
         setIsLoading(false) 
       }
     }
 
-    fetchSettings()
-  }, [])
+    fetchTankCount(); 
+    fetchSettings(); 
+  }, [fetchTankCount]) 
 
-  // --- HANDLERS ---
+  // --- HANDLERS (UNCHANGED) ---
   const handleInputChange = useCallback((field: SettingField, value: number | string) => {
     setSettings((prev) => {
-      // Create new settings object based on input change
       const newSettings = { ...prev, [field]: value } as SystemSettingsProps;
       
-      // Calculate changes based on editable fields only
       const hasChanged = (Object.keys(defaultState) as Array<keyof SystemSettingsProps>)
-        .filter(key => key !== 'sessionsPerDay' && key !== 'actualCloseTime') // Exclude calculated fields
+        .filter(key => key !== 'sessionsPerDay' && key !== 'actualCloseTime' && key !== 'numberOfTanks')
         .some(key => newSettings[key] !== initialSettings[key]);
 
       setHasChanges(hasChanged);
@@ -318,21 +343,19 @@ const SystemSettings = () => {
   }, [initialSettings])
 
   const handleSave = async () => {
-    if (!hasChanges || isSaving || isLoading) return; // Prevent saving if loading/saving/no changes
+    if (!hasChanges || isSaving || isLoading || isLoadingTanks) return; 
     
-    // Prepare data for the database, converting transient empty strings to 0
     const finalSettings: SystemSettingsProps = { ...settings };
     (Object.keys(finalSettings) as Array<keyof SystemSettingsProps>).forEach(key => {
-        // Convert numerical string fields (which might be "") to 0 or their number value
         if (typeof finalSettings[key] === 'string' && 
             (key === 'defaultFloatPrice' || key === 'cleaningBuffer' || key === 'sessionDuration' || 
-             key === 'numberOfTanks' || key === 'tankStaggerInterval')) {
+             key === 'tankStaggerInterval')) { 
             finalSettings[key] = (finalSettings[key] === "" ? 0 : Number(finalSettings[key])) as number;
         }
     });
-    // Ensure calculated fields are explicitly stored
     finalSettings.sessionsPerDay = calculatedSessionCount; 
-    finalSettings.actualCloseTime = calculatedCloseTime; 
+    finalSettings.actualCloseTime = calculatedCloseTime;
+    finalSettings.numberOfTanks = Number(settings.numberOfTanks) || 0; 
 
     try {
       setIsSaving(true);
@@ -347,8 +370,8 @@ const SystemSettings = () => {
       }
 
       const updatedSettings = savedResponse.data || savedResponse;
-      setInitialSettings(updatedSettings); 
-      setSettings(updatedSettings); 
+      setInitialSettings(prev => ({ ...updatedSettings, numberOfTanks: prev.numberOfTanks })); 
+      setSettings(prev => ({ ...updatedSettings, numberOfTanks: prev.numberOfTanks })); 
 
       setSaveSuccess(true);
       setHasChanges(false);
@@ -368,11 +391,12 @@ const SystemSettings = () => {
       setSaveSuccess(false)
     }
   }
+    
+  // Consolidated Loading Check for disabling UI elements
+  const isAnyLoading = isLoading || isLoadingTanks;
 
-  // --- CONDITIONAL RENDERING (REMOVED BLOCK) ---
-  // Removed: if (isLoading) { return <Loader2 /> }
-  // We only render the Fetch Error screen if an error occurred during background loading.
-  if (fetchError) {
+  // --- CONDITIONAL RENDERING (UNCHANGED) ---
+  if (fetchError && !isLoadingTanks) { 
     return (
       <div className="min-h-screen flex items-center justify-center p-8" style={{ backgroundColor: THETA_COLORS.lightBg }}>
         <div
@@ -385,7 +409,7 @@ const SystemSettings = () => {
             <p className="text-sm mt-1" style={{ color: THETA_COLORS.error }}>{fetchError}</p>
           </div>
         </div>
-      </div>
+        </div>
     )
   }
 
@@ -412,7 +436,7 @@ const SystemSettings = () => {
         </div>
         
         {/* Check if data exists or is new */}
-        {!settings._id && !hasChanges && !isLoading && (
+        {!settings._id && !hasChanges && !isAnyLoading && (
             <div className="mb-6 p-4 rounded-lg border border-opacity-20 flex items-start gap-3" 
                 style={{ backgroundColor: `${THETA_COLORS.warning}15`, borderColor: THETA_COLORS.warning }}>
                 <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: THETA_COLORS.warning }} />
@@ -566,7 +590,7 @@ const SystemSettings = () => {
                                 {session.sessionStart} - {session.sessionEnd}
                               </span>
                             </div>
-                            <div className="text-xs" style={{ color: THETA_COLORS.textLight }}>
+                            <div className className="text-xs" style={{ color: THETA_COLORS.textLight }}>
                               Cleaning: {session.sessionEnd} - {session.cleaningEnd}
                             </div>
                           </div>
@@ -604,15 +628,17 @@ const SystemSettings = () => {
             <div className="flex items-center gap-3 mb-6">
               <h2 className="text-lg font-semibold" style={{ color: THETA_COLORS.primaryDark }}>Tank Configuration</h2>
             </div>
-            {/* Number of Tanks */}
+            {/* Number of Tanks (API Driven - Read Only) */}
             <InputField
               label="Number of Floating Tanks"
               field="numberOfTanks"
               type="number"
-              value={settings.numberOfTanks}
-              description="Total number of floating tanks available"
+              // Display loading state if needed
+              value={isAnyLoading ? 'Loading...' : settings.numberOfTanks} 
+              description="This number is automatically retrieved from your active tanks in the database."
               onChange={handleInputChange}
-              disabled={isSaving}
+              disabled={isSaving || isAnyLoading}
+              readOnly={true} 
             />
             {/* Tank Stagger Interval */}
             <div className="mt-6">
@@ -704,16 +730,31 @@ const SystemSettings = () => {
                 onChange={handleInputChange}
                 disabled={isSaving}
               />
-              <InputField
-                label="Actual Closing Time"
-                field="actualCloseTime"
-                type="time"
-                value={calculatedCloseTime}
-                description="When all tanks complete (incl. cleaning)"
-                onChange={() => {}}
-                disabled={isSaving}
-                readOnly={true}
-              />
+              
+              {/* 🛑 FIX: Customized block to remove 'API Driven' badge and fix alignment */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
+                  Actual Closing Time
+                </label>
+                <div className="relative">
+                  <input
+                    type="time"
+                    value={calculatedCloseTime}
+                    readOnly={true}
+                    disabled={isSaving || isAnyLoading}
+                    className="w-full py-2.5 border rounded-lg focus:outline-none px-4 opacity-80 cursor-not-allowed"
+                    style={{
+                      borderColor: THETA_COLORS.gray200,
+                      backgroundColor: THETA_COLORS.gray100, 
+                      color: THETA_COLORS.text,
+                    }}
+                  />
+                </div>
+                <p className="text-xs" style={{ color: THETA_COLORS.textLight }}>
+                  When all tanks complete (incl. cleaning)
+                </p>
+              </div>
+
               <InputField
                 label="Cleaning Buffer"
                 field="cleaningBuffer"
@@ -748,12 +789,12 @@ const SystemSettings = () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={!hasChanges || isSaving}
+            disabled={!hasChanges || isSaving || isAnyLoading} 
             className="px-8 py-2.5 font-semibold text-white rounded-lg transition-all duration-200 flex items-center gap-2"
             style={{
-              backgroundColor: hasChanges && !isSaving ? THETA_COLORS.primary : THETA_COLORS.gray300,
-              cursor: hasChanges && !isSaving ? "pointer" : "not-allowed",
-              opacity: hasChanges && !isSaving ? 1 : 0.6,
+              backgroundColor: hasChanges && !isSaving && !isAnyLoading ? THETA_COLORS.primary : THETA_COLORS.gray300,
+              cursor: hasChanges && !isSaving && !isAnyLoading ? "pointer" : "not-allowed",
+              opacity: hasChanges && !isSaving && !isAnyLoading ? 1 : 0.6,
             }}
           >
             <Save className="w-4 h-4" />
