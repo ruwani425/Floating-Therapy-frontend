@@ -1,9 +1,13 @@
+// src/pages/admin/AdminDashboard.tsx
+
 import type React from "react"
-import { useState, useEffect } from "react" 
-import { useNavigate } from 'react-router-dom'; // Requires React Router
+import { useState, useEffect, useMemo } from "react" 
+import { useNavigate } from 'react-router-dom'; 
+import { useSelector } from 'react-redux'; // ADDED: Redux selector hook
+import type { RootState } from '../../redux/store'; // ADDED: Redux type
 
 // Import Firebase dependencies and utility functions (RUNTIME VALUES/FUNCTIONS)
-import { auth, logout } from "../../firebase/firebase-config" // <-- ADJUST PATH AS NEEDED
+import { auth, logout } from "../../firebase/firebase-config" 
 
 // Import runtime functions from firebase/auth (VALUES)
 import { 
@@ -12,11 +16,11 @@ import {
 
 // Import type-only declarations from firebase/auth (TYPES)
 import type { 
-  User as FirebaseAuthUser, // Renamed to avoid conflict with lucide-react User icon
+  User as FirebaseAuthUser,
 } from "firebase/auth" 
 
 import {
-  User, // lucide-react icon
+  User, 
   CalendarCheck,
   Bath,
   DollarSign,
@@ -50,7 +54,6 @@ import {
 } from "recharts"
 import AdminCard from "../../components/admin/AdminCard"
 
-// --- THEME & DATA CONSTANTS ---
 
 const THETA_COLORS = {
   darkestBlue: "#0F1F2E",
@@ -121,64 +124,74 @@ const KPI_DATA = [
   },
 ]
 
+// Map options to specific permission keys used in the backend
 const dashboardOptions = [
   {
     title: "Appointment Bookings",
     path: "/admin/reservations",
     description: "Manage all appointments and schedules.",
     icon: CalendarCheck,
+    permissionKey: "reservations", 
   },
   {
     title: "Tank Management",
     path: "/admin/tank-management",
     description: "Monitor floating tank capacity and status.",
     icon: Bath,
+    permissionKey: "tanks", 
   },
   {
     title: "User Accounts",
     path: "/admin/users",
     description: "Manage all system users and members.",
     icon: User,
+    permissionKey: "users", 
   },
   {
     title: "Services & Pricing",
     path: "/admin/package-management",
     description: "Update therapy services and package rates.",
     icon: DollarSign,
+    permissionKey: "packages", 
   },
   {
     title: "Package Activations",
     path: "/admin/package-activations",
     description: "Manage customer package activation requests.",
     icon: Package,
+    permissionKey: "activations", 
   },
   {
     title: "Reports & Analytics",
     path: "/admin/reports",
     description: "View performance metrics and insights.",
     icon: TrendingUp,
+    permissionKey: "reports", 
   },
   {
     title: "Content Management",
     path: "/admin/content",
     description: "Edit website pages and blog posts.",
     icon: BookOpen,
+    permissionKey: "content", 
   },
   {
     title: "Access Control",
     path: "/admin/access-controll",
     description: "Manage admin permissions and roles.",
     icon: Shield,
+    permissionKey: "access_control", 
   },
   {
     title: "Global Settings",
     path: "/admin/system-settings",
     description: "Configure application settings.",
     icon: Settings,
+    permissionKey: "settings", 
   },
 ]
 
-// --- CHART AND CARD COMPONENTS ---
+// --- CHART AND CARD COMPONENTS (UNCHANGED) ---
 
 const StatCard: React.FC<(typeof KPI_DATA)[0] & { icon: React.ElementType }> = ({
   title,
@@ -267,7 +280,7 @@ const RevenuePieChart: React.FC = () => (
     <div className="relative z-10">
       <h3 className="text-lg font-bold mb-6" style={{ color: THETA_COLORS.darkestBlue }}>
         Revenue Breakdown by Service
-      </h3>
+        </h3>
       <ResponsiveContainer width="100%" height={280}>
         <PieChart>
           <Pie
@@ -306,8 +319,25 @@ const AdminDashboard: React.FC = () => {
   
   // Hook for navigation (Requires 'react-router-dom')
   const navigate = useNavigate(); 
+  
+  // 2. GET PERMISSIONS FROM REDUX STATE
+  const adminPermissions = useSelector((state: RootState) => state.auth.adminPermissions);
 
-  // 2. EFFECT TO LISTEN FOR AUTH CHANGES
+  // 3. DETERMINE VISIBLE OPTIONS BASED ON PERMISSIONS
+  const visibleDashboardOptions = useMemo(() => {
+      // If permissions haven't loaded or are empty, return an empty array
+      if (!adminPermissions || adminPermissions.length === 0) {
+          return [];
+      }
+
+      // Filter options where the option's permissionKey is present in the adminPermissions array
+      return dashboardOptions.filter(option => 
+          adminPermissions.includes(option.permissionKey)
+      );
+  }, [adminPermissions]); 
+
+
+  // 4. EFFECT TO LISTEN FOR AUTH CHANGES
   useEffect(() => {
     // Use the exported 'auth' instance
     const unsubscribe = onAuthStateChanged(auth, (user) => { 
@@ -318,10 +348,9 @@ const AdminDashboard: React.FC = () => {
     return () => unsubscribe()
   }, [])
 
-  // 3. HANDLERS
+  // 5. HANDLERS
   const handleProfileClick = () => {
     console.log("Navigating to user profile.")
-    // navigate('/admin/profile'); // Example: Implement actual navigation logic here
   }
 
   const handleLogoutClick = async () => {
@@ -410,7 +439,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {dashboardOptions.map((option, index) => (
+            {visibleDashboardOptions.map((option, index) => (
               <AdminCard
                 key={option.title}
                 title={option.title}
@@ -420,7 +449,13 @@ const AdminDashboard: React.FC = () => {
                 animationDelay={index * 0.05}
               />
             ))}
-          </div>
+          </div>
+          {adminPermissions && adminPermissions.length > 0 && visibleDashboardOptions.length === 0 && (
+             <p className="text-lg p-6 rounded-xl text-center" style={{ color: THETA_COLORS.mediumBlue, backgroundColor: THETA_COLORS.lightCyan }}>
+                 You do not have permissions to access any management tools.
+             </p>
+          )}
+
         </section>
 
         {/* --- PERFORMANCE OVERVIEW SECTION --- */}

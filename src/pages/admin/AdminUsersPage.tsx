@@ -256,7 +256,6 @@ const AdminUsersPage: React.FC = () => {
             </div>
           </div>
 
-          {/* User Details Sidebar (Removed) */}
         </div>
       </div>
     </div>

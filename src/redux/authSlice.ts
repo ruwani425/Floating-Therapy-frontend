@@ -11,20 +11,26 @@ export interface AuthUser {
     profileImage?: string;
     role: 'admin' | 'client';
     firebaseUid?: string;
+    // NEW FIELD: Add permissions array
+    permissions?: string[]; 
 }
 
 interface AuthState {
     isAuthenticated: boolean;
-    user: AuthUser | null; // <-- FIX: ADDED 'user' PROPERTY
+    user: AuthUser | null;
     userRole: 'admin' | 'client' | null;
     isLoading: boolean;
+    // NEW STATE FIELD
+    adminPermissions: string[]; 
 }
 
 const initialState: AuthState = {
     isAuthenticated: false,
-    user: null, // <-- FIX: Initialize 'user'
+    user: null, 
     userRole: null, 
     isLoading: true,
+    // NEW: Initialize permissions
+    adminPermissions: [], 
 };
 
 
@@ -65,7 +71,6 @@ const authSlice = createSlice({
             state.userRole = action.payload.userRole;
             state.isLoading = false;
         },
-        // FIX: Added 'user' to the PayloadAction
         loginAction: (state, action: PayloadAction<{ token?: string; role: 'admin' | 'client'; user?: AuthUser }>) => {
             const token = action.payload.token || `simulated_jwt_token_${action.payload.role}`;
             
@@ -88,8 +93,18 @@ const authSlice = createSlice({
 
             state.isAuthenticated = true;
             state.userRole = action.payload.role;
-            state.user = action.payload.user || null; // <-- FIX: SET USER DATA
+            state.user = action.payload.user || null;
             state.isLoading = false;
+        },
+        // NEW REDUCER: To set granular admin permissions after fetching the profile
+        setAdminPermissionsAction: (state, action: PayloadAction<string[]>) => {
+            state.adminPermissions = action.payload;
+            
+            if (state.user && state.user.role === 'admin') {
+                // Optionally update the user object within state if it exists
+                state.user.permissions = action.payload; 
+            }
+            console.log('🔒 Admin permissions set:', action.payload);
         },
         logoutAction: (state) => {
             console.log('🚪 Logout action');
@@ -104,7 +119,9 @@ const authSlice = createSlice({
             
             state.isAuthenticated = false;
             state.userRole = null;
-            state.user = null; // <-- FIX: CLEAR USER DATA
+            state.user = null;
+            // NEW: Clear permissions on logout
+            state.adminPermissions = []; 
             state.isLoading = false;
         },
     },
@@ -117,6 +134,8 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isAuthenticated = action.payload.isAuthenticated;
                 state.userRole = action.payload.userRole;
+                // NOTE: Permissions cannot be determined here as they are not in the cookie.
+                // They must be fetched separately on login/page load if needed.
                 console.log('✅ Auth status loaded:', { 
                     isAuthenticated: state.isAuthenticated, 
                     userRole: state.userRole 
@@ -131,5 +150,5 @@ const authSlice = createSlice({
     }
 });
 
-export const { loginAction, logoutAction } = authSlice.actions;
+export const { loginAction, logoutAction, setAdminPermissionsAction } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,3 +1,5 @@
+// src/pages/LoginPage.tsx
+
 "use client";
 
 import type React from "react";
@@ -5,11 +7,25 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Droplet } from "lucide-react";
 import { signInWithGoogle } from "../firebase/firebase-config";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../components/AuthProvider"; // If this is your access point
+import { useDispatch, useSelector } from 'react-redux'; // <-- ADDED: Redux imports
 import apiRequest from "../core/axios";
+// Import Redux actions and types
+import { 
+    loginAction, 
+    setAdminPermissionsAction, 
+    type AuthUser // FIX APPLIED HERE
+} from '../redux/authSlice'; 
+import type { RootState } from '../redux/store'; 
 
 const LoginPage: React.FC = () => {
-  const { login, isAuthenticated, userRole } = useAuth();
+  // Replace custom useAuth if possible, or assume it provides dispatch/state
+  // const { login, isAuthenticated, userRole } = useAuth(); 
+  
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const userRole = useSelector((state: RootState) => state.auth.userRole);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +44,48 @@ const LoginPage: React.FC = () => {
 
   type UserRole = "admin" | "client";
 
+  // Interface for the detailed user profile response (matches required backend data)
+  interface UserProfileResponse {
+    success: boolean;
+    message: string;
+    data: AuthUser; // Using AuthUser from authSlice
+  }
+
+  const fetchPermissionsAndLogin = async (token: string, role: UserRole, baseUser: AuthUser) => {
+    // Dispatch initial login action using available data (token, role, base user data)
+    dispatch(loginAction({ token, role, user: baseUser }));
+
+    // Only fetch permissions for admins
+    if (role !== "admin") {
+        navigate("/");
+        return;
+    }
+
+    try {
+        // Step 3: Fetch the full profile including permissions
+        // We use /users/me which should return the AuthUser structure
+        const profileResponse = await apiRequest.get<UserProfileResponse>("/users/me");
+        
+        if (profileResponse.success && profileResponse.data) {
+            const permissions = profileResponse.data.permissions || [];
+            
+            // Step 4: Dispatch the permissions to Redux
+            dispatch(setAdminPermissionsAction(permissions)); 
+
+            navigate("/admin/dashboard");
+        } else {
+            throw new Error(profileResponse.message || "Failed to fetch admin permissions.");
+        }
+    } catch (profileError) {
+        console.error("Error fetching admin profile/permissions:", profileError);
+        // Fallback: If permissions fail to load, log out the user
+        // dispatch(logoutAction()); // You would dispatch logout here
+        const errorMessage = (profileError as any).message || (profileError as any).response?.data?.message || (profileError as Error).message || "Unknown error";
+        setError("Admin login failed: Could not load permissions. Error: " + errorMessage);
+    }
+  }
+
+
   const handleGoogleSignIn = async () => {
     setError(null);
     try {
@@ -44,33 +102,37 @@ const LoginPage: React.FC = () => {
         uid: firebaseUser.uid,
       };
 
-      console.log("Sending real Firebase user to backend:", googleUserData);
-
+      // Step 1: Initial Google Auth (to get token and base role/user data)
       const backendResponse = (await apiRequest.post(
         "/auth/google-auth",
         googleUserData
-      )) as any;
-      if (!backendResponse) {
-        console.log(backendResponse);
-        throw new Error("No response data from backend");
+      )) as any; // Cast to any because the response structure is complex/untyped here
+
+      if (!backendResponse || !backendResponse.user) {
+        throw new Error("Invalid response from backend authentication.");
       }
 
       const { token, user: backendUser } = backendResponse;
-
-      console.log("Token from backend:", token);
-
       const role: UserRole = backendUser?.role;
+      
+      // Map the backend response user to the AuthUser interface
+      const baseUser: AuthUser = {
+        _id: backendUser._id,
+        name: backendUser.name,
+        email: backendUser.email,
+        profileImage: backendUser.profileImage,
+        role: role,
+        // permissions are NOT in the initial google-auth response, only fetched later
+      };
 
-      login(role, token);
+      // Step 2: Proceed to fetch full permissions and navigate
+      await fetchPermissionsAndLogin(token, role, baseUser);
 
-      if (role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
     } catch (error) {
       console.error("Google Auth Integration Error:", error);
-      setError("Google Auth Integration Error" + error);
+      // Safely check error object properties from the custom apiRequest utility
+      const errorMessage = (error as any).message || (error as any).response?.data?.message || (error as Error).message || "Unknown error";
+      setError("Google Auth Integration Error: " + errorMessage);
     }
   };
 
