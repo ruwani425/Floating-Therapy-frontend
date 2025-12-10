@@ -6,6 +6,7 @@ import apiRequest from '../../core/axios';
 import Swal from 'sweetalert2';
 import { getCookie, AUTH_TOKEN_KEY } from '../../utils/cookieUtils';
 import Avatar from '../../components/Avatar';
+import { useNavigate } from 'react-router-dom'; // NEW IMPORT
 
 // Define base User interface from user.controller.ts response
 interface User {
@@ -42,6 +43,7 @@ const COLORS = {
 };
 
 const AdminUsersPage: React.FC = () => {
+  const navigate = useNavigate(); // Initialize useNavigate
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,7 +87,11 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  // fetchUserPackages, handleViewUser, and handleUpdateRole functions are removed
+  // Function to handle navigation to client dashboard
+  const handleViewUserDashboard = (email: string) => {
+    // Navigate to the same route used in ReservationPage: /admin/clients/:email
+    navigate(`/admin/clients/${email}`);
+  };
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -199,10 +205,8 @@ const AdminUsersPage: React.FC = () => {
                 {filteredUsers.map((user) => (
                   <div
                     key={user._id}
-                    // onClick={() => handleViewUser(user)} - Removed handler
-                    className="p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                    className="p-4 border rounded-lg hover:shadow-md transition-all"
                     style={{
-                      // Removed conditional styling for selection
                       backgroundColor: COLORS.white,
                       borderColor: COLORS.gray200,
                     }}
@@ -216,7 +220,17 @@ const AdminUsersPage: React.FC = () => {
                           fallbackColor={COLORS.primary}
                         />
                         <div>
-                          <p className="font-bold" style={{ color: COLORS.gray800 }}>{user.name}</p>
+                          {/* MODIFIED: Make the user's name clickable */}
+                          <button
+                            type="button"
+                            onClick={() => handleViewUserDashboard(user.email)}
+                            className="font-bold cursor-pointer hover:underline"
+                            style={{ color: COLORS.gray800 }}
+                            title={`View dashboard for ${user.name}`}
+                          >
+                            {user.name}
+                          </button>
+                          
                           <div className="flex items-center gap-2 text-sm" style={{ color: COLORS.gray600 }}>
                             <Mail className="w-4 h-4" />
                             {user.email}
