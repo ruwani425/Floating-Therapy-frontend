@@ -39,7 +39,7 @@ interface AppointmentResponseData {
   email: string;
   contactNumber: string;
   specialNote?: string;
-  status: "pending" | "completed" | "canceled";
+  status: "pending" | "completed" | "cancelled";
 }
 
 interface AppointmentApiResponse
@@ -76,6 +76,13 @@ interface BookedTimesByDate {
   times: string[];
 }
 
+// 🆕 NEW INTERFACE: For the counts returned by the new API
+interface PackageAppointmentCounts {
+    pending: number;
+    completed: number;
+    cancelled: number;
+}
+
 interface UserPackage {
   _id: string;
   packageId: {
@@ -92,6 +99,8 @@ interface UserPackage {
   startDate: string;
   expiryDate: string;
   status: string;
+  // 🛑 MODIFIED: Add counts to UserPackage interface
+  appointmentCounts?: PackageAppointmentCounts; 
 }
 
 // --- THEME & UTILITIES ---
@@ -427,6 +436,21 @@ const apiService = {
       return [];
     }
   },
+  // 🆕 NEW: Fetch appointment counts for a single package
+  getPackageAppointmentCounts: async (packageId: string): Promise<PackageAppointmentCounts> => {
+    try {
+      const response = await apiRequest.get<ApiResponse<PackageAppointmentCounts>>(
+        `/appointments/package-counts/${packageId}`
+      );
+      if (response.success && response.data) {
+        return response.data;
+      }
+      return { pending: 0, completed: 0, cancelled: 0 };
+    } catch (error) {
+      console.error(`Failed to fetch counts for package ${packageId}:`, error);
+      return { pending: 0, completed: 0, cancelled: 0 };
+    }
+  }
 };
 
 const ConsolidatedBookingForm: React.FC = () => {
@@ -455,8 +479,12 @@ const ConsolidatedBookingForm: React.FC = () => {
   const [userPackages, setUserPackages] = useState<UserPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  
+  // 🆕 NEW STATE: To track if initial package check is done
+  const [packagesChecked, setPackagesChecked] = useState(false);
 
-  // Fetch user profile to auto-populate email if logged in
+
+  // Fetch user profile to auto-populate email if logged in (UNCHANGED)
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated) {
@@ -477,7 +505,7 @@ const ConsolidatedBookingForm: React.FC = () => {
     fetchUserProfile();
   }, [isAuthenticated]);
 
-  // Fetch user's active packages
+  // Fetch user's active packages (MODIFIED to fetch counts)
   const fetchUserPackages = useCallback(async () => {
     if (!isAuthenticated) {
       setUserPackages([]);
@@ -489,14 +517,21 @@ const ConsolidatedBookingForm: React.FC = () => {
       const response: any = await apiRequest.get(
         "/package-activations/user/active"
       );
-      console.log("📦 [fetchUserPackages] Response:", response);
 
       if (response.success && Array.isArray(response.data)) {
-        setUserPackages(response.data);
-        console.log(
-          "✅ [fetchUserPackages] Loaded packages:",
-          response.data.length
+        
+        const packagesWithCounts = await Promise.all(
+          response.data.map(async (pkg: UserPackage) => {
+            if (pkg._id) {
+              const counts = await apiService.getPackageAppointmentCounts(pkg._id);
+              // Attach the counts to the package object
+              return { ...pkg, appointmentCounts: counts }; 
+            }
+            return pkg;
+          })
         );
+
+        setUserPackages(packagesWithCounts);
       } else {
         setUserPackages([]);
       }
@@ -511,6 +546,31 @@ const ConsolidatedBookingForm: React.FC = () => {
   useEffect(() => {
     fetchUserPackages();
   }, [fetchUserPackages]);
+
+  // 🆕 NEW EFFECT: Auto-select package if only one active/usable package exists
+  useEffect(() => {
+    if (!loadingPackages && userPackages.length > 0 && !packagesChecked) {
+        
+        // Filter packages that have remaining sessions
+        // Remaining sessions are calculated by (Total Sessions - (Completed + Pending Appointments))
+        const usablePackages = userPackages.filter(pkg => {
+            const counts = pkg.appointmentCounts;
+            const totalScheduled = (counts?.pending || 0) + (counts?.completed || 0);
+            return pkg.totalSessions > totalScheduled;
+        });
+
+        if (usablePackages.length === 1) {
+            // Automatically select the single usable package
+            setSelectedPackage(usablePackages[0]._id);
+        } else if (usablePackages.length > 1) {
+            // If multiple usable packages exist, ensure none are selected initially
+            setSelectedPackage(null);
+        }
+        
+        setPackagesChecked(true); // Mark as checked
+    }
+  }, [userPackages, loadingPackages, packagesChecked]); 
+
 
   const fetchCalendarData = useCallback(
     async (date: Date) => {
@@ -671,7 +731,7 @@ const ConsolidatedBookingForm: React.FC = () => {
           setEmail("");
         }
         setSpecialNote("");
-        setSelectedPackage(null);
+        // 🛑 FIX: Preserving selectedPackage state here.
 
         fetchCalendarData(currentMonth);
         fetchUserPackages(); // Refresh packages to show updated session counts
@@ -751,8 +811,196 @@ const ConsolidatedBookingForm: React.FC = () => {
     }
   `;
 
+  // --- RENDER PACKAGES SECTION (Extracted for readability and fixed layout) ---
+  const renderPackagesSection = () => {
+    
+    // Helper to get total used/scheduled sessions from the counts
+    const getTotalScheduled = (counts: PackageAppointmentCounts | undefined) => {
+        if (!counts) return 0;
+        // Total booked includes pending and completed sessions
+        return counts.pending + counts.completed + counts.cancelled; 
+    };
+    
+    // Helper to get remaining sessions
+    const getRemainingSessions = (pkg: UserPackage) => {
+        const totalScheduled = getTotalScheduled(pkg.appointmentCounts);
+        return Math.max(0, pkg.totalSessions - totalScheduled);
+    }
+
+    if (loadingPackages) {
+        return (
+            <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-4 border-t-transparent mx-auto mb-4" style={{ borderColor: THEME_COLORS["--accent-color"] }}></div>
+                <p className="text-sm text-gray-500">Loading active packages...</p>
+            </div>
+        );
+    }
+
+    if (userPackages.length === 0) {
+        return (
+            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                <p className="text-gray-600 mb-2">
+                    You don't have any active packages yet.
+                </p>
+                <p className="text-sm text-gray-500">
+                    Purchase a package to enjoy multiple sessions at a
+                    discounted rate!
+                </p>
+            </div>
+        );
+    }
+    
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {userPackages.map((pkg) => {
+                const isSelected = selectedPackage === pkg._id;
+                const isExpiringSoon =
+                    pkg.expiryDate &&
+                    new Date(pkg.expiryDate).getTime() -
+                        new Date().getTime() <
+                        7 * 24 * 60 * 60 * 1000; // Less than 7 days
+                
+                const remaining = getRemainingSessions(pkg);
+                const totalScheduled = getTotalScheduled(pkg.appointmentCounts);
+                const isUsable = remaining > 0;
+                
+                const counts = pkg.appointmentCounts || { pending: 0, completed: 0, cancelled: 0 };
+                
+                return (
+                    <div
+                        key={pkg._id}
+                        onClick={() =>
+                            isUsable && setSelectedPackage(isSelected ? null : pkg._id)
+                        }
+                        className={`
+                            relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
+                            ${
+                                isSelected
+                                    ? "border-[var(--accent-color)] bg-blue-50 shadow-lg scale-105"
+                                    : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
+                            }
+                            ${!isUsable ? 'opacity-60 cursor-not-allowed' : ''}
+                        `}
+                    >
+                        {/* Selected indicator */}
+                        {isSelected && (
+                            <div className="absolute top-3 right-3">
+                                <CheckCircle
+                                    className="w-6 h-6"
+                                    style={{ color: THEME_COLORS["--accent-color"] }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Package Name */}
+                        <h3
+                            className="text-lg font-bold mb-3 pr-8"
+                            style={{
+                                color: isSelected
+                                    ? THEME_COLORS["--accent-color"]
+                                    : THEME_COLORS["--dark-blue-800"],
+                            }}
+                        >
+                            {pkg.packageName}
+                        </h3>
+
+                        {/* Session Progress Bar (Reflects Scheduled vs Total) */}
+                        <div className="mb-4">
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="font-semibold text-gray-700">
+                                    Sessions
+                                </span>
+                                <span className="font-bold text-[var(--theta-blue)]">
+                                    {remaining} / {pkg.totalSessions}
+                                </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full transition-all duration-300 ${
+                                        totalScheduled === pkg.totalSessions
+                                            ? "bg-red-500"
+                                            : remaining <= 2
+                                            ? "bg-orange-500"
+                                            : "bg-green-500"
+                                    }`}
+                                    style={{
+                                        width: `${(totalScheduled / pkg.totalSessions) * 100}%`,
+                                    }}
+                                />
+                            </div>
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Total: {pkg.totalSessions}</span>
+                                <span>Remaining: {remaining}</span>
+                            </div>
+                        </div>
+
+                        {/* 🛑 FIX: Status Counts Display (Now in one row, smaller text) */}
+                        <div className="mt-4 p-2 rounded-lg bg-gray-50 border border-gray-200">
+                            
+                            <div className="grid grid-cols-3 gap-3 text-xs font-medium mb-2">
+                                <div className="text-center">
+                                    <span className="block text-green-600 font-bold text-base">{counts.completed}</span>
+                                    <span className="block text-gray-600 text-[10px] uppercase">Completed</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="block text-blue-600 font-bold text-base">{counts.pending}</span>
+                                    <span className="block text-gray-600 text-[10px] uppercase">Pending</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="block text-red-600 font-bold text-base">{counts.cancelled}</span>
+                                    <span className="block text-gray-600 text-[10px] uppercase">Cancelled</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between font-bold pt-2 border-t border-gray-300">
+                                <span className="text-gray-700 text-sm">Total Used/Scheduled:</span>
+                                <span className="text-gray-800 text-sm">{totalScheduled}</span>
+                            </div>
+                        </div>
+                        
+                        {/* Dates */}
+                        <div className="space-y-2 text-sm mt-4 pt-2 border-t border-gray-200">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              Start:{" "}
+                              {new Date(pkg.startDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div
+                            className={`flex items-center gap-2 ${
+                              isExpiringSoon
+                                ? "text-orange-600 font-semibold"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            <Clock className="w-4 h-4" />
+                            <span>
+                              Expires:{" "}
+                              {new Date(pkg.expiryDate).toLocaleDateString()}
+                              {isExpiringSoon && " ⚠️"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {!isUsable && (
+                          <div className="absolute inset-0 bg-gray-900 bg-opacity-30 rounded-xl flex items-center justify-center">
+                            <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
+                              No Sessions Left
+                            </span>
+                          </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+  }
+  // --- END RENDER PACKAGES SECTION ---
+
+
   return (
-    <div className="bg-[var(--light-blue-50)] min-h-screen pt-0">
+    <div className ="bg-[var(--light-blue-50)] min-h-screen pt-0">
       <style dangerouslySetInnerHTML={{ __html: CustomStyles }} />
       <div className="w-full bg-white shadow-2xl rounded-xl py-8 lg:py-12 border border-gray-100 relative overflow-hidden mt-[72px]">
         {successMessage && (
@@ -790,137 +1038,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                 )}
               </div>
 
-              {userPackages.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {userPackages.map((pkg) => {
-                    const isSelected = selectedPackage === pkg._id;
-                    const isExpiringSoon =
-                      pkg.expiryDate &&
-                      new Date(pkg.expiryDate).getTime() -
-                        new Date().getTime() <
-                        7 * 24 * 60 * 60 * 1000; // Less than 7 days
-
-                    return (
-                      <div
-                        key={pkg._id}
-                        onClick={() =>
-                          setSelectedPackage(isSelected ? null : pkg._id)
-                        }
-                        className={`
-                          relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200
-                          ${
-                            isSelected
-                              ? "border-[var(--accent-color)] bg-blue-50 shadow-lg scale-105"
-                              : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md"
-                          }
-                        `}
-                      >
-                        {/* Selected indicator */}
-                        {isSelected && (
-                          <div className="absolute top-3 right-3">
-                            <CheckCircle
-                              className="w-6 h-6"
-                              style={{ color: THEME_COLORS["--accent-color"] }}
-                            />
-                          </div>
-                        )}
-
-                        {/* Package Name */}
-                        <h3
-                          className="text-lg font-bold mb-3 pr-8"
-                          style={{
-                            color: isSelected
-                              ? THEME_COLORS["--accent-color"]
-                              : THEME_COLORS["--dark-blue-800"],
-                          }}
-                        >
-                          {pkg.packageName}
-                        </h3>
-
-                        {/* Session Progress Bar */}
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-semibold text-gray-700">
-                              Sessions
-                            </span>
-                            <span className="font-bold text-[var(--theta-blue)]">
-                              {pkg.remainingSessions} / {pkg.totalSessions}
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-300 ${
-                                pkg.remainingSessions === 0
-                                  ? "bg-red-500"
-                                  : pkg.remainingSessions <= 2
-                                  ? "bg-orange-500"
-                                  : "bg-green-500"
-                              }`}
-                              style={{
-                                width: `${
-                                  ((pkg.totalSessions - pkg.remainingSessions) /
-                                    pkg.totalSessions) *
-                                  100
-                                }%`,
-                              }}
-                            />
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Used: {pkg.usedCount}</span>
-                            <span>Remaining: {pkg.remainingSessions}</span>
-                          </div>
-                        </div>
-
-                        {/* Dates */}
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              Start:{" "}
-                              {new Date(pkg.startDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div
-                            className={`flex items-center gap-2 ${
-                              isExpiringSoon
-                                ? "text-orange-600 font-semibold"
-                                : "text-gray-600"
-                            }`}
-                          >
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              Expires:{" "}
-                              {new Date(pkg.expiryDate).toLocaleDateString()}
-                              {isExpiringSoon && " ⚠️"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Disabled overlay if no sessions remaining */}
-                        {pkg.remainingSessions === 0 && (
-                          <div className="absolute inset-0 bg-gray-900 bg-opacity-30 rounded-xl flex items-center justify-center">
-                            <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">
-                              No Sessions Left
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                !loadingPackages && (
-                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                    <p className="text-gray-600 mb-2">
-                      You don't have any active packages yet.
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Purchase a package to enjoy multiple sessions at a
-                      discounted rate!
-                    </p>
-                  </div>
-                )
-              )}
+              {renderPackagesSection()}
 
               {selectedPackage && (
                 <div
@@ -1493,7 +1611,7 @@ const CustomCalendar: React.FC<{
         >
           <ChevronLeft className="w-7 h-7 text-gray-700" />
         </button>
-        <h3 className="text-2xl font-semibold">
+        <h3 className ="text-2xl font-semibold">
           {currentDate.toLocaleDateString("en-US", {
             month: "long",
             year: "numeric",
