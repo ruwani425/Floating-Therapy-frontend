@@ -1,12 +1,13 @@
 // src/pages/admin/AdminUsersPage.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Users, Mail, Shield, Package, Clock, Search, User as UserIcon } from 'lucide-react';
+import { Users, Mail, Shield, Search, User as UserIcon } from 'lucide-react';
 import apiRequest from '../../core/axios';
 import Swal from 'sweetalert2';
 import { getCookie, AUTH_TOKEN_KEY } from '../../utils/cookieUtils';
 import Avatar from '../../components/Avatar';
 
+// Define base User interface from user.controller.ts response
 interface User {
   _id: string;
   name: string;
@@ -16,13 +17,15 @@ interface User {
   createdAt: string;
 }
 
-interface PackageActivation {
-  _id: string;
-  packageName: string;
-  status: 'Pending' | 'Contacted' | 'Confirmed' | 'Rejected';
-  preferredDate: string;
-  createdAt: string;
+// Define the expected API Response structures
+interface UsersResponse {
+    success: true;
+    message: string;
+    data: User[];
+    count: number;
 }
+
+// PackageActivation and UserDetailResponse interfaces are removed as they are no longer needed
 
 const COLORS = {
   primary: '#5B8DC4',
@@ -43,9 +46,8 @@ const AdminUsersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<'all' | 'admin' | 'client'>('all');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userPackages, setUserPackages] = useState<PackageActivation[]>([]);
-  const [loadingPackages, setLoadingPackages] = useState(false);
+  
+  // State variables for the right sidebar (selectedUser, userPackages, loadingPackages) are removed
 
   useEffect(() => {
     fetchUsers();
@@ -65,92 +67,25 @@ const AdminUsersPage: React.FC = () => {
         return;
       }
 
-      const response = await apiRequest.get('/users');
+      const response = await apiRequest.get<UsersResponse>('/users');
 
       if (response.success) {
         setUsers(response.data);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching users:', error);
+      const axiosError = error as any;
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.message || 'Failed to fetch users',
+        text: axiosError.response?.data?.message || 'Failed to fetch users',
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUserPackages = async (userId: string) => {
-    try {
-      setLoadingPackages(true);
-      
-      const response = await apiRequest.get(`/users/${userId}`);
-
-      if (response.success) {
-        setUserPackages(response.data.packageActivations);
-      }
-    } catch (error: any) {
-      console.error('Error fetching user packages:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to fetch user packages',
-      });
-    } finally {
-      setLoadingPackages(false);
-    }
-  };
-
-  const handleViewUser = async (user: User) => {
-    setSelectedUser(user);
-    await fetchUserPackages(user._id);
-  };
-
-  const handleUpdateRole = async (userId: string, newRole: 'admin' | 'client') => {
-    try {
-      const result = await Swal.fire({
-        title: 'Update User Role',
-        text: `Change role to ${newRole}?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: COLORS.primary,
-        cancelButtonColor: COLORS.error,
-        confirmButtonText: 'Yes, update it!',
-      });
-
-      if (result.isConfirmed) {
-        const response = await apiRequest.patch(
-          `/users/${userId}/role`,
-          { role: newRole }
-        );
-
-        if (response.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'User role updated successfully',
-            toast: true,
-            position: 'top-end',
-            timer: 2000,
-            showConfirmButton: false,
-          });
-          fetchUsers();
-          if (selectedUser && selectedUser._id === userId) {
-            setSelectedUser({ ...selectedUser, role: newRole });
-          }
-        }
-      }
-    } catch (error: any) {
-      console.error('Error updating role:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.response?.data?.message || 'Failed to update user role',
-      });
-    }
-  };
+  // fetchUserPackages, handleViewUser, and handleUpdateRole functions are removed
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -159,21 +94,8 @@ const AdminUsersPage: React.FC = () => {
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
   });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-        return COLORS.success;
-      case 'Pending':
-        return COLORS.warning;
-      case 'Contacted':
-        return COLORS.primary;
-      case 'Rejected':
-        return COLORS.error;
-      default:
-        return COLORS.gray600;
-    }
-  };
+  
+  // getStatusColor function is removed
 
   if (loading) {
     return (
@@ -200,7 +122,7 @@ const AdminUsersPage: React.FC = () => {
                 User Management
               </h1>
               <p className="mt-2 text-sm font-medium" style={{ color: COLORS.gray600 }}>
-                Manage users and view their package activations
+                Manage users and view their roles
               </p>
             </div>
           </div>
@@ -243,9 +165,9 @@ const AdminUsersPage: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Users List */}
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6"> 
+          {/* Users List - now full width (lg:col-span-3 implicit) */}
+          <div className="lg:col-span-3"> 
             <div className="rounded-xl border p-6 shadow-md" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray200 }}>
               {/* Search and Filter */}
               <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -277,11 +199,12 @@ const AdminUsersPage: React.FC = () => {
                 {filteredUsers.map((user) => (
                   <div
                     key={user._id}
-                    onClick={() => handleViewUser(user)}
+                    // onClick={() => handleViewUser(user)} - Removed handler
                     className="p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
                     style={{
-                      backgroundColor: selectedUser?._id === user._id ? `${COLORS.primary}10` : COLORS.white,
-                      borderColor: selectedUser?._id === user._id ? COLORS.primary : COLORS.gray200,
+                      // Removed conditional styling for selection
+                      backgroundColor: COLORS.white,
+                      borderColor: COLORS.gray200,
                     }}
                   >
                     <div className="flex items-center justify-between">
@@ -319,112 +242,7 @@ const AdminUsersPage: React.FC = () => {
             </div>
           </div>
 
-          {/* User Details Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="rounded-xl border p-6 shadow-md sticky top-6" style={{ backgroundColor: COLORS.white, borderColor: COLORS.gray200 }}>
-              {selectedUser ? (
-                <>
-                  <div className="text-center mb-6">
-                    <Avatar
-                      src={selectedUser.profileImage}
-                      name={selectedUser.name}
-                      size="lg"
-                      className="mx-auto mb-4"
-                      fallbackColor={COLORS.primary}
-                    />
-                    <h3 className="text-xl font-bold" style={{ color: COLORS.gray800 }}>{selectedUser.name}</h3>
-                    <p className="text-sm" style={{ color: COLORS.gray600 }}>{selectedUser.email}</p>
-                    <div className="mt-3">
-                      <span
-                        className="px-4 py-2 rounded-full text-sm font-bold inline-flex items-center gap-2"
-                        style={{
-                          backgroundColor: selectedUser.role === 'admin' ? `${COLORS.success}20` : `${COLORS.primary}20`,
-                          color: selectedUser.role === 'admin' ? COLORS.success : COLORS.primary,
-                        }}
-                      >
-                        {selectedUser.role === 'admin' ? <Shield className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
-                        {selectedUser.role.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Role Update Buttons */}
-                  <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: COLORS.gray50 }}>
-                    <p className="text-xs font-bold mb-3" style={{ color: COLORS.gray600 }}>CHANGE ROLE</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleUpdateRole(selectedUser._id, 'admin')}
-                        disabled={selectedUser.role === 'admin'}
-                        className="flex-1 py-2 px-4 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          backgroundColor: selectedUser.role === 'admin' ? COLORS.success : COLORS.white,
-                          color: selectedUser.role === 'admin' ? COLORS.white : COLORS.success,
-                          border: `2px solid ${COLORS.success}`,
-                        }}
-                      >
-                        <Shield className="w-4 h-4 inline mr-1" />
-                        Admin
-                      </button>
-                      <button
-                        onClick={() => handleUpdateRole(selectedUser._id, 'client')}
-                        disabled={selectedUser.role === 'client'}
-                        className="flex-1 py-2 px-4 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        style={{
-                          backgroundColor: selectedUser.role === 'client' ? COLORS.primary : COLORS.white,
-                          color: selectedUser.role === 'client' ? COLORS.white : COLORS.primary,
-                          border: `2px solid ${COLORS.primary}`,
-                        }}
-                      >
-                        <UserIcon className="w-4 h-4 inline mr-1" />
-                        Client
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Package Activations */}
-                  <div>
-                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: COLORS.gray800 }}>
-                      <Package className="w-5 h-5" style={{ color: COLORS.primary }} />
-                      Package Activations ({userPackages.length})
-                    </h4>
-                    {loadingPackages ? (
-                      <p className="text-center text-sm" style={{ color: COLORS.gray600 }}>Loading...</p>
-                    ) : userPackages.length > 0 ? (
-                      <div className="space-y-3 max-h-64 overflow-y-auto">
-                        {userPackages.map((pkg) => (
-                          <div key={pkg._id} className="p-3 border rounded-lg" style={{ borderColor: COLORS.gray200 }}>
-                            <p className="font-bold text-sm" style={{ color: COLORS.gray800 }}>{pkg.packageName}</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span
-                                className="px-2 py-1 rounded text-xs font-bold"
-                                style={{
-                                  backgroundColor: `${getStatusColor(pkg.status)}20`,
-                                  color: getStatusColor(pkg.status),
-                                }}
-                              >
-                                {pkg.status}
-                              </span>
-                              <div className="flex items-center gap-1 text-xs" style={{ color: COLORS.gray600 }}>
-                                <Clock className="w-3 h-3" />
-                                {new Date(pkg.createdAt).toLocaleDateString()}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-center text-sm py-4" style={{ color: COLORS.gray600 }}>No package activations</p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="w-16 h-16 mx-auto mb-4" style={{ color: COLORS.gray200 }} />
-                  <p className="text-sm font-semibold" style={{ color: COLORS.gray600 }}>Select a user to view details</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* User Details Sidebar (Removed) */}
         </div>
       </div>
     </div>

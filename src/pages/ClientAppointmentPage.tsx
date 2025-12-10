@@ -33,8 +33,7 @@ interface ApiResponse<T> {
 
 interface AppointmentResponseData {
   _id: string;
-  // 🛑 ADDED: reservationId to the response data interface
-  reservationId: string; 
+  reservationId: string;
   date: string;
   time: string;
   name: string;
@@ -719,10 +718,11 @@ const ConsolidatedBookingForm: React.FC = () => {
       if (response.success) {
         setIsSubmitting(false);
         
+        // 🛑 FIX: Use response.data?.reservationId for confirmation ID
         const confirmationId = response.data?.reservationId || "N/A"; 
         
         setSuccessMessage(
-          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Appointment ID: ${confirmationId}`
+          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Confirmation ID: ${confirmationId}`
         );
         setMessage(null);
 
@@ -735,7 +735,7 @@ const ConsolidatedBookingForm: React.FC = () => {
           setEmail("");
         }
         setSpecialNote("");
-        // 🛑 FIX: Selected package is preserved (setSelectedPackage(null) is removed)
+        // 🛑 FIX: selectedPackage is preserved
 
         fetchCalendarData(currentMonth);
         fetchUserPackages(); // Refresh packages to show updated session counts
@@ -814,6 +814,22 @@ const ConsolidatedBookingForm: React.FC = () => {
       transition: all 0.15s ease-in-out;
     }
   `;
+
+  // 🆕 NEW EFFECT: Control Body Scrolling When Success Modal is Active
+  useEffect(() => {
+      if (successMessage) {
+          // Disable scrolling on the body when the modal is open
+          document.body.style.overflow = 'hidden';
+      } else {
+          // Re-enable scrolling when the modal is closed
+          document.body.style.overflow = 'unset';
+      }
+      
+      // Cleanup function to ensure scrolling is re-enabled if the component unmounts
+      return () => {
+          document.body.style.overflow = 'unset';
+      };
+  }, [successMessage]);
 
   // --- RENDER PACKAGES SECTION (Extracted for readability and fixed layout) ---
   const renderPackagesSection = () => {
@@ -1007,23 +1023,34 @@ const ConsolidatedBookingForm: React.FC = () => {
     <div className ="bg-[var(--light-blue-50)] min-h-screen pt-0">
       <style dangerouslySetInnerHTML={{ __html: CustomStyles }} />
       <div className="w-full bg-white shadow-2xl rounded-xl py-8 lg:py-12 border border-gray-100 relative overflow-hidden mt-[72px]">
+        
+        {/* 🛑 MODIFIED SUCCESS MODAL CONTAINER (Fixed Positioning/Size) */}
         {successMessage && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-10 bg-white/95 backdrop-blur-sm rounded-xl">
-            <CalendarCheck className="w-16 h-16 text-[var(--theta-blue)] mb-4 animate-bounce" />
-            <h2 className ="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2">
-              Appointment Confirmed!
-            </h2>
-            <p className="text-lg text-gray-600 mb-6 text-center">
-              {successMessage}
-            </p>
-            <button
-              onClick={() => setSuccessMessage(null)}
-              className="px-6 py-3 bg-[var(--theta-blue)] text-white rounded-full font-semibold hover:bg-[var(--theta-blue-dark)] transition"
-            >
-              Close
-            </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-70 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl p-10 max-w-lg w-full transform transition-all duration-300 scale-100 border-2 border-[var(--theta-green)]">
+                
+                <div className="flex flex-col items-center justify-center">
+                    <CalendarCheck className="w-16 h-16 text-[var(--theta-green)] mb-4 animate-pulse" />
+                    
+                    <h2 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2 text-center">
+                      Appointment Confirmed!
+                    </h2>
+                    
+                    <p className="text-lg text-gray-600 mb-6 text-center">
+                      {successMessage}
+                    </p>
+                    
+                    <button
+                      onClick={() => setSuccessMessage(null)}
+                      className="px-8 py-3 bg-[var(--theta-blue)] text-white rounded-full font-semibold hover:bg-[var(--theta-blue-dark)] transition shadow-md"
+                    >
+                      OK
+                    </button>
+                </div>
+            </div>
           </div>
         )}
+        {/* 🛑 END MODIFIED SUCCESS MODAL CONTAINER */}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-6 text-center">

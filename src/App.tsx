@@ -26,6 +26,7 @@ import PricingPage from "./pages/PricingPage";
 import PackageAppointmentPage from "./pages/PackageAppointmentPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import ClientDashboardPage from "./pages/admin/ClientDashboardPage";
+import AdminAccessControlPage from "./pages/admin/AdminAccessControlPage";
 
 export default function App() {
   return (
@@ -70,6 +71,7 @@ export default function App() {
               element={<CalendarManagement />}
             />
             <Route path="view-appointments" element={<AppointmentsPage/>}/>
+            <Route path="access-controll" element={<AdminAccessControlPage/>}/>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="clients/:email" element={<ClientDashboardPage/>}/>
           </Route>

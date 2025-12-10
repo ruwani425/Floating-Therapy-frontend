@@ -166,7 +166,7 @@ const dashboardOptions = [
   },
   {
     title: "Access Control",
-    path: "/admin/roles",
+    path: "/admin/access-controll",
     description: "Manage admin permissions and roles.",
     icon: Shield,
   },
