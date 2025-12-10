@@ -33,6 +33,8 @@ interface ApiResponse<T> {
 
 interface AppointmentResponseData {
   _id: string;
+  // 🛑 ADDED: reservationId to the response data interface
+  reservationId: string; 
   date: string;
   time: string;
   name: string;
@@ -716,9 +718,11 @@ const ConsolidatedBookingForm: React.FC = () => {
 
       if (response.success) {
         setIsSubmitting(false);
-        const confirmationId = response.data?._id || "N/A";
+        
+        const confirmationId = response.data?.reservationId || "N/A"; 
+        
         setSuccessMessage(
-          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Confirmation ID: ${confirmationId}`
+          `Appointment confirmed on ${selectedDate!.toLocaleDateString()} at ${selectedTime}. Appointment ID: ${confirmationId}`
         );
         setMessage(null);
 
@@ -731,7 +735,7 @@ const ConsolidatedBookingForm: React.FC = () => {
           setEmail("");
         }
         setSpecialNote("");
-        // 🛑 FIX: Preserving selectedPackage state here.
+        // 🛑 FIX: Selected package is preserved (setSelectedPackage(null) is removed)
 
         fetchCalendarData(currentMonth);
         fetchUserPackages(); // Refresh packages to show updated session counts
@@ -1006,7 +1010,7 @@ const ConsolidatedBookingForm: React.FC = () => {
         {successMessage && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-10 bg-white/95 backdrop-blur-sm rounded-xl">
             <CalendarCheck className="w-16 h-16 text-[var(--theta-blue)] mb-4 animate-bounce" />
-            <h2 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2">
+            <h2 className ="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-2">
               Appointment Confirmed!
             </h2>
             <p className="text-lg text-gray-600 mb-6 text-center">
@@ -1611,7 +1615,7 @@ const CustomCalendar: React.FC<{
         >
           <ChevronLeft className="w-7 h-7 text-gray-700" />
         </button>
-        <h3 className ="text-2xl font-semibold">
+        <h3 className="text-2xl font-semibold">
           {currentDate.toLocaleDateString("en-US", {
             month: "long",
             year: "numeric",
