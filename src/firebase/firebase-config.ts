@@ -22,6 +22,20 @@ import type { // Imported as types only
   AuthError 
 } from "firebase/auth";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+
+import type {
+  FirebaseStorage,
+  StorageReference,
+  UploadResult,
+} from "firebase/storage";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDPO-w9kD0xAmXjAyZMzxsRAS1yiIHyxIA",
@@ -33,9 +47,10 @@ const firebaseConfig = {
 };
 
 
-// 2. Initialize Firebase App and Auth
+// 2. Initialize Firebase App, Auth, and Storage
 const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
+export const storage: FirebaseStorage = getStorage(app);
 
 // 3. Google Auth Provider Instance
 export const googleProvider: GoogleAuthProvider = new GoogleAuthProvider();
@@ -77,4 +92,41 @@ export const signInWithGoogle = async (): Promise<User> => {
 // Returns a Promise that resolves when the user is signed out.
 export const logout = (): Promise<void> => {
   return signOut(auth);
+};
+
+// --- 6. Firebase Storage Functions ---
+
+/**
+ * Upload an image to Firebase Storage
+ * @param file - The file to upload
+ * @param path - The storage path (e.g., 'blogs/image-name.jpg')
+ * @returns Promise with the download URL
+ */
+export const uploadImage = async (file: File, path: string): Promise<string> => {
+  try {
+    const storageRef: StorageReference = ref(storage, path);
+    const uploadResult: UploadResult = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+    
+    console.log('✅ Image uploaded successfully:', downloadURL);
+    return downloadURL;
+  } catch (error) {
+    console.error('❌ Error uploading image:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete an image from Firebase Storage
+ * @param path - The storage path of the image to delete
+ */
+export const deleteImage = async (path: string): Promise<void> => {
+  try {
+    const storageRef: StorageReference = ref(storage, path);
+    await deleteObject(storageRef);
+    console.log('✅ Image deleted successfully');
+  } catch (error) {
+    console.error('❌ Error deleting image:', error);
+    throw error;
+  }
 };

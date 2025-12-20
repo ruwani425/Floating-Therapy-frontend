@@ -3,29 +3,30 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Droplet } from "lucide-react";
 import { signInWithGoogle } from "../firebase/firebase-config";
-import { useAuth } from "../components/AuthProvider"; // If this is your access point
-import { useDispatch, useSelector } from 'react-redux'; // <-- ADDED: Redux imports
+import { useDispatch, useSelector } from "react-redux";
 import apiRequest from "../core/axios";
 // Import Redux actions and types
-import { 
-    loginAction, 
-    setAdminPermissionsAction, 
-    type AuthUser // FIX APPLIED HERE
-} from '../redux/authSlice'; 
-import type { RootState } from '../redux/store'; 
+import {
+  loginAction,
+  setAdminPermissionsAction,
+  type AuthUser,
+} from "../redux/authSlice";
+import type { RootState } from "../redux/store";
 
 const LoginPage: React.FC = () => {
   // Replace custom useAuth if possible, or assume it provides dispatch/state
-  // const { login, isAuthenticated, userRole } = useAuth(); 
-  
+  // const { login, isAuthenticated, userRole } = useAuth();
+
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.auth.isAuthenticated
+  );
   const userRole = useSelector((state: RootState) => state.auth.userRole);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,40 +52,59 @@ const LoginPage: React.FC = () => {
     data: AuthUser; // Using AuthUser from authSlice
   }
 
-  const fetchPermissionsAndLogin = async (token: string, role: UserRole, baseUser: AuthUser) => {
+  const fetchPermissionsAndLogin = async (
+    token: string,
+    role: UserRole,
+    baseUser: AuthUser
+  ) => {
     // Dispatch initial login action using available data (token, role, base user data)
     dispatch(loginAction({ token, role, user: baseUser }));
 
-    // Only fetch permissions for admins
-    if (role !== "admin") {
-        navigate("/");
-        return;
-    }
+    // Set admin permissions if they exist in the user object
+    if (role === "admin" && baseUser.permissions) {
+      dispatch(setAdminPermissionsAction(baseUser.permissions));
+      console.log(
+        "✅ Admin permissions loaded from login:",
+        baseUser.permissions
+      );
+      navigate("/admin/dashboard");
+    } else if (role === "admin") {
+      // Fallback: Fetch permissions if not in auth response
+      try {
+        const profileResponse = await apiRequest.get<UserProfileResponse>(
+          "/users/me"
+        );
 
-    try {
-        // Step 3: Fetch the full profile including permissions
-        // We use /users/me which should return the AuthUser structure
-        const profileResponse = await apiRequest.get<UserProfileResponse>("/users/me");
-        
         if (profileResponse.success && profileResponse.data) {
-            const permissions = profileResponse.data.permissions || [];
-            
-            // Step 4: Dispatch the permissions to Redux
-            dispatch(setAdminPermissionsAction(permissions)); 
-
-            navigate("/admin/dashboard");
+          const permissions = profileResponse.data.permissions || [];
+          dispatch(setAdminPermissionsAction(permissions));
+          console.log("✅ Admin permissions loaded from profile:", permissions);
+          navigate("/admin/dashboard");
         } else {
-            throw new Error(profileResponse.message || "Failed to fetch admin permissions.");
+          throw new Error(
+            profileResponse.message || "Failed to fetch admin permissions."
+          );
         }
-    } catch (profileError) {
-        console.error("Error fetching admin profile/permissions:", profileError);
-        // Fallback: If permissions fail to load, log out the user
-        // dispatch(logoutAction()); // You would dispatch logout here
-        const errorMessage = (profileError as any).message || (profileError as any).response?.data?.message || (profileError as Error).message || "Unknown error";
-        setError("Admin login failed: Could not load permissions. Error: " + errorMessage);
+      } catch (profileError) {
+        console.error(
+          "Error fetching admin profile/permissions:",
+          profileError
+        );
+        const errorMessage =
+          (profileError as any).message ||
+          (profileError as any).response?.data?.message ||
+          (profileError as Error).message ||
+          "Unknown error";
+        setError(
+          "Admin login failed: Could not load permissions. Error: " +
+            errorMessage
+        );
+      }
+    } else {
+      // Client user
+      navigate("/");
     }
-  }
-
+  };
 
   const handleGoogleSignIn = async () => {
     setError(null);
@@ -114,7 +134,7 @@ const LoginPage: React.FC = () => {
 
       const { token, user: backendUser } = backendResponse;
       const role: UserRole = backendUser?.role;
-      
+
       // Map the backend response user to the AuthUser interface
       const baseUser: AuthUser = {
         _id: backendUser._id,
@@ -122,16 +142,26 @@ const LoginPage: React.FC = () => {
         email: backendUser.email,
         profileImage: backendUser.profileImage,
         role: role,
-        // permissions are NOT in the initial google-auth response, only fetched later
+        permissions: backendUser.permissions || [], // Get permissions from auth response
       };
+
+      console.log("🔐 User authenticated:", {
+        email: baseUser.email,
+        role: baseUser.role,
+        hasPermissions: !!baseUser.permissions,
+        permissionsCount: baseUser.permissions?.length || 0,
+      });
 
       // Step 2: Proceed to fetch full permissions and navigate
       await fetchPermissionsAndLogin(token, role, baseUser);
-
     } catch (error) {
       console.error("Google Auth Integration Error:", error);
       // Safely check error object properties from the custom apiRequest utility
-      const errorMessage = (error as any).message || (error as any).response?.data?.message || (error as Error).message || "Unknown error";
+      const errorMessage =
+        (error as any).message ||
+        (error as any).response?.data?.message ||
+        (error as Error).message ||
+        "Unknown error";
       setError("Google Auth Integration Error: " + errorMessage);
     }
   };

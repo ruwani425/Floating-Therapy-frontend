@@ -27,6 +27,8 @@ import PackageAppointmentPage from "./pages/PackageAppointmentPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import ClientDashboardPage from "./pages/admin/ClientDashboardPage";
 import AdminAccessControlPage from "./pages/admin/AdminAccessControlPage";
+import ReportsPage from "./pages/admin/ReportsPage";
+import ContentManagementPage from "./pages/admin/ContentManagementPage";
 
 export default function App() {
   return (
@@ -74,7 +76,9 @@ export default function App() {
             <Route path="access-controll" element={<AdminAccessControlPage/>}/>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="clients/:email" element={<ClientDashboardPage/>}/>
-          </Route>
+    <Route path="reports" element={<ReportsPage/>}/>
+            <Route path="content" element={<ContentManagementPage/>}/>          
+            </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>

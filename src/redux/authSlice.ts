@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { AUTH_ROLE_KEY, AUTH_TOKEN_KEY, getCookie, removeCookie, setCookie, TOKEN_LIFESPAN_DAYS } from '../utils/cookieUtils';
+import { clearLocalStorage } from './middleware/localStorageMiddleware';
 
 // --- ADDED: Interface for User Data stored in Redux ---
 export interface AuthUser {
@@ -111,11 +112,12 @@ const authSlice = createSlice({
             
             removeCookie(AUTH_TOKEN_KEY);
             removeCookie(AUTH_ROLE_KEY);
+            clearLocalStorage(); // Clear persisted state
             
             // Verify cookies were removed
             const tokenRemoved = !getCookie(AUTH_TOKEN_KEY);
             const roleRemoved = !getCookie(AUTH_ROLE_KEY);
-            console.log('✅ Cookies removed:', { tokenRemoved, roleRemoved });
+            console.log('✅ Cookies and localStorage cleared:', { tokenRemoved, roleRemoved });
             
             state.isAuthenticated = false;
             state.userRole = null;

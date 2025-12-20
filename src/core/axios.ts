@@ -3,13 +3,13 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { AUTH_TOKEN_KEY, AUTH_ROLE_KEY, getCookie, removeCookie } from "../utils/cookieUtils";
 
 class ApiRequest {
-  private static instance: ApiRequest;
-  private api: AxiosInstance;
+  private static instance: ApiRequest;
+  private api: AxiosInstance;
 
-  private constructor() {
-    this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL,
-    });
+  private constructor() {
+    this.api = axios.create({
+      baseURL: import.meta.env.VITE_API_URL,
+    });
 
     // Add request interceptor to automatically include JWT token from cookies
     this.api.interceptors.request.use(
@@ -84,7 +84,7 @@ class ApiRequest {
         return Promise.reject(error);
       }
     );
-  }
+  }
 
   public static getInstance(): ApiRequest {
     if (!ApiRequest.instance) {
