@@ -106,16 +106,6 @@ const calculateDiscountedPerFloat = (totalPrice: number, sessions: number): stri
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
-const getEligibilityStatus = (
-  sessions: number,
-  isEligible: boolean
-): string => {
-  if (sessions >= GENESIS_CONFIG.minSessions && isEligible) {
-    return "Eligible";
-  }
-  return "Not Eligible";
-};
-
 // --- TOGGLE BUTTON COMPONENT (Unchanged) ---
 
 interface ActiveToggleProps {
@@ -648,7 +638,6 @@ const PackageModal: React.FC<PackageModalProps> = ({
 
     // Safely convert sessions and discount to numbers for calculation and validation
     const sessionsNum = Number(formData.sessions) || 0;
-    const discountNum = Number(formData.discount) || 0;
 
 
   // Calculate Per Float Rate (Discounted) for display in the modal

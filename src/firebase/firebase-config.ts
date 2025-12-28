@@ -66,8 +66,8 @@ export const signInWithGoogle = async (): Promise<User> => {
     const user: User = result.user;
     
     // Optional: Get token/credential info if needed for backend or accessing Google APIs
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token: string | undefined = credential?.accessToken; // token is either string or undefined
+    // const credential = GoogleAuthProvider.credentialFromResult(result);
+    // const token: string | undefined = credential?.accessToken; // token is either string or undefined
 
     console.log("Google Sign-In Successful:", user.displayName, user.email);
     

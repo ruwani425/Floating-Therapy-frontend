@@ -72,10 +72,10 @@ interface BookedCountByDate {
   count: number;
 }
 
-interface BookedTimesByDate {
-  date: string;
-  times: string[];
-}
+// interface BookedTimesByDate {
+//   date: string;
+//   times: string[];
+// }
 
 // 🆕 NEW INTERFACE: For the counts returned by the new API
 interface PackageAppointmentCounts {

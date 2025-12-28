@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Icon } from "@iconify/react";
 import {
   User,
   Mail,
@@ -10,8 +9,6 @@ import {
   CalendarCheck,
   Package,
   Clock,
-  X,
-  CheckCircle,
   ChevronLeft,
 } from "lucide-react";
 import apiRequest from "../../core/axios";

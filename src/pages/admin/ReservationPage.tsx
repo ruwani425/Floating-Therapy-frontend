@@ -7,7 +7,6 @@ import {
   X,
   CheckCircle,
   CalendarIcon,
-  Phone, 
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -963,7 +962,7 @@ export default function ReservationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAppointments.map((appointment, index) => {
+                {filteredAppointments.map((appointment) => {
                   // Prepare the number for the WhatsApp link
                   const whatsappNumber = formatSLNumberForWhatsApp(appointment.contactNumber);
                   // Display the number in domestic format with the country code visible

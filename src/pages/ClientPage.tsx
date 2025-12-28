@@ -133,7 +133,7 @@ const BenefitAccordion: React.FC<{
  */
 const Hero: React.FC = () => {
   const heroVideoUrl =
-    "/pexels.com_video_woman-doing-a-back-massage-6628400.webm";
+    "/Floating_Tank_Video_Generated.mp4";
   const isPlaceholder = heroVideoUrl.includes("YOUR_");
 
   return (

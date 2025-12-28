@@ -8,7 +8,6 @@ interface AdminCardProps {
   description: string
   Icon: LucideIcon
   animationDelay?: number
-  iconColor?: string
 }
 
 const THETA_COLORS = {
@@ -50,7 +49,6 @@ const AdminCard: FC<AdminCardProps> = ({
   description,
   Icon,
   animationDelay = 0,
-  iconColor = THETA_COLORS.darkestBlue,
 }) => {
   const iconBgColor = `${THETA_COLORS.lightCyan}`
   const cardBgGradient = `linear-gradient(135deg, #FFFFFF 0%, rgba(106, 180, 220, 0.05) 100%)`
