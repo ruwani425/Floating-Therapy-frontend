@@ -1,15 +1,12 @@
-// src/pages/LoginPage.tsx
-
 "use client";
 
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Droplet } from "lucide-react";
+import { Droplet } from "lucide-react";
 import { signInWithGoogle } from "../firebase/firebase-config";
 import { useDispatch, useSelector } from "react-redux";
 import apiRequest from "../core/axios";
-// Import Redux actions and types
 import {
   loginAction,
   setAdminPermissionsAction,
@@ -18,96 +15,63 @@ import {
 import type { RootState } from "../redux/store";
 
 const LoginPage: React.FC = () => {
-  // Replace custom useAuth if possible, or assume it provides dispatch/state
-  // const { login, isAuthenticated, userRole } = useAuth();
-
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
   const userRole = useSelector((state: RootState) => state.auth.userRole);
 
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  type UserRole = "admin" | "client";
+
+  interface UserProfileResponse {
+    success: boolean;
+    message: string;
+    data: AuthUser;
+  }
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     if (isAuthenticated) {
       if (userRole === "admin") navigate("/admin/dashboard");
       else navigate("/");
     }
   }, [isAuthenticated, userRole, navigate]);
 
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
-
-  type UserRole = "admin" | "client";
-
-  // Interface for the detailed user profile response (matches required backend data)
-  interface UserProfileResponse {
-    success: boolean;
-    message: string;
-    data: AuthUser; // Using AuthUser from authSlice
-  }
-
   const fetchPermissionsAndLogin = async (
     token: string,
     role: UserRole,
     baseUser: AuthUser
   ) => {
-    // Dispatch initial login action using available data (token, role, base user data)
     dispatch(loginAction({ token, role, user: baseUser }));
 
-    // Set admin permissions if they exist in the user object
     if (role === "admin" && baseUser.permissions) {
       dispatch(setAdminPermissionsAction(baseUser.permissions));
-      console.log(
-        "✅ Admin permissions loaded from login:",
-        baseUser.permissions
-      );
       navigate("/admin/dashboard");
     } else if (role === "admin") {
-      // Fallback: Fetch permissions if not in auth response
       try {
         const profileResponse = await apiRequest.get<UserProfileResponse>(
           "/users/me"
         );
-
         if (profileResponse.success && profileResponse.data) {
           const permissions = profileResponse.data.permissions || [];
           dispatch(setAdminPermissionsAction(permissions));
-          console.log("✅ Admin permissions loaded from profile:", permissions);
           navigate("/admin/dashboard");
-        } else {
-          throw new Error(
-            profileResponse.message || "Failed to fetch admin permissions."
-          );
         }
       } catch (profileError) {
-        console.error(
-          "Error fetching admin profile/permissions:",
-          profileError
-        );
-        const errorMessage =
-          (profileError as any).message ||
-          (profileError as any).response?.data?.message ||
-          (profileError as Error).message ||
-          "Unknown error";
-        setError(
-          "Admin login failed: Could not load permissions. Error: " +
-            errorMessage
-        );
+        setError("Admin login failed: Could not load permissions.");
       }
     } else {
-      // Client user
       navigate("/");
     }
   };
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    setIsLoading(true);
     try {
       const firebaseUser = await signInWithGoogle();
 
@@ -122,11 +86,10 @@ const LoginPage: React.FC = () => {
         uid: firebaseUser.uid,
       };
 
-      // Step 1: Initial Google Auth (to get token and base role/user data)
       const backendResponse = (await apiRequest.post(
         "/auth/google-auth",
         googleUserData
-      )) as any; // Cast to any because the response structure is complex/untyped here
+      )) as any;
 
       if (!backendResponse || !backendResponse.user) {
         throw new Error("Invalid response from backend authentication.");
@@ -135,39 +98,30 @@ const LoginPage: React.FC = () => {
       const { token, user: backendUser } = backendResponse;
       const role: UserRole = backendUser?.role;
 
-      // Map the backend response user to the AuthUser interface
       const baseUser: AuthUser = {
         _id: backendUser._id,
         name: backendUser.name,
         email: backendUser.email,
         profileImage: backendUser.profileImage,
         role: role,
-        permissions: backendUser.permissions || [], // Get permissions from auth response
+        permissions: backendUser.permissions || [],
       };
 
-      console.log("🔐 User authenticated:", {
-        email: baseUser.email,
-        role: baseUser.role,
-        hasPermissions: !!baseUser.permissions,
-        permissionsCount: baseUser.permissions?.length || 0,
-      });
-
-      // Step 2: Proceed to fetch full permissions and navigate
       await fetchPermissionsAndLogin(token, role, baseUser);
     } catch (error) {
-      console.error("Google Auth Integration Error:", error);
-      // Safely check error object properties from the custom apiRequest utility
       const errorMessage =
-        (error as any).message ||
         (error as any).response?.data?.message ||
         (error as Error).message ||
         "Unknown error";
-      setError("Google Auth Integration Error: " + errorMessage);
+      setError("Login failed: " + errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden flex flex-col lg:flex-row bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Left Section - Login */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center space-y-3">
@@ -182,23 +136,27 @@ const LoginPage: React.FC = () => {
             <p className="text-lg text-slate-600 font-light">
               Welcome to Your Sanctuary
             </p>
-            <p className="text-sm text-slate-500">
-              Experience the power of floating therapy
-            </p>
           </div>
 
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-red-700 text-center">{error}</p>
             </div>
           )}
 
-          <div className="bg-white rounded-3xl shadow-md p-6 border border-blue-100 hover:shadow-lg transition-shadow duration-300">
+          <div className="bg-white rounded-3xl shadow-md p-8 border border-blue-100 hover:shadow-lg transition-shadow duration-300">
+            <p className="text-center text-slate-500 mb-6 text-sm">
+              Please sign in with your Google account to access your dashboard.
+            </p>
+            
             <button
-              className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-50 to-slate-50 hover:from-blue-100 hover:to-slate-100 text-slate-900 font-medium rounded-2xl px-6 py-3.5 border border-blue-200 transition-all duration-300"
+              disabled={isLoading}
+              className={`w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-900 font-semibold rounded-2xl px-6 py-4 border-2 border-slate-100 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98] ${
+                isLoading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
               onClick={handleGoogleSignIn}
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -216,125 +174,33 @@ const LoginPage: React.FC = () => {
                   d="M12 6.75c1.66 0 3.14.57 4.31 1.69l3.23-3.23C17.46 2.98 14.97 2 12 2 7.7 2 3.99 4.47 2.18 7.07l3.66 2.84C6.71 7.47 9.14 6.75 12 6.75z"
                 />
               </svg>
-              <span>Continue with Google</span>
+              <span>{isLoading ? "Signing in..." : "Continue with Google"}</span>
             </button>
-
-            <div className="my-6 flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-200" />
-              <span className="text-sm text-slate-500">or</span>
-              <div className="flex-1 h-px bg-slate-200" />
-            </div>
-
-            <form>
-              <div className="space-y-2 mb-4">
-                <label className="text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="you@example.com"
-                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
-                      focusedField === "email"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 bg-white hover:border-blue-300"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-6">
-                <label className="text-sm font-medium text-slate-700">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="••••••••"
-                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 transition-all duration-200 outline-none ${
-                      focusedField === "password"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 bg-white hover:border-blue-300"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
-              >
-                Sign In to Theta Lounge
-              </button>
-            </form>
           </div>
 
-          <div className="text-center space-y-3">
-            <p className="text-sm text-slate-600">
+          <div className="text-center px-4">
+            <p className="text-xs text-slate-500 leading-relaxed">
               By signing in, you agree to our{" "}
-              <a href="#" className="text-blue-600 hover:underline font-medium">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-blue-600 hover:underline font-medium">
-                Privacy Policy
-              </a>
-            </p>
-            <p className="text-xs text-slate-500">
-              Test: admin@theta.com / password123 or client@theta.com / userpass
+              <a href="#" className="text-blue-600 hover:underline">Terms</a> and{" "}
+              <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="hidden lg:flex flex-1 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900">
+      {/* Right Section - Image */}
+      <div className="hidden lg:flex flex-1 relative overflow-hidden">
         <img
           src="/peaceful-person-floating-in-calm-water-spa-therapy.jpg"
           alt="Floating Therapy Sanctuary"
-          className="absolute inset-0 h-full w-full object-cover opacity-90"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-blue-800/40 to-transparent" />
-
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-blue-800/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-12 text-white space-y-4">
-          <h2 className="text-5xl font-bold leading-tight text-pretty">
-            Find Your Inner Peace
-          </h2>
-          <p className="text-xl opacity-95 max-w-sm text-pretty">
-            Experience the transformative power of floatation therapy and unlock
-            your true potential.
+          <h2 className="text-5xl font-bold leading-tight">Find Your Inner Peace</h2>
+          <p className="text-xl opacity-90 max-w-sm">
+            Experience the transformative power of floatation therapy.
           </p>
-
-          <div className="pt-6 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-300" />
-              <span className="text-sm opacity-90">
-                Deep relaxation and stress relief
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-300" />
-              <span className="text-sm opacity-90">
-                Enhanced mental clarity
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-300" />
-              <span className="text-sm opacity-90">
-                Physical recovery & wellness
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
