@@ -6,15 +6,12 @@ import {
   Target,
   Sparkles,
   CheckCircle,
-  Quote,
-  Star,
-  TrendingUp,
+  // Quote,
+  // Star,
   Shield,
-  Clock,
-  MapPin,
 } from "lucide-react";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { Variants } from "framer-motion"; // Use a separate type-only import
 
 const fadeInUp: Variants = {
@@ -108,29 +105,29 @@ const teamMembers = [
 ];
 
 // --- Testimonials ---
-const testimonials = [
-  {
-    quote:
-      "After a sports injury, I was worried I'd never regain full mobility. The chiropractic care I received here not only helped me recover faster, but also strengthened areas I hadn't even realized were weak.",
-    author: "Rebecca Lorenna",
-    role: "Marathon Runner",
-    rating: 5,
-  },
-  {
-    quote:
-      "I've struggled with back pain for years, and after just a few sessions here, I feel like a new person. The therapists are incredibly skilled, and I always leave feeling refreshed.",
-    author: "Maya Sanchez",
-    role: "Office Professional",
-    rating: 5,
-  },
-  {
-    quote:
-      "This place is peaceful, clean, and the energy is amazing. I felt relaxed the moment I arrived. Highly recommend to anyone needing real stress relief.",
-    author: "Marcus Leroy",
-    role: "Business Owner",
-    rating: 5,
-  },
-];
+// const testimonials = [
+//   {
+//     quote:
+//       "After a sports injury, I was worried I'd never regain full mobility. The chiropractic care I received here not only helped me recover faster, but also strengthened areas I hadn't even realized were weak.",
+//     author: "Rebecca Lorenna",
+//     role: "Marathon Runner",
+//     rating: 5,
+//   },
+//   {
+//     quote:
+//       "I've struggled with back pain for years, and after just a few sessions here, I feel like a new person. The therapists are incredibly skilled, and I always leave feeling refreshed.",
+//     author: "Maya Sanchez",
+//     role: "Office Professional",
+//     rating: 5,
+//   },
+//   {
+//     quote:
+//       "This place is peaceful, clean, and the energy is amazing. I felt relaxed the moment I arrived. Highly recommend to anyone needing real stress relief.",
+//     author: "Marcus Leroy",
+//     role: "Business Owner",
+//     rating: 5,
+//   },
+// ];
 const ValueCard: React.FC<{ icon: React.ElementType; title: string; description: string }> = ({ icon: Icon, title, description }) => (
   <motion.div 
     variants={fadeInUp}
@@ -165,22 +162,22 @@ const TeamMemberCard: React.FC<{ member: typeof teamMembers[number] }> = ({ memb
   </motion.div>
 );
 
-const TestimonialCard: React.FC<{ testimonial: typeof testimonials[number] }> = ({ testimonial }) => (
-  <motion.div 
-    variants={scaleIn}
-    className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-  >
-    <div className="flex mb-4">
-      {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />)}
-    </div>
-    <Quote className="w-10 h-10 text-[#3a7ca5] mb-4 opacity-30" />
-    <p className="text-gray-700 leading-relaxed mb-6 text-lg italic">"{testimonial.quote}"</p>
-    <div>
-      <p className="font-bold text-gray-900 text-sm">{testimonial.author}</p>
-      <p className="text-gray-500 text-sm">{testimonial.role}</p>
-    </div>
-  </motion.div>
-);
+// const TestimonialCard: React.FC<{ testimonial: typeof testimonials[number] }> = ({ testimonial }) => (
+//   <motion.div 
+//     variants={scaleIn}
+//     className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
+//   >
+//     <div className="flex mb-4">
+//       {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />)}
+//     </div>
+//     <Quote className="w-10 h-10 text-[#3a7ca5] mb-4 opacity-30" />
+//     <p className="text-gray-700 leading-relaxed mb-6 text-lg italic">"{testimonial.quote}"</p>
+//     <div>
+//       <p className="font-bold text-gray-900 text-sm">{testimonial.author}</p>
+//       <p className="text-gray-500 text-sm">{testimonial.role}</p>
+//     </div>
+//   </motion.div>
+// );
 
 const AboutPage: React.FC = () => {
   return (

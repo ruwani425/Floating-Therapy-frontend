@@ -459,11 +459,10 @@ const AdminAccessControlPage: React.FC = () => {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [existingAdmins, setExistingAdmins] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(false)
-  const [loadingList, setLoadingList] = useState(true)
+  // const [loadingList, setLoadingList] = useState(true)
 
   const fetchExistingAdmins = async () => {
     try {
-      setLoadingList(true)
       const response = await apiRequest.get<AdminListResponse>("/users/admin/list")
       if (response.success) {
         setExistingAdmins(response.data)
@@ -475,8 +474,6 @@ const AdminAccessControlPage: React.FC = () => {
         title: "Error",
         text: axiosError.response?.data?.message || "Failed to fetch existing admins.",
       })
-    } finally {
-      setLoadingList(false)
     }
   }
 

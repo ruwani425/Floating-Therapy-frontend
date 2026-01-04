@@ -8,10 +8,10 @@ import apiRequest from "../core/axios" // Assuming axios instance for API calls
 import { motion, AnimatePresence } from "framer-motion" // 1. Import Framer Motion
 
 const COLOR_PRIMARY = "var(--theta-blue, #3a7ca5)"
-const COLOR_ACCENT_LIGHT = "var(--theta-blue-light, #a0e7e5)"
+// const COLOR_ACCENT_LIGHT = "var(--theta-blue-light, #a0e7e5)"
 const COLOR_TEXT_MUTED = "#6B7280"
 const COLOR_BACKGROUND = "#F9FAFB"
-const COLOR_TEXT_DARK = "#1B4965"
+// const COLOR_TEXT_DARK = "#1B4965"
 
 interface PackageData {
   _id: string
@@ -45,10 +45,10 @@ interface ActivePackageCheckResponse {
     data: any[] // We only care if the array is not empty
 }
 
-const GENESIS_CONFIG = {
-  minSessions: 48,
-  lifetimeDiscount: 50,
-}
+// const GENESIS_CONFIG = {
+//   minSessions: 48,
+//   lifetimeDiscount: 50,
+// }
 
 const packageApiService = {
   fetchActivePackages: async (duration: string, page: number, limit = 4): Promise<PaginatedResponse> => {

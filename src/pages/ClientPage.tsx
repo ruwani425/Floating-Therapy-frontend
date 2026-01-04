@@ -3,7 +3,6 @@ import {
   Flower,
   CalendarCheck,
   ChevronDown,
-  ChevronUp,
   Award,
   DollarSign,
   Clock,

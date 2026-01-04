@@ -4,7 +4,6 @@ import {
   Mail,
   Clock,
   MapPin,
-  Send,
   MessageSquare,
   CheckCircle,
   Users,

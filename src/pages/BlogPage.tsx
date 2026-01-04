@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Calendar, User, ArrowRight, Tag } from "lucide-react";
+import { Search, Calendar, ArrowRight, Tag } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 const fadeInUp: Variants = {
