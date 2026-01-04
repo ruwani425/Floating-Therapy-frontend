@@ -6,7 +6,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import SignupPage from "./pages/SignUpPage";
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
 import BlogPage from "./pages/BlogPage";
@@ -38,14 +37,16 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<ClientPage />} />
             <Route path="login" element={<LoginPage />} />
-            <Route path="signup" element={<SignupPage />} />
             <Route path="About" element={<AboutPage />} />
             <Route path="contact-us" element={<ContactPage />} />
             <Route path="blog" element={<BlogPage />} />
             <Route path="service" element={<ServicesPage />} />
             <Route path="appointments" element={<ClientAppointmentPage />} />
             <Route path="pricing" element={<PricingPage />} />
-            <Route path="package-appointments" element={<PackageAppointmentPage />} />
+            <Route
+              path="package-appointments"
+              element={<PackageAppointmentPage />}
+            />
             <Route path="profile" element={<UserProfilePage />} />
             <Route
               path="*"
@@ -63,22 +64,31 @@ export default function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="tank-management" element={<TankManagementPage />} />
             <Route path="add-tank" element={<AddTankPage />} />
-            <Route path="add-tank/edit/:id" element={<AddTankPage />} /> 
+            <Route path="add-tank/edit/:id" element={<AddTankPage />} />
             <Route path="reservations" element={<ReservationsPage />} />
-            <Route path="system-settings" element={<SystemSettings/>}/>
-            <Route path="package-management" element={<PackageManagementPage/>}/>
-            <Route path="package-activations" element={<PackageActivationManage/>}/>
+            <Route path="system-settings" element={<SystemSettings />} />
+            <Route
+              path="package-management"
+              element={<PackageManagementPage />}
+            />
+            <Route
+              path="package-activations"
+              element={<PackageActivationManage />}
+            />
             <Route
               path="calendar-management"
               element={<CalendarManagement />}
             />
-            <Route path="view-appointments" element={<AppointmentsPage/>}/>
-            <Route path="access-controll" element={<AdminAccessControlPage/>}/>
+            <Route path="view-appointments" element={<AppointmentsPage />} />
+            <Route
+              path="access-controll"
+              element={<AdminAccessControlPage />}
+            />
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="clients/:email" element={<ClientDashboardPage/>}/>
-    <Route path="reports" element={<ReportsPage/>}/>
-            <Route path="content" element={<ContentManagementPage/>}/>          
-            </Route>
+            <Route path="clients/:email" element={<ClientDashboardPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="content" element={<ContentManagementPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>

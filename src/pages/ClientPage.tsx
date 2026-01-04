@@ -11,9 +11,54 @@ import {
 
   Quote, // New icon for Testimonials
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"; // 1. Import Framer Motion
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+} as const;
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
+  }
+};
+
+const imageZoom = {
+  hidden: { scale: 1.1, opacity: 0 },
+  visible: { scale: 1, opacity: 1, transition: { duration: 1.2 } }
+};
 
 // --- Data Structures (Same as before) ---
-
+const coreBenefits = [
+  {
+    title: "Flat Fee",
+    description: "Simple, transparent pricing. Our therapists appreciate tips, reviews, and referrals.",
+    icon: DollarSign,
+    position: "left-top",
+  },
+  {
+    title: "Licensed & Trusted",
+    description: "All therapists are licensed, insured, and highly experienced.",
+    icon: Award,
+    position: "right-top",
+  },
+  {
+    title: "Easy Online Booking",
+    description: "Same-day appointments often available. Book your massage in minutes.",
+    icon: Clock,
+    position: "left-bottom",
+  },
+  {
+    title: "Eco-Friendly",
+    description: "As a small, sustainable business, we offer personalized care with a lighter footprint.",
+    icon: HeartHandshake,
+    position: "right-bottom",
+  },
+];
 // Mock data for the services section
 const servicesData = [
   {
@@ -95,11 +140,7 @@ const blogData = [
   },
 ];
 
-// --- Sub Components ---
 
-/**
- * Accordion item component for the Benefits section
- */
 const BenefitAccordion: React.FC<{
   title: string;
   content: string;
@@ -113,297 +154,210 @@ const BenefitAccordion: React.FC<{
       onClick={() => setOpen(id)}
     >
       <span>{title}</span>
-      {isOpen ? (
-        <ChevronUp className="h-5 w-5 text-dark-blue-600" />
-      ) : (
-        <ChevronDown className="h-5 w-5 text-gray-400" />
-      )}
+      <motion.div
+        animate={{ rotate: isOpen ? 180 : 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <ChevronDown className={`h-5 w-5 ${isOpen ? "text-dark-blue-600" : "text-gray-400"}`} />
+      </motion.div>
     </button>
-    {isOpen && (
-      <div className="pb-4 text-gray-600">
-        <p>{content}</p>
-      </div>
-    )}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden"
+        >
+          <p className="pb-4 text-gray-600">{content}</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 
-
-/**
- * Hero Section
- */
 const Hero: React.FC = () => {
-  const heroVideoUrl =
-    "/Floating_Tank_Video_Generated.mp4";
-  const isPlaceholder = heroVideoUrl.includes("YOUR_");
-
+  const heroVideoUrl = "/Floating_Tank_Video_Generated.mp4";
   return (
-    <section
-      id="home"
-      className="min-h-screen relative w-full overflow-hidden flex justify-center items-center" 
-    >
-      {/* Background Media Container (full width) */}
+    <section id="home" className="min-h-screen relative w-full overflow-hidden flex justify-center items-center">
       <div className="absolute z-0 w-full h-full inset-0">
-        {!isPlaceholder && (
-          <video
-            autoPlay
-            loop
-            muted
-            className="w-full h-full object-cover"
-            // Fallback source is included for browser compatibility
-          >
-            <source src={heroVideoUrl} type="video/mp4" />
-          </video>
-        )}
-
-        {/* Background Image Fallback or Placeholder */}
-        <div
-          className={`w-full h-full object-cover ${
-            isPlaceholder ? "bg-cover bg-center" : ""
-          }`}
-          style={{
-            backgroundImage: isPlaceholder
-              ? `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('YOUR_HERO_STATIC_IMAGE_URL')`
-              : "none",
-          }}
-        ></div>
+        <video autoPlay loop muted className="w-full h-full object-cover">
+          <source src={heroVideoUrl} type="video/mp4" />
+        </video>
       </div>
-
-      {/* Dark Overlay for better text readability */}
       <div className="absolute z-10 inset-0 bg-black opacity-30"></div>
 
-      {/* Content Container (max-w-7xl mx-auto for centering/fixed width) */}
       <div className="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-20 flex flex-col justify-center h-full">
-        {/* === START OF REVERTED CONTENT === */}
-        <div className="max-w-xl p-6">
-          <h1 className="text-6xl font-serif font-bold text-white leading-tight mb-4">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="max-w-xl p-6"
+        >
+          <motion.h1 variants={fadeInUp} className="text-6xl font-serif font-bold text-white leading-tight mb-4">
             Massage for Your Body & Mind
-          </h1>
-          <p className="text-lg text-gray-200 mb-8">
+          </motion.h1>
+          <motion.p variants={fadeInUp} className="text-lg text-gray-200 mb-8">
             Make it a weekly ritual – relax, recharge, recover.
-          </p>
-          <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300 transform hover:scale-105">
+          </motion.p>
+          <motion.button 
+            variants={fadeInUp}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl"
+          >
             <CalendarCheck className="w-5 h-5 mr-2" />
             Book Appointment
-          </button>
-          <div className="mt-8">
-            <p className="text-sm text-gray-200">
-              <span className="text-yellow-500 text-xl">★★★★★</span> TRUSTED BY
-              1000+ PATIENTS
-            </p>
-          </div>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        {/* Footer/Strapline section visible in the screenshot, ensuring alignment */}
-        <div className="absolute bottom-0 left-0 right-0 py-4 px-4 sm:px-6 lg:px-8 bg-black bg-opacity-30 text-white backdrop-blur-sm">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="absolute bottom-0 left-0 right-0 py-4 px-4 sm:px-6 lg:px-8 bg-black bg-opacity-30 text-white backdrop-blur-sm"
+        >
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-medium">
-              <p>Reduced Pain</p>
-              <p>Improved Circulation</p>
-              <p>Reduced Stress</p>
-              <p>Enhances Overall Well-being</p>
+              {["Reduced Pain", "Improved Circulation", "Reduced Stress", "Enhances Overall Well-being"].map((text, i) => (
+                <motion.p 
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 + (i * 0.2) }}
+                >
+                  {text}
+                </motion.p>
+              ))}
             </div>
           </div>
-        </div>
-        {/* === END OF REVERTED CONTENT === */}
+        </motion.div>
       </div>
     </section>
   );
 };
 
-/**
- * About Us Section with Image and Text Split
- */
 const AboutUs: React.FC = () => {
-  const centerImageUrl = "/GettyImages-1322320699-1.jpg";
-
-  const backgroundPattern = "/pattern_bg.jpg";
-  const hasPattern = backgroundPattern.includes("YOUR_") === false;
-
   return (
-    <section
-      className="py-20 relative bg-light-blue-50 w-full" // Use lightest background
-      style={{
-        // Apply background pattern if available
-        backgroundImage: hasPattern ? `url(${backgroundPattern})` : "none",
-        backgroundSize: "cover",
-      }}
-    >
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
+    <section className="py-20 relative bg-light-blue-50 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Text Column */}
-          <div className="lg:col-span-1 space-y-8 py-8">
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <Flower className="w-5 h-5 text-dark-blue-600 mr-2" />
-                <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
-                  16+ Years of Experience
-                </span>
-              </div>
-              <div className="border-l-4 border-dark-blue-600 pl-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  Skilled, Caring Therapists
-                </h3>
-                <p className="text-gray-600">
-                  Our licensed professionals bring years of experience and a
-                  deep understanding of bodywork and wellness.
-                </p>
-              </div>
-            </div>
+          {/* Left Column */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="lg:col-span-1 space-y-8 py-8"
+          >
+            {[
+              { title: "Skilled, Caring Therapists", subtitle: "16+ Years of Experience", desc: "Our licensed professionals bring years of experience and a deep understanding of bodywork and wellness." },
+              { title: "Inspired by Nature", subtitle: "Evening & Weekend Availability", desc: "We use gentle techniques, natural oils, and calming touch to help you feel restored and balanced." }
+            ].map((item, i) => (
+              <motion.div key={i} variants={fadeInUp} className="space-y-4">
+                <div className="flex items-center">
+                  <Flower className="w-5 h-5 text-dark-blue-600 mr-2" />
+                  <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">{item.subtitle}</span>
+                </div>
+                <div className="border-l-4 border-dark-blue-600 pl-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-gray-600">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <Flower className="w-5 h-5 text-dark-blue-600 mr-2" />
-                <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
-                  Evening & Weekend Availability
-                </span>
-              </div>
-              <div className="border-l-4 border-dark-blue-600 pl-4">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  Inspired by Nature
-                </h3>
-                <p className="text-gray-600">
-                  We use gentle techniques, natural oils, and calming touch to
-                  help you feel restored and balanced.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Center Column */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={imageZoom}
+            className="lg:col-span-1 flex justify-center relative"
+          >
+             <div className="relative w-full max-w-sm h-[600px] overflow-hidden rounded-t-[50%] rounded-b-xl shadow-2xl">
+                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('/GettyImages-1322320699-1.jpg')` }} />
+                <div className="absolute inset-0 z-10 flex flex-col items-center pt-20 px-8 text-center text-white bg-black/20">
+                  <p className="text-sm tracking-widest uppercase mb-4">WHO WE ARE</p>
+                  <h2 className="text-4xl font-serif font-bold leading-tight">Professional Care, Inspired by Nature</h2>
+                </div>
+             </div>
+          </motion.div>
 
-          {/* Center Image Column - Complex rounded shape */}
-          <div className="lg:col-span-1 flex justify-center relative">
-            <div className="relative w-full max-w-sm h-[600px] sm:max-w-md lg:max-w-none lg:w-[400px] mx-auto">
-              {/* Background Arch/Shape Container */}
-              <div
-                className="absolute inset-0 z-0 rounded-t-[50%] rounded-b-xl transform -translate-y-4 shadow-2xl overflow-hidden"
-                style={{ backgroundColor: "#E6F3FF" /* Light blue fallback */ }}
-              >
-                <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${centerImageUrl})` }}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).onerror = null;
-                    (e.target as HTMLImageElement).src =
-                      "https://placehold.co/500x750/F0F8FF/000?text=Care";
-                  }}
-                ></div>
-              </div>
-
-              {/* Text Overlay for the Center Image */}
-              <div className="absolute inset-0 z-10 flex flex-col items-center pt-20 pb-8 px-8 text-center text-white">
-                <p className="text-sm tracking-widest uppercase mb-4">
-                  WHO WE ARE
-                </p>
-                <h2 className="text-4xl font-serif font-bold leading-tight mb-6">
-                  Professional Care, Inspired by Nature
-                </h2>
-                {/* Space holder that was previously the image */}
-                <div className="w-full h-full"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Text Column */}
-          <div className="lg:col-span-1 space-y-8 py-8">
-            <div className="space-y-4">
-              <div className="flex items-center justify-end">
-                <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
-                  A Trusted Local Studio
-                </span>
-                <Flower className="w-5 h-5 text-dark-blue-600 ml-2" />
-              </div>
-              <div className="border-r-4 border-dark-blue-600 pr-4 text-right">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  A Trusted Local Studio
-                </h3>
-                <p className="text-gray-600">
-                  We've helped thousands of clients reduce stress, manage pain,
-                  and feel better with care that truly makes a difference.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-end">
-                <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
-                  More Than Massage
-                </span>
-                <Flower className="w-5 h-5 text-dark-blue-600 ml-2" />
-              </div>
-              <div className="border-r-4 border-dark-blue-600 pr-4 text-right">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  More Than Massage
-                </h3>
-                <p className="text-gray-600">
-                  Our peaceful space is designed for calm, comfort, and care –
-                  offering a quiet moment of relief in your busy, demanding day.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Right Column */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={staggerContainer}
+            className="lg:col-span-1 space-y-8 py-8"
+          >
+            {[
+              { title: "A Trusted Local Studio", subtitle: "A Trusted Local Studio", desc: "We've helped thousands of clients reduce stress and manage pain with care that makes a difference." },
+              { title: "More Than Massage", subtitle: "More Than Massage", desc: "Our peaceful space is designed for calm, comfort, and care – a quiet moment of relief in your day." }
+            ].map((item, i) => (
+              <motion.div key={i} variants={fadeInUp} className="space-y-4">
+                <div className="flex items-center justify-end">
+                  <span className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">{item.subtitle}</span>
+                  <Flower className="w-5 h-5 text-dark-blue-600 ml-2" />
+                </div>
+                <div className="border-r-4 border-dark-blue-600 pr-4 text-right">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-gray-600">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
     </section>
   );
 };
 
-/**
- * Services Section
- */
 const Services: React.FC = () => {
   return (
     <section id="services" className="py-20 bg-light-blue-50 w-full">
-      {" "}
-      {/* Added w-full */}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-end mb-12">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="flex justify-between items-end mb-12"
+        >
           <div>
-            <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-2">
-              Services
-            </p>
-            <h2 className="text-5xl font-serif font-bold text-gray-900">
-              Begin Your Journey to Better Health
-            </h2>
+            <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-2">Services</p>
+            <h2 className="text-5xl font-serif font-bold text-gray-900">Begin Your Journey to Better Health</h2>
           </div>
-          {/* Button uses light-blue-200 for background and dark-blue-800 for text */}
-          <button className="px-6 py-2 bg-light-blue-200 text-dark-blue-800 rounded-full hover:bg-light-blue-300 transition duration-150">
-            View All
-          </button>
-        </div>
+          <button className="px-6 py-2 bg-light-blue-200 text-dark-blue-800 rounded-full hover:bg-light-blue-300">View All</button>
+        </motion.div>
 
-        {/* Service Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+        >
           {servicesData.map((service, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white rounded-xl shadow-lg overflow-hidden transition duration-300 hover:shadow-2xl"
+              variants={fadeInUp}
+              whileHover={{ y: -10 }}
+              className="bg-white rounded-xl shadow-lg overflow-hidden"
             >
-              {/* Image with rounded bottom corners to match screenshot aesthetic */}
-              <div
-                className="relative h-64 bg-cover bg-center rounded-t-xl"
-                style={{ backgroundImage: `url(${service.image})` }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).onerror = null;
-                  (e.target as HTMLImageElement).src =
-                    "https://placehold.co/400x500/F0F8FF/000?text=Flexora+Service";
-                }}
-              >
-                {/* Plus icon overlay - simple stylized element */}
+              <div className="relative h-64 bg-cover bg-center" style={{ backgroundImage: `url(${service.image})` }}>
                 <div className="absolute bottom-4 left-4 p-2 bg-white rounded-full shadow-md">
                   <Flower className="w-4 h-4 text-dark-blue-600" />
                 </div>
               </div>
-
               <div className="p-6 text-center">
-                <h3 className="text-xl font-semibold font-serif text-gray-900 mb-2">
-                  {service.title}
-                </h3>
+                <h3 className="text-xl font-semibold font-serif text-gray-900 mb-2">{service.title}</h3>
                 <p className="text-sm text-gray-600">{service.description}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
@@ -574,111 +528,55 @@ const BenefitsFAQ: React.FC = () => {
     </section>
   );
 };
-
-/**
- * Why Choose Us Section
- */
 const WhyChooseUs: React.FC = () => {
-  const centerImageUrl = "/pexels-arina-krasnikova-6663372-1.jpg";
-
-  // Data for the 4 core benefits
-  const coreBenefits = [
-    {
-      title: "Flat Fee",
-      description:
-        "Simple, transparent pricing. Our therapists appreciate tips, reviews, and referrals.",
-      icon: DollarSign,
-      position: "left-top",
-    },
-    {
-      title: "Licensed & Trusted",
-      description:
-        "All therapists are licensed, insured, and highly experienced.",
-      icon: Award,
-      position: "right-top",
-    },
-    {
-      title: "Easy Online Booking",
-      description:
-        "Same-day appointments often available. Book your massage in minutes.",
-      icon: Clock,
-      position: "left-bottom",
-    },
-    {
-      title: "Eco-Friendly",
-      description:
-        "As a small, sustainable business, we offer personalized care with a lighter footprint.",
-      icon: HeartHandshake,
-      position: "right-bottom",
-    },
-  ];
-
   return (
-    <section id="why-choose-us" className="py-20 bg-light-blue-50 w-full">
-      {" "}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
+    <section id="why-choose-us" className="py-20 bg-light-blue-50 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-4">
-          WHY CHOOSE US?
-        </p>
-        <h2 className="text-5xl font-serif font-bold text-gray-900 mb-12">
-          Care That Goes Beyond the Massage
-        </h2>
+        <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+            <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-4">WHY CHOOSE US?</p>
+            <h2 className="text-5xl font-serif font-bold text-gray-900 mb-12">Care That Goes Beyond the Massage</h2>
+        </motion.div>
 
-        {/* Central Arch Layout */}
         <div className="relative flex justify-center py-10">
-          {/* Decorative Arch (Mimicking the semi-circle effect) */}
-          <div className="absolute top-0 w-full max-w-4xl h-96 border-t-2 border-x-2 border-light-blue-200 rounded-t-full"></div>
-
-          {/* Central Image with rounded clip-path */}
-          <img
-            src={centerImageUrl}
-            alt="Central massage image"
-            className="w-96 h-[500px] object-cover rounded-full shadow-2xl z-10"
-            style={{
-              clipPath: "polygon(0% 20%, 50% 0%, 100% 20%, 100% 100%, 0% 100%)",
-              transform: "translateY(-20px)",
-            }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).onerror = null;
-              (e.target as HTMLImageElement).src =
-                "https://placehold.co/500x700/F0F8FF/000?text=Why+Choose+Us";
-            }}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="absolute top-0 w-full max-w-4xl h-96 border-t-2 border-x-2 border-light-blue-200 rounded-t-full"
           />
 
-          {/* Benefit Blocks positioned around the image */}
+          <motion.img
+            initial={{ y: 100, opacity: 0 }}
+            whileInView={{ y: -20, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ type: "spring", stiffness: 50 }}
+            src="/pexels-arina-krasnikova-6663372-1.jpg"
+            className="w-96 h-[500px] object-cover rounded-full shadow-2xl z-10"
+            style={{ clipPath: "polygon(0% 20%, 50% 0%, 100% 20%, 100% 100%, 0% 100%)" }}
+          />
+
+          {/* Benefit Blocks */}
           {coreBenefits.map((benefit, index) => (
-            <div
+            <motion.div
               key={index}
-              className={`absolute w-64 text-left p-4 z-20 ${
-                benefit.position === "left-top"
-                  ? "top-10 left-0 lg:left-10"
-                  : benefit.position === "right-top"
-                  ? "top-10 right-0 lg:right-10 text-right"
-                  : benefit.position === "left-bottom"
-                  ? "bottom-10 left-0 lg:left-10"
-                  : "bottom-10 right-0 lg:right-10 text-right"
-              } hidden sm:block`}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 + (index * 0.1) }}
+              className={`absolute w-64 text-left p-4 z-20 hidden sm:block ${
+                benefit.position === "left-top" ? "top-10 left-10" : 
+                benefit.position === "right-top" ? "top-10 right-10 text-right" : 
+                benefit.position === "left-bottom" ? "bottom-10 left-10" : 
+                "bottom-10 right-10 text-right"
+              }`}
             >
-              <div
-                className={`flex items-center mb-2 ${
-                  benefit.position.includes("right")
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
-                {benefit.position.includes("left") && (
-                  <benefit.icon className="w-5 h-5 text-dark-blue-600 mr-2" />
-                )}
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {benefit.title}
-                </h3>
-                {benefit.position.includes("right") && (
-                  <benefit.icon className="w-5 h-5 text-dark-blue-600 ml-2" />
-                )}
+              <div className={`flex items-center mb-2 ${benefit.position.includes("right") ? "justify-end" : "justify-start"}`}>
+                {benefit.position.includes("left") && <benefit.icon className="w-5 h-5 text-dark-blue-600 mr-2" />}
+                <h3 className="text-xl font-semibold text-gray-900">{benefit.title}</h3>
+                {benefit.position.includes("right") && <benefit.icon className="w-5 h-5 text-dark-blue-600 ml-2" />}
               </div>
               <p className="text-sm text-gray-600">{benefit.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -902,7 +800,8 @@ const HomePage: React.FC = () => {
     .font-serif { font-family: 'Georgia', serif; }
   `;
 
-  return (
+  
+    return (
     <div className="min-h-screen bg-white w-full">
       <style dangerouslySetInnerHTML={{ __html: CustomStyle }} />
       <main>

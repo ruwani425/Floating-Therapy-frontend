@@ -1,7 +1,27 @@
 import React, { useState } from "react";
 import { Search, Calendar, User, ArrowRight, Tag } from "lucide-react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
-// --- Data Structure ---
+const fadeInUp: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.6, ease: "easeOut" } 
+  }
+};
+
+const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
 interface BlogPost {
   id: number;
   category: string;
@@ -128,96 +148,111 @@ const categories = [
   "Sports",
 ];
 
-// --- Featured Post Component ---
 const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => (
-  <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-16 group cursor-pointer">
+  <motion.div 
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.8 }}
+    className="relative rounded-3xl overflow-hidden shadow-2xl mb-16 group cursor-pointer"
+  >
     <div className="relative h-[500px] md:h-[600px]">
       <img
         src={post.imageUrl}
         alt={post.title}
-        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
     </div>
 
     <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
-      <span className="inline-block px-4 py-2 bg-theta-blue text-white text-sm font-display font-bold rounded-full mb-4">
-        Featured
-      </span>
-      <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-display font-semibold rounded-full mb-4 ml-3">
-        {post.category}
-      </span>
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <span className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-full mb-4 shadow-lg">
+          Featured
+        </span>
+        <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-md text-white text-sm font-semibold rounded-full mb-4 ml-3">
+          {post.category}
+        </span>
+      </motion.div>
 
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 leading-tight">
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold mb-4 leading-tight"
+      >
         {post.title}
-      </h1>
+      </motion.h1>
 
-      <p className="text-lg md:text-xl font-sans text-gray-200 mb-6 max-w-3xl">
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="text-lg md:text-xl font-sans text-gray-200 mb-6 max-w-3xl"
+      >
         {post.excerpt}
-      </p>
+      </motion.p>
 
-      <div className="flex items-center space-x-6 text-sm font-display font-medium mb-6">
-        <div className="flex items-center">
-          <User className="w-4 h-4 mr-2" />
-          {post.author}
-        </div>
-        <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-2" />
-          {post.date}
-        </div>
-        <span>{post.readTime}</span>
-      </div>
-
-      <button className="inline-flex items-center px-6 py-3 bg-white text-theta-blue font-display font-bold rounded-full hover:bg-theta-blue hover:text-white transition-all duration-300 group/btn">
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="inline-flex items-center px-8 py-4 bg-white text-blue-900 font-bold rounded-full transition-all group/btn shadow-xl"
+      >
         Read Article
-        <ArrowRight className="w-5 h-5 ml-2 transform group-hover/btn:translate-x-1 transition-transform duration-300" />
-      </button>
+        <ArrowRight className="w-5 h-5 ml-2 transform group-hover/btn:translate-x-1 transition-transform" />
+      </motion.button>
     </div>
-  </div>
+  </motion.div>
 );
 
 // --- Blog Post Card Component ---
 const BlogPostCard: React.FC<{ post: BlogPost }> = ({ post }) => (
-  <article className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group">
+  <motion.article 
+    layout
+    variants={fadeInUp}
+    initial="hidden"
+    animate="visible"
+    exit={{ opacity: 0, scale: 0.9 }}
+    whileHover={{ y: -8 }}
+    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group flex flex-col h-full"
+  >
     <div className="relative h-64 overflow-hidden">
       <img
         src={post.imageUrl}
         alt={post.title}
-        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
       />
       <div className="absolute top-4 left-4">
-        <span className="inline-block px-3 py-1 bg-theta-blue text-white text-xs font-display font-bold rounded-full">
+        <span className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full shadow-md">
           {post.category}
         </span>
       </div>
     </div>
 
-    <div className="p-6">
-      <h3 className="text-xl md:text-2xl font-serif font-bold text-gray-900 mb-3 leading-tight group-hover:text-theta-blue transition-colors duration-300">
+    <div className="p-6 flex flex-col flex-grow">
+      <h3 className="text-xl md:text-2xl font-serif font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
         {post.title}
       </h3>
 
-      <p className="text-gray-600 font-sans text-sm md:text-base mb-4 leading-relaxed line-clamp-2">
+      <p className="text-gray-600 font-sans text-sm md:text-base mb-4 leading-relaxed line-clamp-2 flex-grow">
         {post.excerpt}
       </p>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="flex items-center space-x-3 text-xs font-display text-gray-500">
+      <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+        <div className="flex items-center space-x-3 text-xs text-gray-500">
           <div className="flex items-center">
             <Calendar className="w-3.5 h-3.5 mr-1" />
             {post.date}
           </div>
-          <span>•</span>
           <span>{post.readTime}</span>
         </div>
-
-        <button className="text-theta-blue font-display font-semibold text-sm flex items-center hover:gap-2 gap-1 transition-all duration-300">
-          Read
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <ArrowRight className="w-5 h-5 text-blue-600 opacity-0 group-hover:opacity-100 transform -translate-x-2 group-hover:translate-x-0 transition-all" />
       </div>
     </div>
-  </article>
+  </motion.article>
 );
 
 // --- Main Blog Page Component ---
@@ -229,131 +264,143 @@ const BlogPage: React.FC = () => {
   const regularPosts = blogPosts.filter((post) => !post.featured);
 
   const filteredPosts = regularPosts.filter((post) => {
-    const matchesCategory =
-      selectedCategory === "All" || post.category === selectedCategory;
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   return (
-    <div className="bg-gradient-to-b from-white to-blue-50 w-full min-h-screen">
+    <div className="bg-slate-50 w-full min-h-screen overflow-x-hidden">
+      
       {/* Hero Section */}
-      <div className="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
-        {/* Video Background */}
+      <section className="relative pt-32 pb-20 px-4 text-center overflow-hidden">
         <video
           src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
-          loop
-          preload="none"
-          muted
-          playsInline
-          autoPlay
+          loop preload="none" muted playsInline autoPlay
           className="absolute inset-0 w-full h-full object-cover"
         />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#3a7ca5]/95 to-[#1B4965]/95"></div>
 
-        {/* Blue Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-theta-blue/90 via-theta-blue-dark/85 to-theta-blue/90"></div>
-
-        <div className="relative z-10 max-w-4xl mx-auto text-white">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 leading-tight">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+          className="relative z-10 max-w-4xl mx-auto text-white"
+        >
+          <motion.h1 variants={fadeInUp} className="text-6xl md:text-8xl font-serif font-bold mb-6">
             Our Blog
-          </h1>
-          <p className="text-xl md:text-2xl font-display font-medium text-blue-100 mb-8">
-            Expert insights, tips, and stories about physical therapy and
-            wellness
-          </p>
+          </motion.h1>
+          <motion.p variants={fadeInUp} className="text-xl md:text-2xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            Expert insights and wellness tips for a pain-free life.
+          </motion.p>
 
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <motion.div variants={fadeInUp} className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60" />
             <input
               type="text"
               placeholder="Search articles..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border-2 border-white/30 bg-white/10 backdrop-blur-sm rounded-full focus:border-white focus:outline-none font-sans text-white placeholder-white/70 transition-all duration-300 shadow-lg"
+              className="w-full pl-14 pr-6 py-5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full focus:bg-white/20 focus:outline-none text-white placeholder-white/60 transition-all shadow-2xl"
             />
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </section>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Featured Post */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {featuredPost && <FeaturedPost post={featuredPost} />}
 
         {/* Category Filter */}
-        <div className="mb-12">
-          <div className="flex items-center mb-6">
-            <Tag className="w-5 h-5 text-theta-blue mr-2" />
-            <h2 className="text-2xl font-serif font-bold text-gray-900">
-              Browse by Category
-            </h2>
+        <div className="mb-16">
+          <div className="flex items-center mb-8">
+            <Tag className="w-5 h-5 text-blue-600 mr-2" />
+            <h2 className="text-2xl font-serif font-bold text-gray-900">Browse by Category</h2>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap gap-3"
+          >
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-6 py-2.5 rounded-full font-display font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  selectedCategory === category
-                    ? "bg-theta-blue text-white shadow-lg"
-                    : "bg-white text-gray-700 hover:bg-gray-100 shadow-md"
+                className={`relative px-6 py-3 rounded-full font-bold transition-all z-10 overflow-hidden ${
+                  selectedCategory === category ? "text-white" : "bg-white text-gray-600 hover:bg-gray-100 shadow-sm"
                 }`}
               >
                 {category}
+                {selectedCategory === category && (
+                  <motion.div 
+                    layoutId="activeCategory"
+                    className="absolute inset-0 bg-blue-600 z-[-1]"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                  />
+                )}
               </button>
             ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Blog Posts Grid */}
-        <div className="mb-12">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-8">
+        <motion.div layout className="mb-20">
+          <motion.h2 layout className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-10">
             {selectedCategory === "All" ? "Latest Articles" : selectedCategory}
-          </h2>
+          </motion.h2>
 
-          {filteredPosts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post) => (
-                <BlogPostCard key={post.id} post={post} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <p className="text-xl font-display text-gray-500">
-                No articles found. Try a different search or category.
-              </p>
-            </div>
-          )}
-        </div>
+          <AnimatePresence mode="popLayout">
+            {filteredPosts.length > 0 ? (
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+              >
+                {filteredPosts.map((post) => (
+                  <BlogPostCard key={post.id} post={post} />
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                className="text-center py-20"
+              >
+                <p className="text-xl text-gray-500">No articles match your search.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Newsletter Section */}
-        <div className="bg-gradient-to-r from-theta-blue to-theta-blue-dark rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">
-            Stay Updated with Our Newsletter
-          </h2>
-          <p className="text-lg md:text-xl font-sans mb-8 text-blue-100">
-            Get the latest health tips and wellness insights delivered to your
-            inbox
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-[#1B4965] rounded-[3rem] p-10 md:p-16 text-center text-white shadow-2xl"
+        >
+          <h2 className="text-3xl md:text-5xl font-serif font-bold mb-6">Stay Informed</h2>
+          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+            Get monthly wellness insights and expert health tips delivered to your inbox.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
+          <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
             <input
               type="email"
-              placeholder="Enter your email address"
-              className="flex-1 px-6 py-4 rounded-full text-gray-800 font-sans focus:outline-none focus:ring-2 focus:ring-white"
+              placeholder="Email address"
+              className="flex-1 px-8 py-4 rounded-full text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-400"
             />
-            <button className="px-8 py-4 bg-white text-theta-blue font-display font-bold rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg">
+            <motion.button 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
+              className="px-10 py-4 bg-blue-500 text-white font-bold rounded-full shadow-lg"
+            >
               Subscribe
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 };
-
 export default BlogPage;

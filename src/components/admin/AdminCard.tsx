@@ -1,3 +1,4 @@
+// src/components/admin/AdminCard.tsx
 import type { FC } from "react"
 import type { LucideIcon } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -11,102 +12,52 @@ interface AdminCardProps {
 }
 
 const THETA_COLORS = {
-  lightestBlue: "#92B8D9",
-  lightBlue: "#92B8D9",
-  mediumBlue: "#475D73",
-  darkBlue: "#233547",
-  white: "#FFFFFF",
-  bgLight: "#F5F8FC",
-  darkGray: "#1a1a1a",
-  darkestBlue: "#0F1F2E",
-  darkTealBlue: "#1a3a52",
-  mediumCyanBlue: "#3a7ca5",
-  lightBlueUpdated: "#6ab4dc",
   lightCyan: "#D4F1F9",
-  cyan: "#A0E7E5",
+  darkestBlue: "#0F1F2E",
+  darkBlue: "#233547",
+  mediumBlue: "#475D73",
 }
 
-const CustomCardStyles = `
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  .animate-fade-in-scale {
-    animation: fadeInScale 0.4s ease-out forwards;
-  }
-`
-
-const AdminCard: FC<AdminCardProps> = ({
-  title,
-  path,
-  description,
-  Icon,
-  animationDelay = 0,
-}) => {
-  const iconBgColor = `${THETA_COLORS.lightCyan}`
-  const cardBgGradient = `linear-gradient(135deg, #FFFFFF 0%, rgba(106, 180, 220, 0.05) 100%)`
-
+const AdminCard: FC<AdminCardProps> = ({ title, path, description, Icon, animationDelay = 0 }) => {
   return (
     <Link
       to={path}
-      className="block p-6 rounded-xl shadow-sm h-full
-                 hover:shadow-lg hover:border-blue-300 transition-all duration-300 
-                 group relative overflow-hidden animate-fade-in-scale flex flex-col justify-between cursor-pointer
-                 border border-slate-200 bg-white"
-      style={{
-        animationDelay: `${animationDelay}s`,
-        background: cardBgGradient,
-      }}
+      className="group block p-3 sm:p-4 md:p-5 lg:p-6 rounded-lg sm:rounded-xl md:rounded-2xl bg-white border border-slate-200 shadow-sm 
+                 hover:shadow-md hover:border-blue-300 transition-all duration-300 
+                 relative overflow-hidden animate-fade-in-scale h-full flex flex-col"
+      style={{ animationDelay: `${animationDelay}s` }}
     >
-      <style dangerouslySetInnerHTML={{ __html: CustomCardStyles }} />
-
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-      <div className="relative z-10 flex flex-col items-start justify-start h-full">
+      <div className="relative z-10">
         <div
-          className="p-3 mb-4 rounded-lg transition-all duration-300 group-hover:scale-110"
-          style={{ backgroundColor: iconBgColor }}
+          className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 flex items-center justify-center rounded-lg sm:rounded-xl mb-2 sm:mb-3 md:mb-4 transition-transform group-hover:scale-110"
+          style={{ backgroundColor: THETA_COLORS.lightCyan }}
         >
           <Icon
-            className="w-6 h-6 transition-colors duration-300 group-hover:brightness-110"
+            className="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 lg:w-6 lg:h-6"
             style={{ color: THETA_COLORS.darkestBlue }}
           />
         </div>
 
         <h3
-          className="text-lg font-serif font-bold mb-2 line-clamp-2 transition-colors duration-300"
+          className="text-sm sm:text-base md:text-lg lg:text-lg font-bold mb-1 sm:mb-2 line-clamp-2"
           style={{ color: THETA_COLORS.darkestBlue }}
         >
           {title}
         </h3>
 
         <p
-          className="text-sm font-sans leading-relaxed flex-grow"
+          className="text-xs sm:text-xs md:text-sm lg:text-sm leading-relaxed opacity-80 line-clamp-2"
           style={{ color: THETA_COLORS.darkBlue }}
         >
           {description}
         </p>
+      </div>
 
-        <div
-          className="mt-4 pt-3 flex items-center gap-1 transition-all duration-300 group-hover:translate-x-1"
-          style={{ color: THETA_COLORS.mediumBlue }}
-        >
-          <svg
-            className="w-5 h-5 transition-colors duration-300 group-hover:text-blue-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
+      <div className="mt-3 sm:mt-4 pt-1 sm:pt-2 flex items-center text-blue-500 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1">
+        <span className="text-xs font-bold mr-1">Open</span>
+        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
       </div>
     </Link>
   )

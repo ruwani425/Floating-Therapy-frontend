@@ -1,10 +1,9 @@
 "use client"
 
 import type React from "react"
-// REMOVED: useCallback (unused since handleStatusUpdate is essentially disconnected or uses stale logic)
 import { useEffect, useState } from "react" 
 import { useNavigate } from "react-router-dom"
-import { Bath, PlusCircle, ArrowLeft, Edit } from "lucide-react" 
+import { Bath, PlusCircle, ArrowLeft, Edit, Ruler, Droplets, Calendar, Star } from "lucide-react" 
 import apiRequest from "../../core/axios" 
 import Swal from 'sweetalert2';
 
@@ -29,17 +28,10 @@ const TankManagementPage: React.FC = () => {
   const [tanks, setTanks] = useState<Tank[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   
-  // REMOVED: updating and setUpdating state as they were only used in handleStatusUpdate 
-  // which is currently not being called by the rendered UI.
-
-  // --- API & State Handlers ---
-
-  // 3. Handle Edit (Navigation)
   const handleEdit = (id: string) => {
     navigate(`/admin/add-tank/edit/${id}`); 
   };
   
-  // 4. Fetch Tanks (Initial Data Load)
   useEffect(() => {
     const fetchTanks = async () => {
       try {
@@ -57,7 +49,7 @@ const TankManagementPage: React.FC = () => {
         Swal.fire({
           icon: 'error',
           title: 'Load Error',
-          text: 'Failed to fetch tanks data. Check console for details.',
+          text: 'Failed to fetch tanks data.',
           confirmButtonText: 'OK'
         });
       } finally {
@@ -72,111 +64,131 @@ const TankManagementPage: React.FC = () => {
     navigate("/admin/add-tank");
   };
 
+  const formatDate = (dateString: string | undefined) => 
+    dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
+
   return (
-    <div className="min-h-screen p-6 md:p-8 lg:p-10 bg-gradient-to-br from-[#F0F8FB] via-[#E8F4F9] to-[#F5FAFC]">
-      <div className="w-full max-w-7xl mx-auto bg-white/95 backdrop-blur-sm rounded-3xl shadow-lg p-8 md:p-10 border border-cyan-100/50 hover:border-cyan-200/70 transition-colors duration-300">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-[#F0F8FB] via-[#E8F4F9] to-[#F5FAFC]">
+      <div className="w-full max-w-7xl mx-auto bg-white/95 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-lg p-5 sm:p-8 md:p-10 border border-cyan-100/50">
+        
+        {/* Navigation Section */}
         <button
           onClick={() => navigate("/admin/dashboard")}
-          className="inline-flex items-center mb-8 text-base font-semibold transition-all duration-300 hover:text-cyan-600 hover:translate-x-1 text-slate-700"
+          className="inline-flex items-center mb-6 md:mb-8 text-sm md:text-base font-semibold transition-all duration-300 hover:text-cyan-600 hover:translate-x-1 text-slate-700"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
+          <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 mr-2" />
           Back to Dashboard
         </button>
 
-        <header className="mb-10 pb-8 border-b-2 border-cyan-200/60 pb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-cyan-100/40 border border-cyan-300/50">
-              <Bath className="w-8 h-8 text-cyan-700" />
+        {/* Header Section */}
+        <header className="mb-8 md:mb-10 pb-6 border-b-2 border-cyan-200/60">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 mb-3">
+            <div className="p-2 w-fit rounded-lg bg-cyan-100/40 border border-cyan-300/50">
+              <Bath className="w-6 h-6 md:w-8 md:h-8 text-cyan-700" />
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-800 to-blue-900 bg-clip-text text-transparent">
-              Tank Management Hub
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-800 to-blue-900 bg-clip-text text-transparent">
+              Tank Management
             </h1>
           </div>
-          <p className="text-lg text-slate-600 ml-11">View current tank status and manage configurations.</p>
+          <p className="text-sm md:text-lg text-slate-600 sm:ml-14">View status and manage configurations.</p>
         </header>
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-8 border-b border-cyan-200/60 pb-4">
-            <h2 className="text-3xl font-bold text-cyan-900">Tank Inventory</h2>
-            <button
-              onClick={handleAddTank}
-              className="px-5 py-2 text-white font-semibold rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-cyan-300/40 flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95"
-            >
-              <PlusCircle className="w-5 h-5" />
-              Add New Tank
-            </button>
-          </div>
+        {/* Action Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-cyan-200/60 pb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-cyan-900">Inventory</h2>
+          <button
+            onClick={handleAddTank}
+            className="w-full sm:w-auto px-5 py-3 md:py-2 text-white font-semibold rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-cyan-300/40 flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-700 active:scale-95"
+          >
+            <PlusCircle className="w-5 h-5" />
+            Add New Tank
+          </button>
+        </div>
 
-          {loading ? (
-            <p className="text-slate-600 col-span-full text-center py-8">Loading tanks...</p>
-          ) : tanks.length === 0 ? (
-            <p className="text-slate-600 col-span-full text-center py-8">No tanks found. Click "Add New Tank" to get started.</p>
-          ) : (
-            <div className="overflow-x-auto rounded-xl shadow-lg border border-cyan-200/50">
+        {loading ? (
+          <div className="flex flex-col items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-700 mb-4"></div>
+            <p className="text-slate-600 font-medium">Loading tanks...</p>
+          </div>
+        ) : tanks.length === 0 ? (
+          <div className="text-center py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <p className="text-slate-500 mb-4">No tanks found in the inventory.</p>
+            <button onClick={handleAddTank} className="text-cyan-600 font-bold hover:underline">Add your first tank</button>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View (Hidden on Mobile) */}
+            <div className="hidden md:block overflow-hidden rounded-xl shadow-md border border-cyan-200/50">
               <table className="min-w-full divide-y divide-cyan-200/60">
                 <thead className="bg-cyan-50/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-cyan-800 w-[10rem]">
-                      Tank Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-cyan-800 hidden sm:table-cell w-[8rem]">
-                      Capacity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-cyan-800 hidden lg:table-cell w-[8rem]">
-                      Dimensions (m)
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-cyan-800 hidden md:table-cell w-[8rem]">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-cyan-800 hidden lg:table-cell w-full">
-                      Benefits
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-cyan-800 w-[6rem]">
-                      Actions
-                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-cyan-800">Tank Name</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-cyan-800">Capacity</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-cyan-800">Dimensions</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-cyan-800">Created</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-cyan-800">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cyan-100 bg-white">
-                  {tanks.map((tank) => {
-                    const formatDate = (dateString: string | undefined) => 
-                      dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
-
-                    return (
-                      <tr key={tank._id} className="hover:bg-blue-50/30 transition-colors duration-150">
-                        <td className="px-6 py-4 text-sm font-semibold text-slate-900 align-top">
-                          {tank.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden sm:table-cell align-top">
-                          {tank.capacity}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden lg:table-cell align-top">
-                          {tank.length} x {tank.width}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 hidden md:table-cell align-top">
-                          {formatDate(tank.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-700 hidden lg:table-cell whitespace-normal max-w-lg align-top">
-                          {tank.benefits}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleEdit(tank._id)}
-                              title="Edit Tank"
-                              className="p-2 rounded-lg transition-all duration-200 hover:bg-cyan-200/40 text-cyan-700 hover:text-cyan-900"
-                            >
-                              <Edit className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {tanks.map((tank) => (
+                    <tr key={tank._id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-900">{tank.name}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{tank.capacity}L</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{tank.length}m x {tank.width}m</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{formatDate(tank.createdAt)}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleEdit(tank._id)}
+                          className="p-2 rounded-lg hover:bg-cyan-100 text-cyan-700"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+
+            {/* Mobile Card View (Hidden on Desktop) */}
+            <div className="md:hidden grid grid-cols-1 gap-4">
+              {tanks.map((tank) => (
+                <div key={tank._id} className="bg-white border border-cyan-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-slate-900">{tank.name}</h3>
+                    <button
+                      onClick={() => handleEdit(tank._id)}
+                      className="p-2 rounded-lg bg-cyan-50 text-cyan-700 active:bg-cyan-100"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Droplets className="w-4 h-4 mr-3 text-cyan-500" />
+                      <span className="font-medium mr-2">Capacity:</span> {tank.capacity}L
+                    </div>
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Ruler className="w-4 h-4 mr-3 text-cyan-500" />
+                      <span className="font-medium mr-2">Size:</span> {tank.length}m x {tank.width}m
+                    </div>
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Calendar className="w-4 h-4 mr-3 text-cyan-500" />
+                      <span className="font-medium mr-2">Added:</span> {formatDate(tank.createdAt)}
+                    </div>
+                    <div className="pt-3 border-t border-slate-100">
+                      <div className="flex items-start text-sm text-slate-700">
+                        <Star className="w-4 h-4 mr-3 mt-0.5 text-cyan-500 shrink-0" />
+                        <p className="leading-relaxed line-clamp-3">{tank.benefits}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
