@@ -222,7 +222,7 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* Our Story Section */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div 
@@ -318,7 +318,7 @@ const AboutPage: React.FC = () => {
           className="max-w-5xl mx-auto rounded-[3rem] bg-gradient-to-br from-[#3a7ca5] to-[#1B4965] p-12 md:p-20 text-center text-white shadow-2xl overflow-hidden relative"
         >
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-             <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-white rounded-full blur-3xl"></div>
+            <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl opacity-20"></div>
           </div>
           <Users className="w-16 h-16 mx-auto mb-8 text-blue-100" />
           <h2 className="text-4xl md:text-6xl font-serif font-bold mb-8">Ready to Start?</h2>
