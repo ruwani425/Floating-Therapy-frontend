@@ -4,7 +4,7 @@ import {
   initializeApp, 
 } from "firebase/app";
 
-import type { // Imported as a type only
+import type {
   FirebaseApp 
 } from "firebase/app";
 
@@ -15,7 +15,7 @@ import {
   signOut, 
 } from "firebase/auth";
 
-import type { // Imported as types only
+import type {
   Auth, 
   User, 
   UserCredential, 
@@ -47,7 +47,6 @@ const firebaseConfig = {
 };
 
 
-// 2. Initialize Firebase App, Auth, and Storage
 const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const storage: FirebaseStorage = getStorage(app);
