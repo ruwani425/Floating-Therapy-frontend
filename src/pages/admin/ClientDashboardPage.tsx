@@ -26,7 +26,6 @@ interface ClientProfile {
   email: string;
   role: "admin" | "client";
   createdAt: string;
-  // Add other user fields (e.g., profileImage) as needed
 }
 
 interface ClientReservation {
@@ -47,7 +46,7 @@ interface ClientPackage {
   startDate?: string;
   expiryDate?: string;
   status: string;
-  isActive: boolean; // Calculated on backend
+  isActive: boolean;
   packageId: {
     name: string;
     duration: string;
@@ -69,7 +68,6 @@ interface ClientDashboardApiResponse {
   data: ClientDashboardData;
   message?: string;
 }
-// --- API FETCH FUNCTION ---
 const fetchClientData = async (email: string): Promise<ClientDashboardData> => {
   try {
     const response = await apiRequest.get<ClientDashboardApiResponse>(
@@ -87,7 +85,6 @@ const fetchClientData = async (email: string): Promise<ClientDashboardData> => {
   }
 };
 
-// --- CLIENT DASHBOARD COMPONENT ---
 const ClientDashboardPage: React.FC = () => {
   const { email } = useParams<{ email: string }>();
   const navigate = useNavigate();
@@ -152,7 +149,6 @@ const ClientDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen p-6" style={{ backgroundColor: COLOR_BG_LIGHT }}>
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-4xl font-bold" style={{ color: COLOR_TEXT_DARK }}>
             Client Dashboard
@@ -166,7 +162,6 @@ const ClientDashboardPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Profile Card */}
         <div
           className="mb-8 rounded-xl border p-6 shadow-lg"
           style={{ backgroundColor: COLOR_CARD_BG, borderColor: COLOR_MUTED + "30" }}
@@ -198,9 +193,7 @@ const ClientDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Packages & Reservations Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Packages Column */}
           <div className="lg:col-span-1 space-y-6">
             <h3 className="text-xl font-bold mb-4" style={{ color: COLOR_TEXT_DARK }}>
               Active Packages ({activePackagesCount})
@@ -233,7 +226,6 @@ const ClientDashboardPage: React.FC = () => {
              </div>
           </div>
 
-          {/* Reservations Column */}
           <div className="lg:col-span-2">
             <h3 className="text-xl font-bold mb-4" style={{ color: COLOR_TEXT_DARK }}>
               All Reservations ({reservations.length})
@@ -250,7 +242,6 @@ const ClientDashboardPage: React.FC = () => {
   );
 };
 
-// --- SUB-COMPONENTS FOR DISPLAY ---
 
 const PackageCard: React.FC<{ pkg: ClientPackage }> = ({ pkg }) => {
     const usagePercent = ((pkg.totalSessions - pkg.remainingSessions) / pkg.totalSessions) * 100;
@@ -286,7 +277,7 @@ const PackageCard: React.FC<{ pkg: ClientPackage }> = ({ pkg }) => {
                         className="h-full rounded-full transition-all"
                         style={{
                             width: `${usagePercent}%`,
-                            backgroundColor: isLow ? '#EF4444' : '#10B981', // Red or Green
+                            backgroundColor: isLow ? '#EF4444' : '#10B981',
                         }}
                     />
                 </div>

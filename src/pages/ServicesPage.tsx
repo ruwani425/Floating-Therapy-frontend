@@ -2,7 +2,6 @@ import React from "react";
 import { Flower } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
-// --- Animation Variants ---
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { 
@@ -23,7 +22,6 @@ const staggerContainer: Variants = {
   }
 };
 
-// --- Color Palette & Assets ---
 const COLORS = {
   lightestBlue: "#94CCE7",
   lightBlue: "#2DA0CC",
@@ -33,7 +31,6 @@ const COLORS = {
   bgLight: "#F0F8FF",
 };
 
-// --- Types & Data ---
 interface ServiceItem {
   id: string;
   title: string;
@@ -154,7 +151,6 @@ const servicesData: ServiceSectionData[] = [
   },
 ];
 
-// --- Component: Service Card ---
 const ServiceCard: React.FC<{ item: ServiceItem }> = ({ item }) => {
   return (
     <motion.div
@@ -204,12 +200,10 @@ const ServiceCard: React.FC<{ item: ServiceItem }> = ({ item }) => {
   );
 };
 
-// --- Main Page Component ---
 const ServicesPage: React.FC = () => {
   return (
     <div className="w-full min-h-screen bg-white flex flex-col overflow-x-hidden">
       
-      {/* --- Header Section --- */}
       <div className="relative w-full px-4 sm:px-6 pt-32 pb-20 md:pt-48 md:pb-28 text-center overflow-hidden">
         <video
           src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
@@ -246,7 +240,6 @@ const ServicesPage: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* --- Service Categories Loop --- */}
       {servicesData.map((section, index) => (
         <motion.section 
           key={section.id} 
@@ -257,7 +250,6 @@ const ServicesPage: React.FC = () => {
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            {/* Section Header */}
             <motion.div variants={fadeInUp} className="text-center mb-12 md:mb-20">
               {section.subTitle && (
                 <p 
@@ -278,7 +270,6 @@ const ServicesPage: React.FC = () => {
               </p>
             </motion.div>
 
-            {/* Cards Grid */}
             <motion.div 
               variants={staggerContainer}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10"

@@ -13,11 +13,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "../AuthProvider";
 
-// Define path constants
 const APPOINTMENT_PATH = "/appointments";
 const PRICING_PATH = "/pricing";
 
-// --- Client Navigation Component ---
 const ClientNavigation: React.FC<{
   location: ReturnType<typeof useLocation>;
 }> = ({ location }) => {
@@ -56,7 +54,6 @@ const ClientNavigation: React.FC<{
   );
 };
 
-// --- Main NavBar Component ---
 const NavBar: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -81,7 +78,6 @@ const NavBar: React.FC = () => {
     <header className="fixed top-0 left-0 w-full bg-white backdrop-blur-sm shadow-sm z-50 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo Section - Smaller and more compact */}
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="p-1.5 bg-gradient-to-br from-theta-blue to-theta-blue-dark rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
               <Flower className="w-5 h-5 text-white" />
@@ -96,12 +92,9 @@ const NavBar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Main Navigation - Desktop */}
           <ClientNavigation location={location} />
 
-          {/* Action Buttons - Desktop */}
           <div className="hidden lg:flex items-center gap-2.5">
-            {/* Phone Number */}
             <a
               href="tel:4228208200"
               className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 text-gray-600 hover:text-theta-blue transition-colors duration-300 rounded-lg hover:bg-blue-50"
@@ -110,7 +103,6 @@ const NavBar: React.FC = () => {
               <span className="text-xs font-medium">(422) 820 820</span>
             </a>
 
-            {/* Appointment Button */}
             <Link
               to={APPOINTMENT_PATH}
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-theta-blue to-theta-blue-dark text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
@@ -119,10 +111,8 @@ const NavBar: React.FC = () => {
               <span>Appointment</span>
             </Link>
 
-            {/* Auth Buttons */}
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
-                {/* Profile Button */}
                 <Link
                   to="/profile"
                   className="flex items-center gap-1.5 px-3 py-2 bg-white border border-theta-blue text-theta-blue text-sm font-semibold rounded-full hover:bg-theta-blue hover:text-white transition-all duration-300 shadow-sm hover:shadow-md"
@@ -131,7 +121,6 @@ const NavBar: React.FC = () => {
                   <span className="hidden xl:inline">Profile</span>
                 </Link>
 
-                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full hover:bg-gray-200 transition-all duration-300"
@@ -151,7 +140,6 @@ const NavBar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
             className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-theta-blue hover:bg-blue-50 transition-all duration-300"
@@ -166,14 +154,12 @@ const NavBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       <div
         className={`lg:hidden fixed top-16 left-0 right-0 bg-white border-t border-gray-100 shadow-xl transition-all duration-300 ease-in-out overflow-hidden ${
           isMobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
-          {/* Mobile Navigation Links */}
           <Link
             to="/"
             onClick={closeMobileMenu}
@@ -241,10 +227,8 @@ const NavBar: React.FC = () => {
             Contact
           </Link>
 
-          {/* Divider */}
           <div className="pt-3 pb-2 border-t border-gray-200 my-3"></div>
 
-          {/* Mobile Phone Number */}
           <a
             href="tel:4228208200"
             className="flex items-center gap-2.5 py-2.5 px-3 text-gray-600 hover:text-theta-blue hover:bg-blue-50 transition-all duration-300 rounded-lg"
@@ -256,11 +240,9 @@ const NavBar: React.FC = () => {
             </div>
           </a>
 
-          {/* Mobile Action Buttons */}
           <div className="space-y-2 pt-3">
             {isAuthenticated ? (
               <>
-                {/* Mobile Profile Button */}
                 <Link
                   to="/profile"
                   onClick={closeMobileMenu}
@@ -270,7 +252,6 @@ const NavBar: React.FC = () => {
                   <span>My Profile</span>
                 </Link>
 
-                {/* Mobile Appointment Button */}
                 <Link
                   to={APPOINTMENT_PATH}
                   onClick={closeMobileMenu}
@@ -280,7 +261,6 @@ const NavBar: React.FC = () => {
                   <span>Book Appointment</span>
                 </Link>
 
-                {/* Mobile Logout Button */}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200 transition-all duration-300"
@@ -291,7 +271,6 @@ const NavBar: React.FC = () => {
               </>
             ) : (
               <>
-                {/* Mobile Appointment Button */}
                 <Link
                   to={APPOINTMENT_PATH}
                   onClick={closeMobileMenu}
@@ -301,7 +280,6 @@ const NavBar: React.FC = () => {
                   <span>Book Appointment</span>
                 </Link>
 
-                {/* Mobile Login Button */}
                 <Link
                   to="/login"
                   onClick={closeMobileMenu}

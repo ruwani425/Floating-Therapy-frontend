@@ -7,7 +7,6 @@ import { getCookie, AUTH_TOKEN_KEY } from '../utils/cookieUtils';
 import Avatar from '../components/Avatar';
 import type { AuthUser } from '../redux/authSlice';
 
-// --- Interfaces for Typing ---
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -24,7 +23,6 @@ interface UserProfile extends AuthUser {
   updatedAt: string;
 }
 
-// 🛑 MODIFIED INTERFACE: Added optional startDate and expiryDate
 interface PackageActivation {
   _id: string;
   packageName: string;
@@ -36,7 +34,6 @@ interface PackageActivation {
   phone: string;
   address: string;
   message?: string;
-    // 🆕 NEW: startDate and expiryDate fields are included here
     startDate?: string;
     expiryDate?: string;
   packageId: {
@@ -49,10 +46,10 @@ interface PackageActivation {
 
 interface Appointment {
   _id: string;
-  reservationId: string; // Added field
-  date: string; // YYYY-MM-DD format
-  time: string; // HH:mm format
-  status: 'pending' | 'confirmed' | 'canceled' | 'completed'; // Matches controller output
+  reservationId: string;
+  date: string;
+  time: string; 
+  status: 'pending' | 'confirmed' | 'canceled' | 'completed';
   name: string;
   contactNumber: string;
   specialNote?: string;
@@ -61,12 +58,12 @@ interface Appointment {
 }
 
 const COLORS = {
-  primary: "#0873A1",    // Dark Blue
-  darkest: "#035C84",    // Deep Navy
-  medium: "#2DA0CC",     // Medium Blue
-  light: "#94CCE7",      // Sky Blue
+  primary: "#0873A1",    
+  darkest: "#035C84",   
+  medium: "#2DA0CC",     
+  light: "#94CCE7",      
   white: "#FFFFFF",
-  bgLight: "#F8FAFC",    // Page background
+  bgLight: "#F8FAFC",   
   grayBorder: "#E2E8F0", 
   grayText: "#64748B",
   success: "#10B981",    
@@ -154,7 +151,6 @@ const UserProfilePage: React.FC = () => {
     });
   };
 
-// 1. Updated getStatusIcon to use your theme's 'grayText'
 const getStatusIcon = (status: string) => {
   switch (status.toLowerCase()) {
     case 'confirmed':
@@ -168,12 +164,10 @@ const getStatusIcon = (status: string) => {
     case 'canceled':
       return <XCircle className="w-5 h-5" style={{ color: COLORS.error }} />;
     default:
-      // Replaced gray600 with grayText
       return <AlertCircle className="w-5 h-5" style={{ color: COLORS.grayText }} />;
   }
 };
 
-// 2. Updated getStatusColor mapping
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'confirmed':
@@ -182,11 +176,10 @@ const getStatusColor = (status: string) => {
     case 'contacted': return COLORS.primary;
     case 'rejected':
     case 'canceled': return COLORS.error;
-    default: return COLORS.grayText; // Replaced gray600
+    default: return COLORS.grayText;
   }
 };
 
-// 3. Updated Loading State colors
 if (loading) {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.bgLight }}>
@@ -213,7 +206,6 @@ if (loading) {
     <div className="min-h-screen pt-24 pb-12" style={{ backgroundColor: COLORS.bgLight }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
-        {/* Page Header Area */}
         <div className="mb-8 flex items-center gap-4">
            <div className="p-3 rounded-2xl shadow-lg" style={{ backgroundColor: COLORS.darkest }}>
               <Waves className="w-8 h-8 text-white" />
@@ -226,7 +218,6 @@ if (loading) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left: Profile Side */}
           <div className="lg:col-span-1">
             <div className="rounded-3xl border-2 shadow-xl p-8 sticky top-28 overflow-hidden" style={{ backgroundColor: COLORS.white, borderColor: `${COLORS.light}30` }}>
               <div className="text-center relative z-10">
@@ -279,7 +270,6 @@ if (loading) {
             </div>
           </div>
 
-          {/* Right: Tabbed Content */}
           <div className="lg:col-span-2">
             <div className="rounded-3xl border-2 shadow-sm p-2" style={{ backgroundColor: COLORS.white, borderColor: `${COLORS.light}30` }}>
               
@@ -331,7 +321,6 @@ if (loading) {
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 border-t border-slate-100">
-                             {/* 🛑 Start/Expiry Logic Re-integrated */}
                              {pkg.status === 'Confirmed' && pkg.startDate && pkg.expiryDate ? (
                                <>
                                  <div>
@@ -355,7 +344,6 @@ if (loading) {
                              </div>
                           </div>
 
-                          {/* Status Messages */}
                           {pkg.status === 'Pending' && (
                             <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: `${COLORS.warning}10` }}>
                               <p className="text-xs font-bold flex items-center gap-2" style={{ color: COLORS.warning }}>
@@ -368,7 +356,6 @@ if (loading) {
                     </div>
                   )
                 ) : (
-                  /* Reservations logic similarly restored ... */
                   <div className="space-y-4">
                     {reservations.map((res) => (
                       <div key={res._id} className="border-2 rounded-2xl p-5 hover:border-sky-300 transition-all flex justify-between items-center" style={{ borderColor: COLORS.grayBorder }}>

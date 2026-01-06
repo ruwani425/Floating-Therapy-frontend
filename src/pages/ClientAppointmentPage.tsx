@@ -16,7 +16,6 @@ import {
 import apiRequest from "../core/axios";
 import { useAuth } from "../components/AuthProvider";
 
-// --- 1. TypeScript Interfaces & Data ---
 const DAY_STATUS = {
   BOOKABLE: "Bookable",
   CLOSED: "Closed",
@@ -72,12 +71,6 @@ interface BookedCountByDate {
   count: number;
 }
 
-// interface BookedTimesByDate {
-//   date: string;
-//   times: string[];
-// }
-
-// 🆕 NEW INTERFACE: For the counts returned by the new API
 interface PackageAppointmentCounts {
     pending: number;
     completed: number;
@@ -100,11 +93,9 @@ interface UserPackage {
   startDate: string;
   expiryDate: string;
   status: string;
-  // 🛑 MODIFIED: Add counts to UserPackage interface
   appointmentCounts?: PackageAppointmentCounts; 
 }
 
-// --- THEME & UTILITIES ---
 const THEME_COLORS: { [key: string]: string } = {
   "--theta-blue": "#035C84",
   "--theta-blue-dark": "#0873A1",
@@ -340,7 +331,6 @@ const generateSessionDetails = (
   return sessionDetails;
 };
 
-// --- API SERVICE ---
 const CALENDAR_API_BASE_URL = "/calendar";
 const SETTINGS_API_BASE_URL = "/system-settings";
 
@@ -437,7 +427,6 @@ const apiService = {
       return [];
     }
   },
-  // 🆕 NEW: Fetch appointment counts for a single package
   getPackageAppointmentCounts: async (packageId: string): Promise<PackageAppointmentCounts> => {
     try {
       const response = await apiRequest.get<ApiResponse<PackageAppointmentCounts>>(
@@ -480,12 +469,9 @@ const ConsolidatedBookingForm: React.FC = () => {
   const [userPackages, setUserPackages] = useState<UserPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [loadingPackages, setLoadingPackages] = useState(false);
-  
-  // 🆕 NEW STATE: To track if initial package check is done
   const [packagesChecked, setPackagesChecked] = useState(false);
 
 
-  // Fetch user profile to auto-populate email if logged in (UNCHANGED)
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (isAuthenticated) {
@@ -494,11 +480,10 @@ const ConsolidatedBookingForm: React.FC = () => {
           if (response.success && response.data) {
             setEmail(response.data.email);
             setIsEmailFromProfile(true);
-            console.log("✅ User email auto-populated:", response.data.email);
+            console.log("User email auto-populated:", response.data.email);
           }
         } catch (err: any) {
           console.error("Failed to fetch user profile:", err);
-          // If fetch fails, user can still manually enter email
           setIsEmailFromProfile(false);
         }
       }
@@ -506,7 +491,6 @@ const ConsolidatedBookingForm: React.FC = () => {
     fetchUserProfile();
   }, [isAuthenticated]);
 
-  // Fetch user's active packages (MODIFIED to fetch counts)
   const fetchUserPackages = useCallback(async () => {
     if (!isAuthenticated) {
       setUserPackages([]);
@@ -525,7 +509,6 @@ const ConsolidatedBookingForm: React.FC = () => {
           response.data.map(async (pkg: UserPackage) => {
             if (pkg._id) {
               const counts = await apiService.getPackageAppointmentCounts(pkg._id);
-              // Attach the counts to the package object
               return { ...pkg, appointmentCounts: counts }; 
             }
             return pkg;
@@ -537,7 +520,7 @@ const ConsolidatedBookingForm: React.FC = () => {
         setUserPackages([]);
       }
     } catch (err: any) {
-      console.error("❌ [fetchUserPackages] Error:", err);
+      console.error("[fetchUserPackages] Error:", err);
       setUserPackages([]);
     } finally {
       setLoadingPackages(false);
@@ -548,12 +531,9 @@ const ConsolidatedBookingForm: React.FC = () => {
     fetchUserPackages();
   }, [fetchUserPackages]);
 
-  // 🆕 NEW EFFECT: Auto-select package if only one active/usable package exists
   useEffect(() => {
     if (!loadingPackages && userPackages.length > 0 && !packagesChecked) {
         
-        // Filter packages that have remaining sessions
-        // Remaining sessions are calculated by (Total Sessions - (Completed + Pending Appointments))
         const usablePackages = userPackages.filter(pkg => {
             const counts = pkg.appointmentCounts;
             const totalScheduled = (counts?.pending || 0) + (counts?.completed || 0);
@@ -561,14 +541,12 @@ const ConsolidatedBookingForm: React.FC = () => {
         });
 
         if (usablePackages.length === 1) {
-            // Automatically select the single usable package
             setSelectedPackage(usablePackages[0]._id);
         } else if (usablePackages.length > 1) {
-            // If multiple usable packages exist, ensure none are selected initially
             setSelectedPackage(null);
         }
         
-        setPackagesChecked(true); // Mark as checked
+        setPackagesChecked(true);
     }
   }, [userPackages, loadingPackages, packagesChecked]); 
 
@@ -693,7 +671,7 @@ const ConsolidatedBookingForm: React.FC = () => {
         email: email,
         contactNumber: contactNumber,
         specialNote: specialNote,
-        packageActivationId: selectedPackage, // Include selected package if any
+        packageActivationId: selectedPackage,
         calendarContext: {
           date: dateKey,
           hasCalendarOverride: !!override,
@@ -718,7 +696,6 @@ const ConsolidatedBookingForm: React.FC = () => {
       if (response.success) {
         setIsSubmitting(false);
         
-        // 🛑 FIX: Use response.data?.reservationId for confirmation ID
         const confirmationId = response.data?.reservationId || "N/A"; 
         
         setSuccessMessage(
@@ -730,15 +707,13 @@ const ConsolidatedBookingForm: React.FC = () => {
         setSelectedDate(null);
         setName("");
         setContactNumber("");
-        // Only clear email if it's not from profile (guest user)
         if (!isEmailFromProfile) {
           setEmail("");
         }
         setSpecialNote("");
-        // 🛑 FIX: selectedPackage is preserved
 
         fetchCalendarData(currentMonth);
-        fetchUserPackages(); // Refresh packages to show updated session counts
+        fetchUserPackages(); 
       } else {
         setIsSubmitting(false);
         setMessage(
@@ -815,33 +790,25 @@ const ConsolidatedBookingForm: React.FC = () => {
     }
   `;
 
-  // 🆕 NEW EFFECT: Control Body Scrolling When Success Modal is Active
   useEffect(() => {
       if (successMessage) {
-          // Disable scrolling on the body when the modal is open
           document.body.style.overflow = 'hidden';
       } else {
-          // Re-enable scrolling when the modal is closed
           document.body.style.overflow = 'unset';
       }
       
-      // Cleanup function to ensure scrolling is re-enabled if the component unmounts
       return () => {
           document.body.style.overflow = 'unset';
       };
   }, [successMessage]);
 
-  // --- RENDER PACKAGES SECTION (Extracted for readability and fixed layout) ---
   const renderPackagesSection = () => {
     
-    // Helper to get total used/scheduled sessions from the counts
     const getTotalScheduled = (counts: PackageAppointmentCounts | undefined) => {
         if (!counts) return 0;
-        // Total booked includes pending and completed sessions
         return counts.pending + counts.completed + counts.cancelled; 
     };
     
-    // Helper to get remaining sessions
     const getRemainingSessions = (pkg: UserPackage) => {
         const totalScheduled = getTotalScheduled(pkg.appointmentCounts);
         return Math.max(0, pkg.totalSessions - totalScheduled);
@@ -878,7 +845,7 @@ const ConsolidatedBookingForm: React.FC = () => {
                     pkg.expiryDate &&
                     new Date(pkg.expiryDate).getTime() -
                         new Date().getTime() <
-                        7 * 24 * 60 * 60 * 1000; // Less than 7 days
+                        7 * 24 * 60 * 60 * 1000;
                 
                 const remaining = getRemainingSessions(pkg);
                 const totalScheduled = getTotalScheduled(pkg.appointmentCounts);
@@ -902,7 +869,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                             ${!isUsable ? 'opacity-60 cursor-not-allowed' : ''}
                         `}
                     >
-                        {/* Selected indicator */}
                         {isSelected && (
                             <div className="absolute top-3 right-3">
                                 <CheckCircle
@@ -912,7 +878,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Package Name */}
                         <h3
                             className="text-lg font-bold mb-3 pr-8"
                             style={{
@@ -924,7 +889,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                             {pkg.packageName}
                         </h3>
 
-                        {/* Session Progress Bar (Reflects Scheduled vs Total) */}
                         <div className="mb-4">
                             <div className="flex justify-between text-sm mb-1">
                                 <span className="font-semibold text-gray-700">
@@ -954,7 +918,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 🛑 FIX: Status Counts Display (Now in one row, smaller text) */}
                         <div className="mt-4 p-2 rounded-lg bg-gray-50 border border-gray-200">
                             
                             <div className="grid grid-cols-3 gap-3 text-xs font-medium mb-2">
@@ -978,7 +941,6 @@ const ConsolidatedBookingForm: React.FC = () => {
                             </div>
                         </div>
                         
-                        {/* Dates */}
                         <div className="space-y-2 text-sm mt-4 pt-2 border-t border-gray-200">
                           <div className="flex items-center gap-2 text-gray-600">
                             <Clock className="w-4 h-4" />
@@ -1016,15 +978,12 @@ const ConsolidatedBookingForm: React.FC = () => {
         </div>
     );
   }
-  // --- END RENDER PACKAGES SECTION ---
-
 
   return (
     <div className ="bg-[var(--light-blue-50)] min-h-screen pt-0">
       <style dangerouslySetInnerHTML={{ __html: CustomStyles }} />
       <div className="w-full bg-white shadow-2xl rounded-xl py-8 lg:py-12 border border-gray-100 relative overflow-hidden mt-[72px]">
         
-        {/* 🛑 MODIFIED SUCCESS MODAL CONTAINER (Fixed Positioning/Size) */}
         {successMessage && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-70 backdrop-blur-sm">
             <div className="bg-white rounded-xl shadow-2xl p-10 max-w-lg w-full transform transition-all duration-300 scale-100 border-2 border-[var(--theta-green)]">
@@ -1050,14 +1009,12 @@ const ConsolidatedBookingForm: React.FC = () => {
             </div>
           </div>
         )}
-        {/* 🛑 END MODIFIED SUCCESS MODAL CONTAINER */}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-serif font-bold text-[var(--dark-blue-800)] mb-6 text-center">
             Make an Appointment
           </h1>
 
-          {/* User Packages Section */}
           {isAuthenticated && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">

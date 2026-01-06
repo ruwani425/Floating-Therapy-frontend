@@ -7,7 +7,6 @@ import { Bath, PlusCircle, ArrowLeft, Edit, Ruler, Droplets, Calendar, Star } fr
 import apiRequest from "../../core/axios" 
 import Swal from 'sweetalert2';
 
-// --- INTERFACE DEFINITION ---
 
 interface Tank {
   _id: string
@@ -21,7 +20,6 @@ interface Tank {
   status?: "Ready" | "Occupied" | "Maintenance"
 }
 
-// --- MAIN COMPONENT ---
 
 const TankManagementPage: React.FC = () => {
   const navigate = useNavigate()
@@ -71,7 +69,6 @@ const TankManagementPage: React.FC = () => {
     <div className="min-h-screen p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-[#F0F8FB] via-[#E8F4F9] to-[#F5FAFC]">
       <div className="w-full max-w-7xl mx-auto bg-white/95 backdrop-blur-sm rounded-2xl md:rounded-3xl shadow-lg p-5 sm:p-8 md:p-10 border border-cyan-100/50">
         
-        {/* Navigation Section */}
         <button
           onClick={() => navigate("/admin/dashboard")}
           className="inline-flex items-center mb-6 md:mb-8 text-sm md:text-base font-semibold transition-all duration-300 hover:text-cyan-600 hover:translate-x-1 text-slate-700"
@@ -80,7 +77,6 @@ const TankManagementPage: React.FC = () => {
           Back to Dashboard
         </button>
 
-        {/* Header Section */}
         <header className="mb-8 md:mb-10 pb-6 border-b-2 border-cyan-200/60">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 mb-3">
             <div className="p-2 w-fit rounded-lg bg-cyan-100/40 border border-cyan-300/50">
@@ -93,7 +89,6 @@ const TankManagementPage: React.FC = () => {
           <p className="text-sm md:text-lg text-slate-600 sm:ml-14">View status and manage configurations.</p>
         </header>
 
-        {/* Action Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-cyan-200/60 pb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-cyan-900">Inventory</h2>
           <button
@@ -117,7 +112,6 @@ const TankManagementPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Desktop Table View (Hidden on Mobile) */}
             <div className="hidden md:block overflow-hidden rounded-xl shadow-md border border-cyan-200/50">
               <table className="min-w-full divide-y divide-cyan-200/60">
                 <thead className="bg-cyan-50/50">
@@ -150,7 +144,6 @@ const TankManagementPage: React.FC = () => {
               </table>
             </div>
 
-            {/* Mobile Card View (Hidden on Desktop) */}
             <div className="md:hidden grid grid-cols-1 gap-4">
               {tanks.map((tank) => (
                 <div key={tank._id} className="bg-white border border-cyan-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">

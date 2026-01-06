@@ -21,7 +21,6 @@ const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
-  // Size mappings
   const sizeClasses = {
     sm: 'w-8 h-8 text-sm',
     md: 'w-12 h-12 text-lg',
@@ -36,7 +35,6 @@ const Avatar: React.FC<AvatarProps> = ({
     xl: 'w-16 h-16',
   };
 
-  // Get initials from name
   const getInitials = (name?: string): string => {
     if (!name) return 'U';
     
@@ -52,7 +50,6 @@ const Avatar: React.FC<AvatarProps> = ({
     setImageError(true);
   };
 
-  // Show image if available and no error
   if (src && !imageError) {
     return (
       <img
@@ -66,7 +63,6 @@ const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
-  // Show initials fallback
   if (name) {
     return (
       <div
@@ -78,7 +74,6 @@ const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
-  // Show generic user icon fallback
   return (
     <div
       className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white border-2 ${className}`}

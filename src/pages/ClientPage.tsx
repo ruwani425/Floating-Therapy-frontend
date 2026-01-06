@@ -8,9 +8,9 @@ import {
   Clock,
   HeartHandshake,
 
-  Quote, // New icon for Testimonials
+  Quote,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"; // 1. Import Framer Motion
+import { motion, AnimatePresence } from "framer-motion";
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
@@ -31,7 +31,6 @@ const imageZoom = {
   visible: { scale: 1, opacity: 1, transition: { duration: 1.2 } }
 };
 
-// --- Data Structures (Same as before) ---
 const coreBenefits = [
   {
     title: "Flat Fee",
@@ -86,7 +85,6 @@ const servicesData = [
   },
 ];
 
-// Mock data for the massage benefits/FAQ section
 const benefitsData = [
   {
     id: 1,
@@ -120,7 +118,6 @@ const benefitsData = [
   },
 ];
 
-// Mock data for the blog section
 const blogData = [
   {
     category: "SPA",
@@ -242,7 +239,6 @@ const AboutUs: React.FC = () => {
     <section className="py-20 relative bg-light-blue-50 w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Column */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -267,7 +263,6 @@ const AboutUs: React.FC = () => {
             ))}
           </motion.div>
 
-          {/* Center Column */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -284,7 +279,6 @@ const AboutUs: React.FC = () => {
              </div>
           </motion.div>
 
-          {/* Right Column */}
           <motion.div 
             initial="hidden"
             whileInView="visible"
@@ -362,15 +356,11 @@ const Services: React.FC = () => {
   );
 };
 
-/**
- * Reviews/Testimonials Section (No background image needed)
- */
+
 const Reviews: React.FC = () => {
   return (
     <section id="reviews" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Use lightest background */}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-2">
@@ -382,7 +372,6 @@ const Reviews: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Review Card 1 (Left) */}
           <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200">
             <Quote className="w-8 h-8 text-dark-blue-600 mb-4 transform -scale-x-100" />
             <p className="text-lg text-gray-700 leading-relaxed mb-6">
@@ -396,9 +385,7 @@ const Reviews: React.FC = () => {
             </p>
           </div>
 
-          {/* Center Column: Rating and Second Review */}
           <div className="lg:col-span-1 flex flex-col items-center justify-between space-y-8">
-            {/* Rating Box */}
             <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200 w-full text-center">
               <p className="text-6xl font-bold font-serif text-dark-blue-600 mb-2">
                 4.9
@@ -412,7 +399,6 @@ const Reviews: React.FC = () => {
               </button>
             </div>
 
-            {/* Review 2 (Middle Top) */}
             <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200 w-full">
               <Quote className="w-8 h-8 text-dark-blue-600 mb-4 transform -scale-x-100" />
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
@@ -426,7 +412,6 @@ const Reviews: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Review Card 3 (Right) */}
           <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-blue-200">
             <Quote className="w-8 h-8 text-dark-blue-600 mb-4 transform -scale-x-100" />
             <p className="text-lg text-gray-700 leading-relaxed mb-6">
@@ -445,9 +430,6 @@ const Reviews: React.FC = () => {
   );
 };
 
-/**
- * Benefits/FAQ Section with Image Split
- */
 const BenefitsFAQ: React.FC = () => {
   const [openBenefitId, setOpenBenefitId] = useState(1);
 
@@ -463,17 +445,13 @@ const BenefitsFAQ: React.FC = () => {
   return (
     <section className="py-20 bg-white w-full">
       {" "}
-      {/* Use white background */}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {/* Image Column (Left on Desktop) */}
           <div className="lg:order-1 relative">
-            {/* Background texture/pattern box */}
             <div
               className="absolute inset-0 rounded-xl"
               style={{
-                backgroundColor: hasBackground ? "transparent" : "#E6F3FF", // Fallback color
+                backgroundColor: hasBackground ? "transparent" : "#E6F3FF",
                 backgroundImage: hasBackground
                   ? `url('${benefitBackgroundUrl}')`
                   : "none",
@@ -497,7 +475,6 @@ const BenefitsFAQ: React.FC = () => {
             </div>
           </div>
 
-          {/* Text & Accordion Column (Right on Desktop) */}
           <div className="lg:order-2 space-y-12 pt-10">
             <div>
               <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold mb-2">
@@ -508,7 +485,6 @@ const BenefitsFAQ: React.FC = () => {
               </h2>
             </div>
 
-            {/* Accordion */}
             <div className="space-y-4">
               {benefitsData.map((benefit) => (
                 <BenefitAccordion
@@ -554,7 +530,6 @@ const WhyChooseUs: React.FC = () => {
             style={{ clipPath: "polygon(0% 20%, 50% 0%, 100% 20%, 100% 100%, 0% 100%)" }}
           />
 
-          {/* Benefit Blocks */}
           {coreBenefits.map((benefit, index) => (
             <motion.div
               key={index}
@@ -583,9 +558,6 @@ const WhyChooseUs: React.FC = () => {
   );
 };
 
-/**
- * Meet Our Therapist Section
- */
 const MeetOurTherapist: React.FC = () => {
   const therapists = [
     {
@@ -603,10 +575,8 @@ const MeetOurTherapist: React.FC = () => {
   return (
     <section id="therapist" className="py-20 bg-light-blue-50 w-full">
       {" "}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-          {/* Introduction Column */}
           <div className="lg:col-span-1 space-y-6">
             <p className="text-sm tracking-widest uppercase text-dark-blue-600 font-semibold">
               Our Therapist
@@ -623,7 +593,6 @@ const MeetOurTherapist: React.FC = () => {
             </button>
           </div>
 
-          {/* Therapist Cards Grid */}
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
             {therapists.map((therapist, index) => (
               <div
@@ -632,7 +601,6 @@ const MeetOurTherapist: React.FC = () => {
               >
                 <div
                   className="h-80 w-full bg-cover bg-center"
-                  // 💡 Image source here
                   style={{ backgroundImage: `url(${therapist.image})` }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).onerror = null;
@@ -657,14 +625,11 @@ const MeetOurTherapist: React.FC = () => {
   );
 };
 
-/**
- * Blog Section
- */
+
 const Blog: React.FC = () => {
   return (
     <section id="blog" className="py-20 bg-white w-full">
       {" "}
-      {/* Container is max-w-7xl mx-auto to contain the content width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-end mb-12">
           <h2 className="text-5xl font-serif font-bold text-gray-900">
@@ -701,16 +666,15 @@ const Blog: React.FC = () => {
   );
 };
 
-/**
- * Call to Action Section (Why Wait to Feel Better?)
- */ const CtaWhyWait: React.FC = () => {
+
+const CtaWhyWait: React.FC = () => {
   const ctaVideoUrl =
     "/pexels.com_video_woman-doing-a-back-massage-6628400.webm";
 
   return (
     <section
       id="cta-wait"
-      className="py-20 relative overflow-hidden flex justify-center items-center w-full" // Added w-full
+      className="py-20 relative overflow-hidden flex justify-center items-center w-full"
       style={{ minHeight: "400px" }}
     >
       <div className="absolute z-0 w-full h-full inset-0">
@@ -729,11 +693,10 @@ const Blog: React.FC = () => {
       <div
         className="absolute z-10 w-full h-full inset-0"
         style={{
-          backgroundColor: "rgba(0, 0, 0, 0.5)", // Dark overlay
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
         }}
       ></div>
 
-      {/* Content Container (max-w-7xl mx-auto for centering/fixed width) - z-20 */}
       <div className="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 text-center py-10">
         <h2 className="text-5xl font-serif font-bold text-white mb-4">
           Why Wait to Feel Better?
@@ -742,17 +705,12 @@ const Blog: React.FC = () => {
           Start your journey to relaxation and wellness today.
         </p>
 
-        {/* ... buttons remain the same ... */}
         <div className="flex flex-wrap justify-center items-center space-x-4">
-          {/* Call button */}
           <button className="flex items-center px-6 py-3 bg-white text-dark-blue-600 font-semibold rounded-full shadow-xl hover:bg-gray-100 transition duration-300 transform hover:scale-105">
-            {/* <Phone className="w-5 h-5 mr-2" /> */}
             (422) 820 820
           </button>
           <span className="text-white text-lg">or</span>
-          {/* Appointment button */}
           <button className="flex items-center px-6 py-3 bg-dark-blue-600 text-white font-semibold rounded-full shadow-xl hover:bg-dark-blue-700 transition duration-300 transform hover:scale-105">
-            {/* <CalendarCheck className="w-5 h-5 mr-2" /> */}
             Book Appointment
           </button>
         </div>
@@ -761,9 +719,6 @@ const Blog: React.FC = () => {
   );
 };
 
-/**
- * Main wrapper for the Floating Theraphy homepage.
- */
 const HomePage: React.FC = () => {
   const CustomStyle = `
     /* ** CRITICAL FIX: RESET BODY/HTML MARGINS ** */

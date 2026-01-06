@@ -90,7 +90,6 @@ const ReportsPage: React.FC = () => {
       setIsLoading(true);
       console.log("📊 Fetching reports data for:", dateRange, "days");
 
-      // Fetch real reports data from backend
       const response = await apiRequest.get<{
         success: boolean;
         data: {
@@ -117,8 +116,7 @@ const ReportsPage: React.FC = () => {
         console.log("📋 Status:", response.data.statusBreakdown);
       }
     } catch (error) {
-      console.error("❌ Failed to fetch reports data:", error);
-      // Set empty data on error
+      console.error("Failed to fetch reports data:", error);
       setMetrics({
         totalRevenue: 0,
         revenueGrowth: 0,
@@ -138,7 +136,6 @@ const ReportsPage: React.FC = () => {
 
   const handleExportReport = () => {
     console.log("Exporting report...");
-    // Implement export functionality
   };
 
   const MetricCard: React.FC<{
@@ -188,7 +185,6 @@ const ReportsPage: React.FC = () => {
       className="min-h-screen"
     >
       <div className="w-full mx-auto p-6 md:p-8 max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate("/admin/dashboard")}
@@ -216,7 +212,6 @@ const ReportsPage: React.FC = () => {
             </div>
 
             <div className="flex gap-3">
-              {/* Date Range Filter */}
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
@@ -228,7 +223,6 @@ const ReportsPage: React.FC = () => {
                 <option value="90">Last 90 Days</option>
               </select>
 
-              {/* Export Button */}
               <button
                 onClick={handleExportReport}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 shadow-sm"
@@ -247,7 +241,6 @@ const ReportsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* Key Metrics Grid */}
             <section className="mb-8">
               <h2
                 className="text-xl font-bold mb-4"
@@ -285,9 +278,7 @@ const ReportsPage: React.FC = () => {
               </div>
             </section>
 
-            {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Booking Trends Chart */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3
                   className="text-lg font-bold mb-4"
@@ -335,7 +326,6 @@ const ReportsPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Status Breakdown Chart */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <h3
                   className="text-lg font-bold mb-4"
@@ -388,9 +378,7 @@ const ReportsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Additional Metrics */}
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              {/* Top Performing Package */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center gap-3 mb-4">
                   <div
@@ -420,7 +408,6 @@ const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Cancellation Rate */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-lg bg-red-50">
@@ -444,7 +431,6 @@ const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Avg Response Time */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
                 <div className="flex items-center gap-3 mb-4">
                   <div

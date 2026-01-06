@@ -5,12 +5,11 @@ import type React from "react"
 import { Save, RotateCcw, CheckCircle, AlertCircle, Settings } from "lucide-react"
 import apiRequest from "../../core/axios"
 
-// --- THEME COLORS (UPDATED) ---
 const THETA_COLORS = {
   primary: "#0873A1",
   primaryDark: "#035C84",
   primaryLight: "#94CCE7",
-  lightBg: "#F0F9FF", // Very light tint of the palette's blue
+  lightBg: "#F0F9FF",
   white: "#FFFFFF",
   gray100: "#F3F4F6",
   gray200: "#E5E7EB",
@@ -23,7 +22,6 @@ const THETA_COLORS = {
   error: "#EF4444",
 }
 
-// --- INTERFACE DEFINITION ---
 interface SystemSettingsProps {
   _id?: string
   defaultFloatPrice: number | string
@@ -37,16 +35,13 @@ interface SystemSettingsProps {
   actualCloseTime?: string
 }
 
-// Interface from tank.controller.ts for safe typing of the tank list response
 interface TankData {
   _id: string
   name: string
-  // ... other tank fields
 }
 
 type SettingField = keyof Omit<SystemSettingsProps, "_id">
 
-// --- INPUT FIELD COMPONENT ---
 interface InputFieldProps {
   label: string
   field: SettingField
@@ -82,7 +77,6 @@ const InputField = memo(
       <div className="space-y-2">
         <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
           {label}
-          {/* 🛑 REMOVED: API Driven Span */}
         </label>
         <div className="relative">
           {unit && type === "number" && (
@@ -133,8 +127,6 @@ const InputField = memo(
 
 InputField.displayName = "InputField"
 
-// --- UTILITY FUNCTION FOR CALCULATION ---
-// (calculateStaggeredSessions function remains unchanged)
 const calculateStaggeredSessions = (
   openTime: string,
   closeTime: string,
@@ -143,14 +135,12 @@ const calculateStaggeredSessions = (
   numberOfTanks: number,
   staggerInterval: number,
 ): { sessionsPerTank: number; actualCloseTime: string } => {
-  // Helper: Time string to minutes from midnight
   const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(":").map(Number)
     if (isNaN(hours) || isNaN(minutes)) return 0
     return hours * 60 + minutes
   }
 
-  // Helper: Minutes to time string
   const minutesToTime = (minutes: number): string => {
     const hrs = Math.floor(minutes / 60) % 24
     const mins = minutes % 60
@@ -160,14 +150,12 @@ const calculateStaggeredSessions = (
   const openMinutes = timeToMinutes(openTime)
   let closeMinutes = timeToMinutes(closeTime)
 
-  // Handle next-day closing
   if (closeMinutes <= openMinutes) {
     closeMinutes += 24 * 60
   }
 
   const sessionLength = duration + buffer
 
-  // Validate inputs
   if (sessionLength <= 0 || numberOfTanks <= 0 || staggerInterval < 0 || isNaN(openMinutes) || isNaN(closeMinutes)) {
     return { sessionsPerTank: 0, actualCloseTime: closeTime }
   }
@@ -175,26 +163,20 @@ const calculateStaggeredSessions = (
   let maxSessionsPerTank = 0
   let latestEndTime = openMinutes
 
-  // Calculate sessions for each tank
   for (let tankIndex = 0; tankIndex < numberOfTanks; tankIndex++) {
     const tankStartMinutes = openMinutes + tankIndex * staggerInterval
 
-    // Skip calculation if the tank's staggered start time exceeds the closing time
     if (tankStartMinutes >= closeMinutes) continue
 
-    // Calculate how many sessions this tank can fit
     const availableTime = closeMinutes - tankStartMinutes
     const tankSessions = Math.floor(availableTime / sessionLength)
 
     if (tankSessions > 0) {
-      // Calculate when this tank's last session ends (including cleaning)
       const tankEndTime = tankStartMinutes + tankSessions * sessionLength
       latestEndTime = Math.max(latestEndTime, tankEndTime)
 
-      // Track minimum sessions across all tanks to determine overall max sessions per tank
       maxSessionsPerTank = maxSessionsPerTank === 0 ? tankSessions : Math.min(maxSessionsPerTank, tankSessions)
     } else {
-      // If the first tank can fit 0 sessions, stop processing
       if (tankIndex === 0) {
         maxSessionsPerTank = 0
         break
@@ -210,9 +192,7 @@ const calculateStaggeredSessions = (
   }
 }
 
-// --- MAIN COMPONENT ---
 const SystemSettings = () => {
-  // 1. Define the default state for a brand new, unsaved document
   const defaultState: SystemSettingsProps = {
     defaultFloatPrice: 0,
     cleaningBuffer: 30,
@@ -234,7 +214,6 @@ const SystemSettings = () => {
   const [isLoadingTanks, setIsLoadingTanks] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
-  // --- API CALL TO FETCH TANK COUNT (UNCHANGED) ---
   const fetchTankCount = useCallback(async () => {
     setIsLoadingTanks(true)
     try {
@@ -259,7 +238,6 @@ const SystemSettings = () => {
     }
   }, [])
 
-  // --- CALCULATED VALUE (UNCHANGED) ---
   const { calculatedSessionCount, calculatedCloseTime } = useMemo(() => {
     const duration = Number(settings.sessionDuration) || 0
     const buffer = Number(settings.cleaningBuffer) || 0
@@ -284,7 +262,6 @@ const SystemSettings = () => {
     settings.tankStaggerInterval,
   ])
 
-  // --- EFFECT TO UPDATE CALCULATED FIELDS IN STATE (UNCHANGED) ---
   useEffect(() => {
     setSettings((prev) => {
       const needsUpdate = prev.sessionsPerDay !== calculatedSessionCount || prev.actualCloseTime !== calculatedCloseTime
@@ -299,7 +276,6 @@ const SystemSettings = () => {
     })
   }, [calculatedSessionCount, calculatedCloseTime])
 
-  // --- DATA FETCHING (UNCHANGED) ---
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -330,7 +306,6 @@ const SystemSettings = () => {
     fetchSettings()
   }, [fetchTankCount])
 
-  // --- HANDLERS (UNCHANGED) ---
   const handleInputChange = useCallback(
     (field: SettingField, value: number | string) => {
       setSettings((prev) => {
@@ -404,10 +379,8 @@ const SystemSettings = () => {
     }
   }
 
-  // Consolidated Loading Check for disabling UI elements
   const isAnyLoading = isLoading || isLoadingTanks
 
-  // --- CONDITIONAL RENDERING (UNCHANGED) ---
   if (fetchError && !isLoadingTanks) {
     return (
       <div
@@ -432,11 +405,9 @@ const SystemSettings = () => {
     )
   }
 
-  // --- MAIN RENDER ---
   return (
     <div style={{ backgroundColor: THETA_COLORS.lightBg }} className="min-h-screen py-8">
       <div className="w-full max-w-5xl mx-auto px-4">
-        {/* Header Section */}
         <div className="mb-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 rounded-full" style={{ backgroundColor: THETA_COLORS.primary }}>
@@ -453,7 +424,6 @@ const SystemSettings = () => {
           </div>
         </div>
 
-        {/* Check if data exists or is new */}
         {!settings._id && !hasChanges && !isAnyLoading && (
           <div
             className="mb-6 p-4 rounded-lg border border-opacity-20 flex items-start gap-3"
@@ -467,7 +437,6 @@ const SystemSettings = () => {
           </div>
         )}
 
-        {/* Status Messages */}
         {saveSuccess && (
           <div
             className="mb-6 p-4 rounded-lg border border-opacity-20 flex items-start gap-3"
@@ -502,7 +471,6 @@ const SystemSettings = () => {
           </div>
         )}
 
-        {/* Daily Capacity Summary Card */}
         {Number(settings.numberOfTanks) > 0 && Number(settings.sessionDuration) > 0 && (
           <div
             className="mb-8 rounded-lg p-6 border-2"
@@ -531,7 +499,6 @@ const SystemSettings = () => {
           </div>
         )}
 
-        {/* Tank Schedule Preview - Hour by Hour */}
         {Number(settings.numberOfTanks) > 0 && Number(settings.sessionDuration) > 0 && calculatedSessionCount > 0 && (
           <div
             className="mb-8 rounded-lg p-6 border"
@@ -548,7 +515,6 @@ const SystemSettings = () => {
                   return `${String(hrs).padStart(2, "0")}:${String(min).padStart(2, "0")}`
                 }
 
-                // Calculate initial tank start time
                 const [openHours, openMinutes] = settings.openTime.split(":").map(Number)
                 const tankStartMinutes = openHours * 60 + openMinutes + tankIndex * Number(settings.tankStaggerInterval)
 
@@ -556,7 +522,6 @@ const SystemSettings = () => {
                 const cleaningBuffer = Number(settings.cleaningBuffer)
                 const sessionLength = sessionDuration + cleaningBuffer
 
-                // Generate all sessions for this tank
                 const sessions = []
                 for (let sessionNum = 0; sessionNum < calculatedSessionCount; sessionNum++) {
                   const sessionStartMinutes = tankStartMinutes + sessionNum * sessionLength
@@ -605,7 +570,6 @@ const SystemSettings = () => {
                       </span>
                     </div>
 
-                    {/* All Sessions for this tank */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {sessions.map((session) => (
                         <div
@@ -644,9 +608,7 @@ const SystemSettings = () => {
           </div>
         )}
 
-        {/* Settings Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Pricing Section */}
           <div
             className="rounded-lg p-6 border"
             style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}
@@ -668,7 +630,6 @@ const SystemSettings = () => {
             />
           </div>
 
-          {/* Tank Configuration Section */}
           <div
             className="rounded-lg p-6 border"
             style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}
@@ -678,19 +639,16 @@ const SystemSettings = () => {
                 Tank Configuration
               </h2>
             </div>
-            {/* Number of Tanks (API Driven - Read Only) */}
             <InputField
               label="Number of Floating Tanks"
               field="numberOfTanks"
               type="number"
-              // Display loading state if needed
               value={isAnyLoading ? "Loading..." : settings.numberOfTanks}
               description="This number is automatically retrieved from your active tanks in the database."
               onChange={handleInputChange}
               disabled={isSaving || isAnyLoading}
               readOnly={true}
             />
-            {/* Tank Stagger Interval */}
             <div className="mt-6">
               <InputField
                 label="Tank Start Time Gap"
@@ -705,7 +663,6 @@ const SystemSettings = () => {
             </div>
           </div>
 
-          {/* Capacity Section */}
           <div
             className="rounded-lg p-6 border"
             style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}
@@ -715,7 +672,6 @@ const SystemSettings = () => {
                 Session Capacity
               </h2>
             </div>
-            {/* Session Duration (Editable Field) */}
             <InputField
               label="Float Session Duration"
               field="sessionDuration"
@@ -726,7 +682,6 @@ const SystemSettings = () => {
               onChange={handleInputChange}
               disabled={isSaving}
             />
-            {/* Max Sessions Per Day (Per Tank) */}
             <div className="mt-6">
               <InputField
                 label="Max Sessions Per Day (Per Tank)"
@@ -739,7 +694,6 @@ const SystemSettings = () => {
                 readOnly={true}
               />
             </div>
-            {/* Total Sessions Per Day (All Tanks) */}
             <div className="mt-6">
               <div
                 className="p-4 rounded-lg"
@@ -767,7 +721,6 @@ const SystemSettings = () => {
             </div>
           </div>
 
-          {/* Operating Hours Section */}
           <div
             className="md:col-span-2 rounded-lg p-6 border"
             style={{ backgroundColor: THETA_COLORS.white, borderColor: THETA_COLORS.gray200 }}
@@ -797,7 +750,6 @@ const SystemSettings = () => {
                 disabled={isSaving}
               />
 
-              {/* 🛑 FIX: Customized block to remove 'API Driven' badge and fix alignment */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold" style={{ color: THETA_COLORS.text }}>
                   Actual Closing Time
@@ -835,7 +787,6 @@ const SystemSettings = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
           <button
             onClick={handleReset}

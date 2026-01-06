@@ -1,14 +1,9 @@
 "use client"
 
 // src/pages/admin/ContentManagementPage.tsx
-// Note: To enable rich text editor, run: npm install react-quill
-// Then uncomment the ReactQuill import and usage below
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-// import ReactQuill from 'react-quill';
-// import 'react-quill/dist/quill.snow.css';
 import apiRequest from "../../core/axios"
 import { uploadImage } from "../../firebase/firebase-config"
 import { Plus, Edit, Trash2, Eye, EyeOff, ArrowLeft, ImageIcon, Save, X, Search } from "lucide-react"
@@ -53,7 +48,6 @@ const ContentManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all")
 
-  // Form state
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -65,18 +59,6 @@ const ContentManagementPage: React.FC = () => {
     tags: [] as string[],
     isActive: false,
   })
-
-  // Rich text editor configuration (uncomment when react-quill is installed)
-  // const quillModules = {
-  //   toolbar: [
-  //     [{ header: [1, 2, 3, false] }],
-  //     ['bold', 'italic', 'underline', 'strike'],
-  //     [{ list: 'ordered' }, { list: 'bullet' }],
-  //     [{ color: [] }, { background: [] }],
-  //     ['link'],
-  //     ['clean'],
-  //   ],
-  // };
 
   useEffect(() => {
     fetchBlogs()
@@ -138,7 +120,6 @@ const ContentManagementPage: React.FC = () => {
 
       let imageUrl = formData.imageUrl
 
-      // Upload image if new one selected
       if (imageFile) {
         const imagePath = `blogs/${Date.now()}-${imageFile.name}`
         imageUrl = await uploadImage(imageFile, imagePath)
@@ -150,11 +131,9 @@ const ContentManagementPage: React.FC = () => {
       }
 
       if (editingBlog) {
-        // Update existing blog
         await apiRequest.put(`/blogs/${editingBlog._id}`, blogData)
         Swal.fire("Success", "Blog updated successfully", "success")
       } else {
-        // Create new blog
         await apiRequest.post("/blogs", blogData)
         Swal.fire("Success", "Blog created successfully", "success")
       }
@@ -239,7 +218,6 @@ const ContentManagementPage: React.FC = () => {
   return (
     <div style={{ backgroundColor: THETA_COLORS.bgLight }} className="min-h-screen">
       <div className="w-full mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
-        {/* Header */}
         <div className="mb-6 md:mb-8">
           <button
             onClick={() => navigate("/admin/dashboard")}
@@ -274,7 +252,6 @@ const ContentManagementPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="mb-6 flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -299,7 +276,6 @@ const ContentManagementPage: React.FC = () => {
           </select>
         </div>
 
-        {/* Blog List */}
         {isLoading ? (
           <div className="flex justify-center items-center h-96">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -377,7 +353,6 @@ const ContentManagementPage: React.FC = () => {
           </div>
         )}
 
-        {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-white rounded-xl max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
@@ -397,7 +372,6 @@ const ContentManagementPage: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6">
-                {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Featured Image *
@@ -437,7 +411,6 @@ const ContentManagementPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Title */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Title *
@@ -451,7 +424,6 @@ const ContentManagementPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Slug */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Slug *
@@ -466,7 +438,6 @@ const ContentManagementPage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-1">URL-friendly version of the title</p>
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Description *
@@ -480,12 +451,10 @@ const ContentManagementPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Content (Rich Text Editor) */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Content *
                   </label>
-                  {/* Temporary textarea - Replace with ReactQuill after installing react-quill */}
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -500,7 +469,6 @@ const ContentManagementPage: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Category & Author */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
@@ -526,7 +494,6 @@ const ContentManagementPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Tags */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
                     Tags (comma separated)
@@ -545,7 +512,6 @@ const ContentManagementPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Active Toggle */}
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -563,7 +529,6 @@ const ContentManagementPage: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Form Actions */}
                 <div className="flex flex-col-reverse md:flex-row gap-3 pt-4 border-t border-slate-200">
                   <button
                     type="button"

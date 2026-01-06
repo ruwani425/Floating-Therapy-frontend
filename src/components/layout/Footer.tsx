@@ -9,7 +9,6 @@ const Footer: React.FC = () => {
     <footer
       className="relative pt-20 pb-0 bg-cover bg-center text-white w-full bg-dark-blue-600"
     >
-      {/* Curved top shape */}
       <div
         className="absolute top-0 left-0 right-0 h-10 bg-white"
         style={{
@@ -19,7 +18,6 @@ const Footer: React.FC = () => {
       ></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Section: Address, Hours, Logo, CTA */}
         <div className="text-center mb-16">
           <div className="flex justify-center text-sm font-display font-semibold mb-10 text-gray-300 space-x-12">
             <div>
@@ -50,9 +48,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Section: Footer Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-600 pt-10 text-sm">
-          {/* ABOUT */}
           <div className="space-y-4">
             <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               ABOUT
@@ -64,7 +60,6 @@ const Footer: React.FC = () => {
               <li className="hover:text-white cursor-pointer transition-colors duration-300">Contact us</li>
             </ul>
           </div>
-          {/* SERVICES */}
           <div className="space-y-4">
             <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               SERVICES
@@ -77,7 +72,6 @@ const Footer: React.FC = () => {
               <li className="hover:text-white cursor-pointer transition-colors duration-300">Sport Injuries</li>
             </ul>
           </div>
-          {/* CONDITIONS */}
           <div className="space-y-4">
             <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               CONDITIONS
@@ -90,7 +84,6 @@ const Footer: React.FC = () => {
               <li className="hover:text-white cursor-pointer transition-colors duration-300">Shoulder Pain</li>
             </ul>
           </div>
-          {/* PATIENTS */}
           <div className="space-y-4">
             <h4 className="font-display font-bold mb-2 text-light-blue-200 uppercase tracking-wider">
               PATIENTS
@@ -104,7 +97,6 @@ const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* Copyright Strip */}
       <div className="mt-8 border-t border-gray-600 pt-4 pb-4 text-center text-xs text-gray-400 font-sans">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <span>
@@ -117,7 +109,6 @@ const Footer: React.FC = () => {
             <span className="hover:text-white cursor-pointer transition-colors duration-300 font-display">
               Privacy Policy
             </span>
-            {/* Social Icons Placeholder */}
             <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />
             <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />
             <Star className="w-4 h-4 hover:text-white cursor-pointer transition-colors duration-300" />

@@ -27,7 +27,6 @@ import {
 import Swal from "sweetalert2";
 import apiRequest from "../../core/axios";
 
-// --- THEME COLORS ---
 const COLORS = {
   primary: "#5B8DC4",
   primaryDark: "#2C4A6F",
@@ -46,7 +45,6 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-// --- UTILITY FUNCTIONS ---
 const formatDate = (date: Date | string, format: string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
@@ -90,7 +88,6 @@ const addMonths = (date: Date, months: number): Date => {
   return newDate;
 };
 
-// --- TYPE DEFINITIONS ---
 type DayStatus = "Bookable" | "Closed" | "Sold Out";
 
 interface SystemSettings {
@@ -145,7 +142,6 @@ interface SessionDetail {
   }[];
 }
 
-// --- API SERVICE ---
 const apiService = {
   getSystemSettings: async (): Promise<SystemSettings> => {
     try {
@@ -221,7 +217,6 @@ const apiService = {
   },
 };
 
-// --- SESSION CALCULATION ---
 const calculateStaggeredSessions = (
   openTime: string,
   closeTime: string,
@@ -350,7 +345,6 @@ const generateSessionDetails = (
   return sessionDetails;
 };
 
-// --- DAY CONFIGURATION MODAL ---
 interface DayConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -571,7 +565,6 @@ const DayConfigModal: React.FC<DayConfigModalProps> = ({
   );
 };
 
-// --- MAIN COMPONENT ---
 const CalendarManage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -734,7 +727,6 @@ const CalendarManage: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: COLORS.gray50 }}>
-      {/* Header */}
       <div className="p-4 sm:p-6 border-b shadow-sm" style={{ backgroundColor: COLORS.white }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -749,7 +741,6 @@ const CalendarManage: React.FC = () => {
             </div>
           </div>
 
-          {/* Stats Cards - Responsive Grid */}
           {stats && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
@@ -777,7 +768,6 @@ const CalendarManage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Calendar Section */}
           <div className="lg:col-span-2 rounded-xl border p-3 sm:p-4 shadow-md bg-white" style={{ borderColor: COLORS.gray200 }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl sm:text-2xl font-bold" style={{ color: COLORS.gray800 }}>{formatDate(currentMonth, "MMMM yyyy")}</h2>
@@ -788,7 +778,6 @@ const CalendarManage: React.FC = () => {
               </div>
             </div>
 
-            {/* Legend - Scrollable on mobile */}
             <div className="flex items-center gap-3 mb-4 p-2 rounded-lg text-[10px] sm:text-xs overflow-x-auto whitespace-nowrap scrollbar-hide" style={{ backgroundColor: COLORS.gray50 }}>
               {[{ c: `${COLORS.success}40`, t: 'Available' }, { c: `${COLORS.warning}40`, t: 'Partial' }, { c: `${COLORS.error}40`, t: 'Full' }, { c: `${COLORS.error}80`, t: 'Closed' }].map((l, i) => (
                 <div key={i} className="flex items-center gap-1">
@@ -798,7 +787,6 @@ const CalendarManage: React.FC = () => {
               ))}
             </div>
 
-            {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {["S", "M", "T", "W", "T", "F", "S"].map(d => <div key={d} className="text-center py-1 text-[10px] sm:text-xs font-bold text-gray-500">{d}</div>)}
               {calendarDays.map((day, idx) => {
@@ -846,7 +834,6 @@ const CalendarManage: React.FC = () => {
             </div>
           </div>
 
-          {/* Details Sidebar */}
           <div className="rounded-xl border p-4 shadow-md bg-white h-fit" style={{ borderColor: COLORS.gray200 }}>
             {selectedDate && selectedDayData ? (
               <div className="space-y-4">
@@ -885,7 +872,6 @@ const CalendarManage: React.FC = () => {
           </div>
         </div>
 
-        {/* Sessions Section */}
         {selectedDate && selectedDayData && selectedDayData.status !== "Closed" && (
           <div className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="rounded-xl border p-4 sm:p-6 shadow-lg bg-white" style={{ borderColor: COLORS.gray200 }}>
@@ -927,7 +913,6 @@ const CalendarManage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal */}
       {settings && selectedDayData && (
         <DayConfigModal
           isOpen={isModalOpen}

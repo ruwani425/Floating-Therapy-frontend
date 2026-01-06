@@ -2,7 +2,6 @@ import { useSearchParams, useNavigate } from "react-router-dom"
 import { Calendar, Clock, MapPin, Phone, ChevronLeft } from "lucide-react"
 import { useState, useMemo } from "react"
 
-// --- TYPESCRIPT DEFINITIONS ---
 type AppointmentStatus = "confirmed" | "pending" | "completed"
 
 interface Appointment {
@@ -68,7 +67,6 @@ export default function AppointmentsPage() {
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl p-4 md:p-6">
         
-        {/* Responsive Header */}
         <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Appointments</h1>
@@ -85,7 +83,6 @@ export default function AppointmentsPage() {
           </button>
         </div>
 
-        {/* Appointments List */}
         <div className="space-y-4">
           {appointments.length > 0 ? (
             appointments.map((appointment) => {
@@ -98,7 +95,6 @@ export default function AppointmentsPage() {
                     isSelected ? "ring-2 ring-primary/20" : "hover:bg-muted/50"
                   }`}
                 >
-                  {/* Appointment Header */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2 mb-1">
@@ -112,7 +108,6 @@ export default function AppointmentsPage() {
                     </span>
                   </div>
 
-                  {/* Responsive Quick Info Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="text-xs md:text-sm font-semibold text-muted-foreground whitespace-nowrap">Service:</span>
@@ -124,7 +119,6 @@ export default function AppointmentsPage() {
                     </div>
                   </div>
 
-                  {/* Expandable Details */}
                   {isSelected && (
                     <div className="border-t border-border pt-4 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="space-y-3 mb-6">
@@ -138,7 +132,6 @@ export default function AppointmentsPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons - Stacked on mobile */}
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button className="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-opacity-90 active:scale-[0.98] transition-all">
                           Confirm
@@ -166,7 +159,6 @@ export default function AppointmentsPage() {
           )}
         </div>
 
-        {/* Summary Stats - Grid adjustments */}
         {appointments.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mt-8">
             <div className="rounded-lg border border-border bg-card p-4 text-center">

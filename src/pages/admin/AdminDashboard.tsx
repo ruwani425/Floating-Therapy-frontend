@@ -24,8 +24,6 @@ import {
   Shield,
   BookOpen,
   TrendingUp,
-  // ArrowUp,
-  // ArrowDown,
   Waves,
   LogOut,
   Package,
@@ -165,43 +163,6 @@ const dashboardOptions = [
     permissionKey: "settings",
   },
 ]
-
-// interface StatCardProps {
-//   title: string
-//   value: string
-//   change: string
-//   trend: "up" | "down"
-//   icon: React.ElementType
-//   color: string
-// }
-
-// const StatCard: React.FC<StatCardProps> = ({ title, value, change, trend, icon: Icon }) => (
-//   <motion.div
-//     variants={itemVariants}
-//     whileHover={{ y: -5, transition: { duration: 0.2 } }}
-//     className="p-6 bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg transition-shadow duration-300 flex flex-col"
-//   >
-//     <div className="flex items-start justify-between mb-4">
-//       <div className="flex-1">
-//         <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: THETA_COLORS.mediumBlue }}>
-//           {title}
-//         </p>
-//         <h4 className="text-3xl font-bold mb-2" style={{ color: THETA_COLORS.darkestBlue }}>
-//           {value}
-//         </h4>
-//         <div
-//           className={`flex items-center text-xs font-semibold ${trend === "up" ? "text-emerald-600" : "text-red-600"}`}
-//         >
-//           {trend === "up" ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />}
-//           {change} vs last period
-//         </div>
-//       </div>
-//       <div className="p-3 rounded-xl shadow-inner" style={{ backgroundColor: `${THETA_COLORS.lightBlue}20` }}>
-//         <Icon className="w-6 h-6" style={{ color: THETA_COLORS.darkBlue }} />
-//       </div>
-//     </div>
-//   </motion.div>
-// )
 
 const BookingTrendLineChart: React.FC<{
   data: Array<{ name: string; bookings: number }>

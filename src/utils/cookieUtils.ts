@@ -1,7 +1,7 @@
 // src/utils/cookieUtils.ts
 
 export const AUTH_TOKEN_KEY: string = "auth_token";
-export const AUTH_ROLE_KEY: string = "auth_role"; // ⬅️ FIX: Define AUTH_ROLE_KEY
+export const AUTH_ROLE_KEY: string = "auth_role";
 export const TOKEN_LIFESPAN_DAYS: number = 7;
 
 export const getCookie = (name: string): string | null => {

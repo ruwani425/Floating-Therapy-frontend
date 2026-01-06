@@ -5,14 +5,12 @@ import apiRequest from "../core/axios";
 import Swal from 'sweetalert2'; 
 import { useAuth } from '../components/AuthProvider'; 
 
-// --- Color Constants (Replicated from PricingPage for consistency) ---
-const COLOR_PRIMARY = "#3a7ca5"; // var(--theta-blue)
-const COLOR_ACCENT_LIGHT = "#a0e7e5"; // var(--theta-blue-light)
+const COLOR_PRIMARY = "#3a7ca5";
+const COLOR_ACCENT_LIGHT = "#a0e7e5";
 const COLOR_TEXT_MUTED = "#6B7280";
 const COLOR_BACKGROUND = "#F9FAFB";
 const COLOR_TEXT_DARK = "#1B4965";
 
-// --- Interfaces ---
 interface PackageData {
   _id: string;
   name: string;
@@ -25,18 +23,16 @@ interface PackageData {
   isActive: boolean;
 }
 
-// Interface for the data sent to the new /api/package-activations route
 interface ActivationPayload {
   fullName: string;
   email: string;
   phone: string;
   address: string; 
-  preferredDate: string; // ISO string representation of the request date
+  preferredDate: string;
   message: string;
   packageId: string;
 }
 
-// Internal form state interface
 interface InternalFormData {
   fullName: string;
   email: string;
@@ -45,7 +41,6 @@ interface InternalFormData {
   message: string;
 }
 
-// --- Package ID Hook: Extracts packageId from the URL query string ---
 
 const useQueryPackageId = (): string | null => {
   const location = useLocation();
@@ -53,7 +48,6 @@ const useQueryPackageId = (): string | null => {
   return params.get('packageId'); 
 }
 
-// --- API Service Implementation (Live Data Fetch and Submission) ---
 
 const packageApiService = {
   fetchPackageDetails: async (packageId: string): Promise<PackageData | null> => {
@@ -76,7 +70,6 @@ const packageApiService = {
   },
 };
 
-// --- Helper Component: Package Summary Card ---
 
 const PackageSummaryCard: React.FC<{ pkg: PackageData }> = ({ pkg }) => {
   const formattedTotalPrice = pkg.totalPrice.toLocaleString("en-US");
@@ -121,7 +114,6 @@ const PackageSummaryCard: React.FC<{ pkg: PackageData }> = ({ pkg }) => {
   );
 };
 
-// --- Main Component ---
 
 const PackageAppointmentPage: React.FC = () => {
   const packageId = useQueryPackageId();
@@ -135,16 +127,14 @@ const PackageAppointmentPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'fail'>('idle');
 
-  // Initializing formData without email field
   const [formData, setFormData] = useState<InternalFormData>({
     fullName: '',
-    email: '', // Will be populated from user profile
+    email: '', 
     phone: '',
     address: '',
     message: '',
   });
 
-  // Check authentication and redirect if not logged in
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       Swal.fire({
@@ -159,7 +149,6 @@ const PackageAppointmentPage: React.FC = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Fetch user profile to get email
   const fetchUserProfile = useCallback(async () => {
     if (!isAuthenticated) return;
     
@@ -199,14 +188,12 @@ const PackageAppointmentPage: React.FC = () => {
     }
   }, []);
 
-  // Fetch user profile on mount
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       fetchUserProfile();
     }
   }, [isAuthenticated, authLoading, fetchUserProfile]);
 
-  // Fetch package details
   useEffect(() => {
     if (packageId && isAuthenticated && !authLoading) {
       fetchPackageDetails(packageId);
@@ -216,7 +203,6 @@ const PackageAppointmentPage: React.FC = () => {
     }
   }, [packageId, isAuthenticated, authLoading, fetchPackageDetails]);
 
-  // Handle changes for input and textarea fields
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -229,7 +215,6 @@ const PackageAppointmentPage: React.FC = () => {
       return;
     }
 
-    // Simple validation (address is required, email comes from user profile)
     if (!formData.fullName || !formData.phone || !formData.address || !userEmail) {
         setError("Please fill out all required fields.");
         return;
@@ -240,17 +225,15 @@ const PackageAppointmentPage: React.FC = () => {
     setError(null);
 
     try {
-      // Construct the payload with user's email from profile
       const dataToSubmit: ActivationPayload = {
         ...formData,
-        email: userEmail, // Use email from authenticated user profile
+        email: userEmail,
         packageId: pkg._id,
         preferredDate: new Date().toISOString(), 
       };
       
       await packageApiService.submitActivation(dataToSubmit); 
       
-      // 🛑 SUCCESS LOGIC: Show SweetAlert and navigate
       await Swal.fire({
           icon: 'success',
           title: 'Request Sent!',
@@ -259,10 +242,8 @@ const PackageAppointmentPage: React.FC = () => {
           confirmButtonColor: COLOR_PRIMARY,
       });
       
-      // Navigate to the Pricing Page after the user closes the alert
       navigate('/pricing');
       
-      // Note: We don't set submissionStatus to 'success' here as navigation occurs immediately
 
     } catch (err: any) {
       console.error("Submission error:", err);
@@ -283,7 +264,6 @@ const PackageAppointmentPage: React.FC = () => {
       );
     }
 
-    // Don't render if not authenticated (will redirect)
     if (!isAuthenticated) {
       return null;
     }
@@ -303,12 +283,11 @@ const PackageAppointmentPage: React.FC = () => {
       );
     }
 
-    if (!pkg) return null; // Should be covered by error/loading, but good guard
+    if (!pkg) return null;
 
     return (
       <div className="grid lg:grid-cols-3 gap-8 sm:gap-12">
         
-        {/* Package Details (Left/Top) */}
         <div className="lg:col-span-1 space-y-8">
           <PackageSummaryCard pkg={pkg} />
           <div className="p-6 rounded-xl bg-white shadow-md border border-gray-200">
@@ -321,7 +300,6 @@ const PackageAppointmentPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Form Section (Right/Bottom) */}
         <div className="lg:col-span-2">
           <div className="p-6 sm:p-8 rounded-xl shadow-2xl bg-white">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: COLOR_PRIMARY }}>
@@ -333,14 +311,12 @@ const PackageAppointmentPage: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* Submission Status Message - Kept for visibility before successful navigation */}
               {error && submissionStatus !== 'success' && (
                  <div className="p-4 rounded-lg bg-red-50 text-red-700 font-semibold flex items-center shadow-inner">
                    {error}
                  </div>
               )}
               
-              {/* Full Name */}
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <div className="relative rounded-md shadow-sm">
@@ -360,7 +336,6 @@ const PackageAppointmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Email (Read-only from user profile) */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <div className="relative rounded-md shadow-sm bg-gray-50">
@@ -383,7 +358,6 @@ const PackageAppointmentPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Phone */}
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                 <div className="relative rounded-md shadow-sm">
@@ -403,7 +377,6 @@ const PackageAppointmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Address Field (Textarea) */}
               <div>
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Billing/Contact Address</label>
                 <div className="relative rounded-md shadow-sm">
@@ -423,7 +396,6 @@ const PackageAppointmentPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Message */}
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
                 <textarea
@@ -437,7 +409,6 @@ const PackageAppointmentPage: React.FC = () => {
                 />
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting || submissionStatus === 'success'}

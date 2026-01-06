@@ -34,7 +34,6 @@ const staggerContainer: Variants = {
   }
 };
 
-// --- Contact Info Cards Component ---
 interface ContactInfoProps {
   icon: React.ElementType;
   title: string;
@@ -117,7 +116,6 @@ const ContactPage: React.FC = () => {
 
     if (response.success) {
       setIsSubmitted(true);
-      // Reset form
       setFormData({ name: "", email: "", phone: "", service: "", message: "" });
       setTimeout(() => setIsSubmitted(false), 3000);
     }
@@ -141,7 +139,6 @@ const ContactPage: React.FC = () => {
   return (
     <div className="bg-white w-full min-h-screen overflow-x-hidden">
       
-      {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 text-center overflow-hidden">
         <video 
           src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
@@ -168,12 +165,10 @@ const ContactPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Form & Sidebar Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             
-            {/* Contact Form */}
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -213,7 +208,6 @@ const ContactPage: React.FC = () => {
               </form>
             </motion.div>
 
-            {/* Sidebar Image/Info */}
             <motion.div 
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -244,7 +238,6 @@ const ContactPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Contact Cards */}
       <section className="py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -259,7 +252,6 @@ const ContactPage: React.FC = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
       <section className="py-24 px-4 bg-slate-50">
         <div className="max-w-4xl mx-auto">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-center mb-16">
@@ -271,7 +263,6 @@ const ContactPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-24 px-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }}

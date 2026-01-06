@@ -20,13 +20,12 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiRequest from "../../core/axios";
 
-// --- THEME & CONSTANTS ---
 const COLOR_BG_LIGHT = "#F0F8FF";
 const COLOR_TEXT_DARK = "#1B4965";
 const COLOR_ACCENT = "#A8D8EA";
 const COLOR_MUTED = "#5E7B9D";
 const COLOR_CARD_BG = "#FFFFFF";
-const COLOR_EDIT_BLUE = "#3B82F6"; // Tailwind blue-500
+const COLOR_EDIT_BLUE = "#3B82F6";
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
@@ -34,7 +33,6 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-// --- INTERFACES ---
 interface PackageDetails {
   _id: string;
   packageName: string;
@@ -79,7 +77,6 @@ interface PaginationMeta {
   hasPrevPage: boolean;
 }
 
-// --- API SERVICE ---
 const reservationApiService = {
   updateAppointmentStatus: async (
     id: string,
@@ -99,7 +96,6 @@ const reservationApiService = {
     }
   },
 
-  // API METHOD: Update Date and Time
   updateAppointmentDetails: async (
     id: string,
     date: string,
@@ -112,7 +108,6 @@ const reservationApiService = {
       );
       if (response.success && response.data) {
         const app = response.data;
-        // Re-map the response, converting time to 24hr format for state consistency
         return {
           id: app._id,
           reservationId: app.reservationId,
@@ -121,11 +116,11 @@ const reservationApiService = {
           contactNumber: app.contactNumber,
           specialNote: app.specialNote,
           sessionDate: app.date,
-          sessionTime: convert12hrTo24hr(app.time), // Use helper for consistency
+          sessionTime: convert12hrTo24hr(app.time),
           status: (app.status as string)?.toLowerCase() || "pending",
           name: app.name,
           date: app.date,
-          time: app.time, // The original 12hr/24hr format is here, but we use sessionTime below
+          time: app.time,
           isPackageUser: app.isPackageUser || false,
           packageDetails: app.packageDetails || null,
         } as Appointment;
@@ -163,15 +158,11 @@ const reservationApiService = {
   },
 };
 
-
-// --- HELPER FUNCTIONS ---
-
 const getStatusBadge = (status: string) => {
-  // Keeping badge colors light and contrasting against the card background
   const statusStyles: Record<string, string> = {
-    pending: `bg-yellow-100 text-yellow-700 border-yellow-200`, // Soft Yellow
-    completed: `bg-teal-100 text-teal-700 border-teal-200`, // Soft Teal
-    cancelled: `bg-red-100 text-red-700 border-red-200`, // Soft Red
+    pending: `bg-yellow-100 text-yellow-700 border-yellow-200`,
+    completed: `bg-teal-100 text-teal-700 border-teal-200`,
+    cancelled: `bg-red-100 text-red-700 border-red-200`, 
   };
   const statusIcons: Record<string, React.ReactNode> = {
     pending: <Clock className="h-4 w-4" />,
@@ -184,33 +175,24 @@ const getStatusBadge = (status: string) => {
   };
 };
 
-/**
- * Utility function to format Sri Lankan numbers for WhatsApp.
- */
 const formatSLNumberForWhatsApp = (contactNumber: string | null): string => {
     if (!contactNumber) return "";
     
-    // 1. Remove non-digit characters (for safety)
     let cleanedNumber = contactNumber.replace(/\D/g, '');
     
-    // 2. Check for the domestic leading zero and remove it
     if (cleanedNumber.startsWith('0')) {
         cleanedNumber = cleanedNumber.substring(1);
     }
 
-    // 3. Prepend the hardcoded Sri Lankan country code '94'
     return '94' + cleanedNumber;
 };
 
 
-// NEW FIX: Converts 12hr format (e.g., "12:20 PM") to 24hr format (e.g., "12:20")
 const convert12hrTo24hr = (time12h: string): string => {
-    // Check if the format is already 24-hour (e.g., "20:21")
     if (time12h.includes(':') && !time12h.includes('M')) {
         return time12h;
     }
     
-    // Attempt to handle 12-hour format
     const parts = time12h.split(' ');
     const time = parts[0];
     const period = parts.length > 1 ? parts[1].toUpperCase() : '';
@@ -223,16 +205,12 @@ const convert12hrTo24hr = (time12h: string): string => {
     if (period === 'PM' && h !== 12) {
         h += 12;
     } else if (period === 'AM' && h === 12) {
-        h = 0; // Midnight (12:xx AM)
+        h = 0;
     }
 
-    // Ensure minutes are present and padded
     const paddedMinutes = (minutes || '00').padStart(2, '0');
     return `${String(h).padStart(2, '0')}:${paddedMinutes}`;
 };
-
-
-// --- SUB-COMPONENTS ---
 
 interface StatusDropdownProps {
   appointmentId: string;
@@ -267,7 +245,6 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           position: "top-end",
           timer: 3000,
           showConfirmButton: false,
-          // Use theme colors for SweetAlert
           background: COLOR_CARD_BG,
           color: COLOR_TEXT_DARK,
         });
@@ -280,7 +257,6 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
         icon: "error",
         title: "Error",
         text: "Could not update status.",
-        // Use theme colors for SweetAlert
         background: COLOR_CARD_BG,
         color: COLOR_TEXT_DARK,
       });
@@ -298,12 +274,10 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
         value={selectedStatus}
         onChange={handleChange}
         disabled={isUpdating}
-        // CORRECTED: Using style attribute for borderColor and safe Tailwind classes
         className={`appearance-none rounded-md border px-3 py-2 text-xs font-medium cursor-pointer transition-colors focus:ring-2 focus:outline-none 
           text-gray-800 bg-white ${styles}`}
         style={{
-          borderColor: COLOR_MUTED, // Muted blue border
-          // Using a known utility class for the ring color, or directly setting ring color if needed
+          borderColor: COLOR_MUTED,
           boxShadow: `0 0 0 2px ${COLOR_CARD_BG}, 0 0 0 4px ${COLOR_ACCENT}50`,
         }}
       >
@@ -317,7 +291,6 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           </option>
         ))}
       </select>
-      {/* CORRECTED: Using style attribute for dynamic color */}
       {isUpdating && (
         <Clock
           className="absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 animate-spin"
@@ -342,9 +315,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // FIXED: NewDate and NewTime are already correctly initialized as YYYY-MM-DD and HH:MM 
-  // because they were converted in fetchAppointments (via sessionDate/sessionTime).
   const [newDate, setNewDate] = useState(appointment.sessionDate);
   const [newTime, setNewTime] = useState(appointment.sessionTime);
 
@@ -383,7 +353,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           timer: 3000,
           showConfirmButton: false,
         });
-        onUpdate(updatedData); // Notify parent to refresh/update table data
+        onUpdate(updatedData);
         setIsEditing(false);
       } else {
         throw new Error("Update response was invalid.");
@@ -401,7 +371,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     }
   };
 
-  // Data pairs for read-only fields
   const readOnlyFields = [
     { label: "Reservation ID", value: appointment.reservationId, icon: "mdi:identifier" },
     { label: "Client Name", value: appointment.clientName || "N/A", icon: "lucide:user" },
@@ -412,7 +381,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
     { label: "Notes", value: appointment.specialNote || "None", icon: "mdi:note-text-outline" },
   ];
 
-  // Utility for displaying status badge in the modal
   const { styles: statusStyles } = getStatusBadge(appointment.status);
 
   return (
@@ -420,9 +388,8 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
       <div
         className="relative max-w-3xl w-full rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100"
         style={{ backgroundColor: COLOR_CARD_BG }}
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div
           className="sticky top-0 flex items-center justify-between p-6 border-b"
           style={{
@@ -445,7 +412,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-6">
           <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
             <h3 className="text-xl font-semibold" style={{ color: COLOR_TEXT_DARK }}>
@@ -456,9 +422,7 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             </span>
           </div>
 
-          {/* Editable Fields: Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-lg" style={{ backgroundColor: COLOR_BG_LIGHT }}>
-            {/* Date Field */}
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: COLOR_MUTED }}>
                 Date
@@ -473,7 +437,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
               />
             </div>
 
-            {/* Time Field */}
             <div>
               <label className="block text-sm font-medium mb-1" style={{ color: COLOR_MUTED }}>
                 Time
@@ -489,7 +452,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* Read-Only Details Grid */}
           <h3 className="text-lg font-bold mt-6 mb-4" style={{ color: COLOR_TEXT_DARK }}>
             Client & Details (Read-Only)
           </h3>
@@ -510,7 +472,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
           </div>
         </div>
 
-        {/* Footer: Action Buttons */}
         <div className="sticky bottom-0 p-6 border-t flex justify-end gap-3" style={{ backgroundColor: COLOR_CARD_BG, borderColor: COLOR_MUTED + "30" }}>
           
           {isEditing ? (
@@ -551,7 +512,6 @@ const AppointmentDetailsModal: React.FC<AppointmentDetailsModalProps> = ({
 };
 
 
-// --- MAIN COMPONENT ---
 export default function ReservationsPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -569,30 +529,25 @@ export default function ReservationsPage() {
     useState<PackageDetails | null>(null);
   const [showPackageModal, setShowPackageModal] = useState(false);
 
-  // NEW STATE: For Appointment Details Modal
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  // Function to handle opening the appointment modal
   const handleOpenAppointmentModal = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsDetailsModalOpen(true);
   };
 
-  // Function to handle closing the appointment modal and clearing state
   const handleCloseAppointmentModal = () => {
     setSelectedAppointment(null);
     setIsDetailsModalOpen(false);
   };
 
-  // Function to update the table data after a successful edit
   const handleAppointmentUpdate = (updatedAppointment: Appointment) => {
     setAppointments(prevAppointments => 
       prevAppointments.map(app => 
         app.id === updatedAppointment.id ? updatedAppointment : app
       )
     );
-    // Also update the currently viewed appointment in the modal for seamless interaction
     setSelectedAppointment(updatedAppointment); 
   };
 
@@ -620,7 +575,6 @@ export default function ReservationsPage() {
           contactNumber: app.contactNumber,
           specialNote: app.specialNote,
           sessionDate: app.date,
-          // FIXED: Convert time to 24hr format for state and editable input consistency
           sessionTime: convert12hrTo24hr(app.time), 
           status: (app.status as string)?.toLowerCase() || "pending",
           isPackageUser: app.isPackageUser || false,
@@ -630,7 +584,7 @@ export default function ReservationsPage() {
         setAppointments(mappedAppointments);
         setPagination({
                   ...response.pagination,
-                  recordsPerPage: response.pagination.limit, // Map 'limit' to 'recordsPerPage'
+                  recordsPerPage: response.pagination.limit,
         });
         setCurrentPage(page);
       } catch (err: any) {
@@ -647,7 +601,6 @@ export default function ReservationsPage() {
   fetchAppointments(1);
   }, [startDate, endDate, fetchAppointments]);
 
-// FIXED: Define filteredAppointments using useMemo for efficient filtering
   const filteredAppointments = useMemo(() => {
     return appointments.filter((appointment) => {
       const clientName = appointment.clientName || "";
@@ -695,10 +648,8 @@ export default function ReservationsPage() {
   };
 
   return (
-    // Background Color
     <div className="min-h-screen" style={{ backgroundColor: COLOR_BG_LIGHT }}>
       <div className="mx-auto max-w-7xl p-6">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold" style={{ color: COLOR_TEXT_DARK }}>
             Reservations
@@ -708,8 +659,6 @@ export default function ReservationsPage() {
           </p>
         </div>
 
-        {/* Date Filter Card */}
-        {/* Card Style: White background, subtle muted blue border, soft shadow */}
         <div
           className="mb-6 rounded-xl border p-4 shadow-sm"
           style={{
@@ -742,7 +691,6 @@ export default function ReservationsPage() {
                   backgroundColor: COLOR_BG_LIGHT,
                   borderColor: COLOR_MUTED + "40",
                   color: COLOR_TEXT_DARK,
-                  // CORRECTED: Using boxShadow for the custom focus ring style
                   boxShadow: `0 0 0 2px ${COLOR_BG_LIGHT}, 0 0 0 4px ${COLOR_ACCENT}50`,
                 }}
               />
@@ -766,7 +714,6 @@ export default function ReservationsPage() {
                   backgroundColor: COLOR_BG_LIGHT,
                   borderColor: COLOR_MUTED + "40",
                   color: COLOR_TEXT_DARK,
-                  // CORRECTED: Using boxShadow for the custom focus ring style
                   boxShadow: `0 0 0 2px ${COLOR_BG_LIGHT}, 0 0 0 4px ${COLOR_ACCENT}50`,
                 }}
               />
@@ -794,9 +741,7 @@ export default function ReservationsPage() {
           </p>
         </div>
 
-        {/* Top Controls */}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          {/* Search Bar */}
           <div className="relative flex-1">
             <Search
               className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2"
@@ -812,15 +757,12 @@ export default function ReservationsPage() {
                 backgroundColor: COLOR_CARD_BG,
                 borderColor: COLOR_MUTED + "40",
                 color: COLOR_TEXT_DARK,
-                // CORRECTED: Using boxShadow for the custom focus ring style
                 boxShadow: `0 0 0 2px ${COLOR_CARD_BG}, 0 0 0 4px ${COLOR_ACCENT}50`,
               }}
             />
           </div>
 
-          {/* Filter & Calendar Buttons */}
           <div className="flex gap-3">
-            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -829,7 +771,6 @@ export default function ReservationsPage() {
                 backgroundColor: COLOR_CARD_BG,
                 borderColor: COLOR_MUTED + "40",
                 color: COLOR_TEXT_DARK,
-                // CORRECTED: Using boxShadow for the custom focus ring style
                 boxShadow: `0 0 0 2px ${COLOR_CARD_BG}, 0 0 0 4px ${COLOR_ACCENT}50`,
               }}
             >
@@ -847,14 +788,13 @@ export default function ReservationsPage() {
               </option>
             </select>
 
-            {/* Calendar Toggle Button */}
             <button
               onClick={() => navigate("/admin/calendar-management")}
               className="flex items-center gap-2 rounded-md px-4 py-2 font-medium transition-all shadow-md hover:shadow-lg"
               style={{
                 backgroundColor: COLOR_ACCENT,
                 color: COLOR_TEXT_DARK,
-                boxShadow: `0 4px 6px -1px ${COLOR_ACCENT}40, 0 2px 4px -2px ${COLOR_ACCENT}40`, // Soft shadow with accent color
+                boxShadow: `0 4px 6px -1px ${COLOR_ACCENT}40, 0 2px 4px -2px ${COLOR_ACCENT}40`,
               }}
             >
               <CalendarIcon className="h-5 w-5" />
@@ -863,7 +803,6 @@ export default function ReservationsPage() {
           </div>
         </div>
 
-        {/* Loading and Error States */}
         {isLoading && (
           <div
             className="text-center p-10 text-xl font-medium"
@@ -877,11 +816,10 @@ export default function ReservationsPage() {
             className="text-center p-10 text-xl font-medium border border-red-300 rounded-lg"
             style={{ backgroundColor: COLOR_CARD_BG, color: "#dc2626" }}
           >
-            Error: {error} ❌
+            Error: {error}
           </div>
         )}
 
-        {/* Bookings Table */}
         {!isLoading && !error && (
           <div
             className="rounded-xl border overflow-x-auto shadow-md"
@@ -963,9 +901,7 @@ export default function ReservationsPage() {
               </thead>
               <tbody>
                 {filteredAppointments.map((appointment) => {
-                  // Prepare the number for the WhatsApp link
                   const whatsappNumber = formatSLNumberForWhatsApp(appointment.contactNumber);
-                  // Display the number in domestic format with the country code visible
                   const displayContact = appointment.contactNumber ? `+94 ${appointment.contactNumber.substring(1)}` : "N/A";
 
                   return (
@@ -996,7 +932,6 @@ export default function ReservationsPage() {
                       >
                         <button
                           type="button"
-                          // Use client's email for unique identification and navigation
                           onClick={() => navigate(`/admin/clients/${appointment.email}`)}
                           className="font-medium hover:underline"
                           style={{ color: COLOR_TEXT_DARK }}
@@ -1020,7 +955,6 @@ export default function ReservationsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <a
-                          // MODIFIED: Uses the formatted number for WhatsApp link
                           href={`https://wa.me/${whatsappNumber}`}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1028,12 +962,10 @@ export default function ReservationsPage() {
                             appointment.contactNumber ? "" : ""
                           }`}
                           style={{
-                            // Highlight in green if a number exists
                             color: appointment.contactNumber ? "#10b981" : COLOR_MUTED,
                         }}
                         >
                           <Icon icon="mdi:whatsapp" className="h-4 w-4" />
-                          {/* Display the formatted number (e.g., +94 703973327) */}
                           {appointment.contactNumber ? displayContact : "N/A"}
                         </a>
                       </td>
@@ -1183,7 +1115,6 @@ export default function ReservationsPage() {
           </div>
         )}
 
-        {/* Empty State */}
         {!isLoading && !error && filteredAppointments.length === 0 && (
           <div
             className="text-center p-10 text-xl font-medium border rounded-lg"
@@ -1197,14 +1128,12 @@ export default function ReservationsPage() {
           </div>
         )}
 
-        {/* Package Details Modal */}
         {showPackageModal && selectedPackageDetails && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
             <div
               className="relative max-w-2xl w-full rounded-xl shadow-2xl max-h-[90vh] overflow-y-auto"
               style={{ backgroundColor: COLOR_CARD_BG }}
             >
-              {/* Header */}
               <div
                 className="sticky top-0 flex items-center justify-between p-6 border-b"
                 style={{
@@ -1229,9 +1158,7 @@ export default function ReservationsPage() {
                 </button>
               </div>
 
-              {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Package Info */}
                 <div
                   className="rounded-lg border p-4"
                   style={{
@@ -1300,7 +1227,6 @@ export default function ReservationsPage() {
                   </div>
                 </div>
 
-                {/* Session Usage */}
                 <div
                   className="rounded-lg border p-4"
                   style={{
@@ -1354,7 +1280,6 @@ export default function ReservationsPage() {
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
                     <div>
                       <div
                         className="flex justify-between text-sm mb-2"
@@ -1390,7 +1315,6 @@ export default function ReservationsPage() {
                   </div>
                 </div>
 
-                {/* Dates */}
                 <div
                   className="rounded-lg border p-4"
                   style={{
@@ -1444,7 +1368,6 @@ export default function ReservationsPage() {
                     </div>
                   </div>
 
-                  {/* Days Remaining */}
                   <div
                     className="mt-4 p-3 rounded-lg"
                     style={{ backgroundColor: COLOR_CARD_BG }}
@@ -1475,7 +1398,6 @@ export default function ReservationsPage() {
                 </div>
               </div>
 
-              {/* Footer */}
               <div
                 className="sticky bottom-0 p-6 border-t"
                 style={{

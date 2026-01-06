@@ -121,7 +121,6 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden flex flex-col lg:flex-row bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Left Section - Login */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-16">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center space-y-3">
@@ -188,7 +187,6 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Section - Image */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden">
         <img
           src="/peaceful-person-floating-in-calm-water-spa-therapy.jpg"

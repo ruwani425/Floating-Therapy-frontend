@@ -18,7 +18,6 @@ import Swal from "sweetalert2";
 import apiRequest from "../../core/axios";
 import Avatar from "../../components/Avatar";
 
-// --- THEME COLORS ---
 const COLORS = {
   primary: "#1B4965",
   accent: "#2DA0CC",
@@ -30,7 +29,6 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-// --- INTERFACES ---
 interface PackageActivation {
   _id: string;
   userId?: {
@@ -44,16 +42,13 @@ interface PackageActivation {
   phone: string;
   address: string;
   message?: string;
-  // NOTE: packageId is defined as an object in the interface,
-  // but the runtime error suggests it can be null/undefined.
-  // We will treat it as potentially nullable in the runtime logic.
   packageId: {
     _id: string;
     name: string;
     duration: string;
     sessions: number;
     totalPrice: number;
-  } | null; // Added | null for safety
+  } | null;
   packageName: string;
   totalSessions: number;
   usedCount: number;
@@ -73,7 +68,6 @@ interface PaginationInfo {
   totalPages: number;
 }
 
-// --- API SERVICE ---
 const activationApiService = {
   fetchActivations: async (
     page: number = 1,
@@ -106,14 +100,13 @@ const activationApiService = {
     };
   },
 
-// 🛑 MODIFIED: updateStatus now accepts an optional startDate
   updateStatus: async (
     id: string,
     status: string,
-    startDate?: string // New optional parameter
+    startDate?: string
   ): Promise<{ success: boolean; data: PackageActivation }> => {
     const payload: { status: string; startDate?: string } = { status };
-    if (startDate) { // Send startDate if provided, regardless of whether it's the first time confirming.
+    if (startDate) { 
         payload.startDate = startDate;
     }
 
@@ -126,7 +119,6 @@ const activationApiService = {
 },
 };
 
-// --- STATUS BADGE COMPONENT ---
 const StatusBadge: React.FC<{ status: PackageActivation["status"] }> = ({
   status,
 }) => {
@@ -168,7 +160,6 @@ const StatusBadge: React.FC<{ status: PackageActivation["status"] }> = ({
   );
 };
 
-// --- MAIN COMPONENT ---
 const PackageActivationManage: React.FC = () => {
   const [activations, setActivations] = useState<PackageActivation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -184,7 +175,6 @@ const PackageActivationManage: React.FC = () => {
     totalPages: 0,
   });
 
-  // Fetch activations
   const fetchActivations = useCallback(async () => {
     setLoading(true);
     try {
@@ -195,9 +185,9 @@ const PackageActivationManage: React.FC = () => {
       );
       setActivations(response.data);
       setPagination(response.pagination);
-      console.log("✅ [fetchActivations] Loaded:", response.data.length);
+      console.log(" [fetchActivations] Loaded:", response.data.length);
     } catch (error: any) {
-      console.error("❌ [fetchActivations] Error:", error);
+      console.error(" [fetchActivations] Error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -212,13 +202,10 @@ const PackageActivationManage: React.FC = () => {
     fetchActivations();
   }, [fetchActivations]);
 
-  // Handle status change
   const handleStatusChange = async (
     activation: PackageActivation,
     newStatus: string
   ) => {
-    // 🆕 NEW: Capture the current time if the status change is to 'Confirmed'
-    // If it's already confirmed, we capture the time to allow recalculation if the status is changed back to Confirmed.
     const confirmDate = newStatus === 'Confirmed' ? new Date().toISOString() : undefined;
     const confirmationTime = confirmDate ? new Date(confirmDate).toLocaleTimeString() : '';
 
@@ -244,7 +231,6 @@ const PackageActivationManage: React.FC = () => {
     if (result.isConfirmed) {
       try {
         setLoading(true);
-        // 🛑 MODIFIED: Pass the confirmDate to the updateStatus function
         await activationApiService.updateStatus(activation._id, newStatus, confirmDate);
 
         Swal.fire({
@@ -270,7 +256,6 @@ const PackageActivationManage: React.FC = () => {
     }
   };
 
-  // Format date helper
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -280,7 +265,6 @@ const PackageActivationManage: React.FC = () => {
     });
   };
 
-  // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -289,7 +273,6 @@ const PackageActivationManage: React.FC = () => {
     }).format(amount);
   };
 
-  // Status counts
   const statusCounts = {
     All: activations.length,
     Pending: activations.filter((a) => a.status === "Pending").length,
@@ -304,7 +287,6 @@ const PackageActivationManage: React.FC = () => {
       style={{ backgroundColor: COLORS.lightGray }}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1
             className="text-3xl font-bold mb-1"
@@ -317,7 +299,6 @@ const PackageActivationManage: React.FC = () => {
           </p>
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2 mb-4">
           {(["All", "Pending", "Contacted", "Confirmed", "Rejected"] as const).map(
             (status) => (
@@ -346,7 +327,6 @@ const PackageActivationManage: React.FC = () => {
           )}
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
           <div className="bg-white p-3 rounded-xl shadow-sm border-l-4 border-yellow-500">
             <div className="flex items-center justify-between">
@@ -394,9 +374,7 @@ const PackageActivationManage: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Activations Table */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="p-4 border-b flex items-center justify-between">
@@ -443,7 +421,6 @@ const PackageActivationManage: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {/* Table */}
                   <div className="overflow-hidden">
                     <table className="w-full table-fixed">
                       <thead className="bg-gray-50 border-b">
@@ -479,7 +456,6 @@ const PackageActivationManage: React.FC = () => {
                             }`}
                             onClick={() => setSelectedActivation(activation)}
                           >
-                            {/* Customer */}
                             <td className="px-3 py-2">
                               <div className="flex items-center gap-2">
                                 <Avatar
@@ -498,20 +474,17 @@ const PackageActivationManage: React.FC = () => {
                               </div>
                             </td>
 
-                            {/* Package */}
                             <td className="px-3 py-2">
                               <div className="min-w-0">
                                 <p className="font-semibold text-gray-900 text-xs truncate">
                                   {activation.packageName}
                                 </p>
                                 <p className="text-[10px] text-gray-500 truncate">
-                                  {/* FIX 1: Safely access packageId.duration */}
                                   {activation.packageId?.duration || "N/A"} 
                                 </p>
                               </div>
                             </td>
 
-                            {/* Sessions */}
                             <td className="px-3 py-2">
                               {activation.status === "Confirmed" ? (
                                 <div className="min-w-0">
@@ -529,12 +502,10 @@ const PackageActivationManage: React.FC = () => {
                               )}
                             </td>
 
-                            {/* Status */}
                             <td className="px-3 py-2">
                               <StatusBadge status={activation.status} />
                             </td>
 
-                            {/* Date */}
                             <td className="px-3 py-2">
                               <div className="min-w-0">
                                 <p className="text-xs text-gray-900 truncate">
@@ -549,7 +520,6 @@ const PackageActivationManage: React.FC = () => {
                               </div>
                             </td>
 
-                            {/* Actions */}
                             <td className="px-3 py-2">
                               <div className="flex items-center gap-1 flex-wrap">
                                 {activation.status === "Pending" && (
@@ -583,12 +553,9 @@ const PackageActivationManage: React.FC = () => {
                     </table>
                   </div>
 
-                  {/* Enhanced Pagination */}
                   <div className="p-4 border-t bg-gray-50">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      {/* Left side: Items per page and info */}
                       <div className="flex items-center gap-3">
-                        {/* Items per page selector */}
                         <div className="flex items-center gap-2">
                           <label
                             htmlFor="itemsPerPage"
@@ -601,7 +568,7 @@ const PackageActivationManage: React.FC = () => {
                             value={itemsPerPage}
                             onChange={(e) => {
                               setItemsPerPage(Number(e.target.value));
-                              setCurrentPage(1); // Reset to first page
+                              setCurrentPage(1);
                             }}
                             className="px-2 py-1 border rounded-lg bg-white text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             style={{ borderColor: COLORS.gray }}
@@ -613,7 +580,6 @@ const PackageActivationManage: React.FC = () => {
                           </select>
                         </div>
 
-                        {/* Pagination Info */}
                         <div className="text-xs text-gray-600">
                           Showing{" "}
                           <span className="font-semibold text-gray-900">
@@ -630,9 +596,7 @@ const PackageActivationManage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Pagination Controls */}
                       <div className="flex items-center gap-1">
-                        {/* First Page */}
                         <button
                           onClick={() => setCurrentPage(1)}
                           disabled={currentPage === 1}
@@ -642,7 +606,6 @@ const PackageActivationManage: React.FC = () => {
                           <span className="text-xs font-semibold">First</span>
                         </button>
 
-                        {/* Previous */}
                         <button
                           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
@@ -652,11 +615,9 @@ const PackageActivationManage: React.FC = () => {
                           <ChevronLeft className="w-4 h-4" />
                         </button>
 
-                        {/* Page Numbers */}
                         <div className="flex items-center gap-1">
                           {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
                             .filter((page) => {
-                              // Show first page, last page, current page, and pages around current
                               return (
                                 page === 1 ||
                                 page === pagination.totalPages ||
@@ -665,7 +626,6 @@ const PackageActivationManage: React.FC = () => {
                             })
                             .map((page, index, array) => (
                               <React.Fragment key={page}>
-                                {/* Add ellipsis if there's a gap */}
                                 {index > 0 && array[index - 1] !== page - 1 && (
                                   <span className="px-1 text-xs text-gray-500">...</span>
                                 )}
@@ -689,7 +649,6 @@ const PackageActivationManage: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* Next */}
                         <button
                           onClick={() =>
                             setCurrentPage((p) =>
@@ -703,7 +662,6 @@ const PackageActivationManage: React.FC = () => {
                           <ChevronRight className="w-4 h-4" />
                         </button>
 
-                        {/* Last Page */}
                         <button
                           onClick={() => setCurrentPage(pagination.totalPages)}
                           disabled={currentPage === pagination.totalPages}
@@ -720,7 +678,6 @@ const PackageActivationManage: React.FC = () => {
             </div>
           </div>
 
-          {/* Details Panel */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-md overflow-hidden sticky top-8">
               {selectedActivation ? (
@@ -736,7 +693,6 @@ const PackageActivationManage: React.FC = () => {
                   </div>
 
                   <div className="p-6 space-y-6">
-                    {/* Customer Info */}
                     <div>
                       <h3 className="font-bold text-sm text-gray-500 uppercase mb-3">
                         Customer Information

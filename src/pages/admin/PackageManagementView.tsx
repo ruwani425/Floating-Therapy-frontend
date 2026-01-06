@@ -5,12 +5,6 @@ import { Plus, X, Edit, Clock } from "lucide-react"
 import Swal from "sweetalert2"
 import apiRequest from "../../core/axios"
 
-// const COLOR_BG_LIGHT = "#F0F8FF"
-// const COLOR_TEXT_DARK = "#1B4965"
-// const COLOR_ACCENT = "#A8D8EA"
-// const COLOR_MUTED = "#5E7B9D"
-// const COLOR_CARD_BG = "#FFFFFF"
-
 const COLOR_BG_LIGHT = "#F8FAFC" 
 const COLOR_TEXT_DARK = "#035C84" 
 const COLOR_ACCENT = "#94CCE7"    
@@ -256,7 +250,7 @@ const PackageManagementPage: React.FC = () => {
     <div className="min-h-screen p-6" style={{ backgroundColor: COLOR_BG_LIGHT }}>
            {" "}
       <div className="mx-auto max-w-7xl">
-                {/* Header */}       {" "}
+                       {" "}
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                    {" "}
           <h1 className="text-2xl sm:text-4xl font-bold" style={{ color: COLOR_TEXT_DARK }}>
@@ -283,7 +277,7 @@ const PackageManagementPage: React.FC = () => {
           </button>
                  {" "}
         </div>
-                {/* Loading / Error States */}       {" "}
+                       {" "}
         {isLoading && packages.length === 0 && (
           <div className="text-center p-10 text-xl font-medium" style={{ color: COLOR_TEXT_DARK }}>
                         Loading packages... ⏳          {" "}
@@ -298,7 +292,7 @@ const PackageManagementPage: React.FC = () => {
                         Error: {error}         {" "}
           </div>
         )}
-                {/* Packages Table View */}       {" "}
+                       {" "}
         {!isLoading && packages.length > 0 && (
           <div
             className="rounded-xl border shadow-lg overflow-x-auto"

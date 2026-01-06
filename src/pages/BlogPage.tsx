@@ -208,7 +208,6 @@ const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => (
   </motion.div>
 );
 
-// --- Blog Post Card Component ---
 const BlogPostCard: React.FC<{ post: BlogPost }> = ({ post }) => (
   <motion.article 
     layout
@@ -255,7 +254,6 @@ const BlogPostCard: React.FC<{ post: BlogPost }> = ({ post }) => (
   </motion.article>
 );
 
-// --- Main Blog Page Component ---
 const BlogPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -272,7 +270,6 @@ const BlogPage: React.FC = () => {
   return (
     <div className="bg-slate-50 w-full min-h-screen overflow-x-hidden">
       
-      {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 text-center overflow-hidden">
         <video
           src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
@@ -307,11 +304,9 @@ const BlogPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {featuredPost && <FeaturedPost post={featuredPost} />}
 
-        {/* Category Filter */}
         <div className="mb-16">
           <div className="flex items-center mb-8">
             <Tag className="w-5 h-5 text-blue-600 mr-2" />
@@ -344,7 +339,6 @@ const BlogPage: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Blog Posts Grid */}
         <motion.div layout className="mb-20">
           <motion.h2 layout className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-10">
             {selectedCategory === "All" ? "Latest Articles" : selectedCategory}
@@ -372,7 +366,6 @@ const BlogPage: React.FC = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Newsletter Section */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}

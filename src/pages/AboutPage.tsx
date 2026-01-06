@@ -6,13 +6,11 @@ import {
   Target,
   Sparkles,
   CheckCircle,
-  // Quote,
-  // Star,
   Shield,
 } from "lucide-react";
 
 import { motion } from "framer-motion";
-import type { Variants } from "framer-motion"; // Use a separate type-only import
+import type { Variants } from "framer-motion";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -43,7 +41,6 @@ const scaleIn: Variants = {
   }
 };
 
-// --- Values/Benefits Data ---
 const coreValues = [
   {
     icon: Heart,
@@ -71,7 +68,6 @@ const coreValues = [
   },
 ];
 
-// --- Stats Data ---
 const stats = [
   { number: "15+", label: "Years Experience" },
   { number: "5000+", label: "Happy Patients" },
@@ -79,7 +75,6 @@ const stats = [
   { number: "4.9", label: "Google Rating" },
 ];
 
-// --- Team Members ---
 const teamMembers = [
   {
     name: "Dr. Sarah Mitchell",
@@ -104,30 +99,6 @@ const teamMembers = [
   },
 ];
 
-// --- Testimonials ---
-// const testimonials = [
-//   {
-//     quote:
-//       "After a sports injury, I was worried I'd never regain full mobility. The chiropractic care I received here not only helped me recover faster, but also strengthened areas I hadn't even realized were weak.",
-//     author: "Rebecca Lorenna",
-//     role: "Marathon Runner",
-//     rating: 5,
-//   },
-//   {
-//     quote:
-//       "I've struggled with back pain for years, and after just a few sessions here, I feel like a new person. The therapists are incredibly skilled, and I always leave feeling refreshed.",
-//     author: "Maya Sanchez",
-//     role: "Office Professional",
-//     rating: 5,
-//   },
-//   {
-//     quote:
-//       "This place is peaceful, clean, and the energy is amazing. I felt relaxed the moment I arrived. Highly recommend to anyone needing real stress relief.",
-//     author: "Marcus Leroy",
-//     role: "Business Owner",
-//     rating: 5,
-//   },
-// ];
 const ValueCard: React.FC<{ icon: React.ElementType; title: string; description: string }> = ({ icon: Icon, title, description }) => (
   <motion.div 
     variants={fadeInUp}
@@ -162,28 +133,10 @@ const TeamMemberCard: React.FC<{ member: typeof teamMembers[number] }> = ({ memb
   </motion.div>
 );
 
-// const TestimonialCard: React.FC<{ testimonial: typeof testimonials[number] }> = ({ testimonial }) => (
-//   <motion.div 
-//     variants={scaleIn}
-//     className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100"
-//   >
-//     <div className="flex mb-4">
-//       {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />)}
-//     </div>
-//     <Quote className="w-10 h-10 text-[#3a7ca5] mb-4 opacity-30" />
-//     <p className="text-gray-700 leading-relaxed mb-6 text-lg italic">"{testimonial.quote}"</p>
-//     <div>
-//       <p className="font-bold text-gray-900 text-sm">{testimonial.author}</p>
-//       <p className="text-gray-500 text-sm">{testimonial.role}</p>
-//     </div>
-//   </motion.div>
-// );
-
 const AboutPage: React.FC = () => {
   return (
     <div className="bg-white w-full min-h-screen overflow-x-hidden">
       
-      {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 min-h-[80vh] flex items-center">
         <video 
           src="https://videos.pexels.com/video-files/9694443/9694443-hd_1920_1080_25fps.mp4"
@@ -221,7 +174,6 @@ const AboutPage: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Our Story Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -273,7 +225,6 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Core Values */}
       <section className="py-24 bg-gray-50 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -292,7 +243,6 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div 
@@ -310,7 +260,6 @@ const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-24 px-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
